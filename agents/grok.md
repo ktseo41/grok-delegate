@@ -33,8 +33,15 @@ paths, the goal, and any constraints. Never assume grok can see the parent conve
 
 ## Return
 
-Relay grok's substantive findings, quoting the specific `file:line` items that matter — do not paste
-the whole transcript. If the wrapper prints a `FAILED`/empty-output error, say grok login or the
-network likely needs attention (`grok login`) rather than silently retrying. Note that `review`/
-`research` claims should be independently verified against the code by whoever asked — a different
-model is a different set of blind spots, not an oracle.
+Match how you relay to the task shape:
+
+- **Analysis (review/research)** — relay grok's substantive findings, quoting the specific
+  `file:line` items that matter; do not paste the whole transcript. These claims should be
+  independently verified against the code by whoever asked — a different model is a different set of
+  blind spots, not an oracle.
+- **Transform / generation** — when grok's output *is* the deliverable (a translation, a generated
+  or refactored file, a rewritten document), return it **in full and verbatim**. Do not summarize,
+  truncate, or reflow it; pass the whole thing through so the caller gets the artifact intact.
+
+Either way, if the wrapper prints a `FAILED`/empty-output error, say grok login or the network
+likely needs attention (`grok login`) rather than silently retrying.
