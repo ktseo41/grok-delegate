@@ -37,6 +37,18 @@ large ones, which the wrapper streams to grok via `--prompt-file`), or name conc
 
 ## Return
 
+**Always surface grok's usage.** After every run the wrapper prints one line to stderr:
+
+```
+[grok-usage] ctxTokens=72493 wallSec=140 toolCalls=14 tools=web_search,web_fetch session=019f448a
+```
+
+This is grok's **own** (xAI) usage — the whole reason to delegate — and it is otherwise invisible
+to the caller, whose only visible tokens are yours (Claude's), not grok's. End your reply with this
+line **verbatim** so the caller can see what the delegation actually cost on grok's quota. If the
+line is absent (older wrapper, or a best-effort skip when `uuidgen`/`jq`/`signals.json` is missing),
+just omit it — never fabricate the numbers.
+
 Match how you relay to the task shape:
 
 - **Analysis (review/research)** — relay grok's substantive findings, quoting the specific
@@ -54,9 +66,19 @@ Match how you relay to the task shape:
   keeps the artifact intact on disk without flooding the conversation.
 
 Either way, if the wrapper prints a `FAILED`/empty-output error, say grok login or the network
-likely needs attention (`grok login`) rather than silently retrying. If it reports that research is
-unavailable on this grok build, relay that as-is — never try to make research work by dropping the
-`--tools` sandbox (e.g. `--disallowed-tools` or a permission mode); on grok 0.2.93 that re-enables
-file writes and shell (canary-verified), so the run would no longer be read-only. If the caller still
-needs the web lookup, note the option (don't silently take it): `fix -w <name>` has web and works,
-but it lets grok write/shell — so it needs the user's OK, and it stays on grok's xAI quota.
+likely needs attention (`grok login`) rather than silently retrying.
+
+If it reports that **research is unavailable on this grok build** (fail-closed: grok 0.2.93 cannot
+combine web tools with the read-only `--tools` sandbox), do **not** silently work around it, and do
+**not** just fall back on your own. Stop and hand the decision back to the caller as an explicit
+three-way choice for the user — you cannot pick for them:
+
+1. **`fix -w <name>`** — grok gets web and this works, but `fix` lets grok write files and run shell,
+   so it needs the user's OK; edits land in an isolated git worktree to review, and it stays on
+   grok's xAI quota.
+2. **Claude's own web search** — the main session does the lookup instead (Claude quota, no grok).
+3. **Proceed without web** — answer from existing knowledge, clearly flagged as unverified.
+
+Never make research work by dropping the `--tools` sandbox (e.g. `--disallowed-tools` or a permission
+mode); on grok 0.2.93 that re-enables file writes and shell (canary-verified), so the run would no
+longer be read-only.
