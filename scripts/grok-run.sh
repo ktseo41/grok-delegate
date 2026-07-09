@@ -112,18 +112,31 @@ if grep -qiE 'agent building failed|auto_background_on_timeout' <<<"$ERR"; then
     echo "[grok-run] FAILED: research mode is unavailable on this grok build (0.2.93)." >&2
     echo "[grok-run]   grok can't combine web tools with a read-only --tools allowlist" >&2
     echo "[grok-run]   (upstream session-build bug). Not worked around on purpose: dropping the" >&2
-    echo "[grok-run]   allowlist would re-enable writes/shell. Use 'review' for read-only code work." >&2
+    echo "[grok-run]   allowlist would re-enable writes/shell. Use 'review' for read-only code work," >&2
+    echo "[grok-run]   or (with the user's OK to let grok write) 'fix -w <name>' — it has web." >&2
   else
     echo "[grok-run] FAILED: grok could not build the session:" >&2
     printf '%s\n' "$ERR" | head -3 >&2
   fi
-  exit "${RC:-1}"
+  # This branch is the wrapper's OWN "FAILED" verdict, so it must exit non-zero
+  # even when grok itself returned 0 — empty output on an expired auth / transport
+  # error can come back as exit 0. `${RC:-1}` did NOT do this: it only falls back
+  # to 1 when RC is *unset*, and RC is always set by `RC=$?` above, so a grok 0
+  # sailed straight through as a success code. Preserve a real non-zero grok code,
+  # otherwise force 1.
+  exit $(( RC == 0 ? 1 : RC ))
 fi
 
 # Empty output almost always means auth expired or a transport error — treat as failure.
 if [[ -z "${OUT//[[:space:]]/}" ]]; then
   echo "[grok-run] FAILED: empty output. Check 'grok login' / network." >&2
-  exit "${RC:-1}"
+  # This branch is the wrapper's OWN "FAILED" verdict, so it must exit non-zero
+  # even when grok itself returned 0 — empty output on an expired auth / transport
+  # error can come back as exit 0. `${RC:-1}` did NOT do this: it only falls back
+  # to 1 when RC is *unset*, and RC is always set by `RC=$?` above, so a grok 0
+  # sailed straight through as a success code. Preserve a real non-zero grok code,
+  # otherwise force 1.
+  exit $(( RC == 0 ? 1 : RC ))
 fi
 
 printf '%s\n' "$OUT"

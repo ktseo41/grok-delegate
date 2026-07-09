@@ -38,10 +38,20 @@ denied at the tool level, not via a permission mode.)
 
 **grok 0.2.93 research-mode bug — do not "fix" it the unsafe way.** On this build, adding a web tool
 to a `--tools` allowlist fails to build the session (upstream error naming `run_terminal_cmd` /
-`auto_background_on_timeout`), so `research` currently **fails closed** — it cannot run until grok
-ships a fix. If grok reports that `--tools` is broken and suggests `--disallowed-tools` or a
-permission mode to get web working, do **not** take it: those build fine but re-enable file writes
-and shell (canary-verified), so the run would no longer be read-only. `review` is unaffected.
+`auto_background_on_timeout`), so `research` **fails closed on 0.2.93**. The wrapper detects the
+build error per-run, so a newer grok that fixes it works again with no change here — this is a
+version-specific block, not a permanent one. If grok reports that `--tools` is broken and suggests
+`--disallowed-tools` or a permission mode to get web working, do **not** take it: those build fine
+but re-enable file writes and shell (canary-verified), so the run would no longer be read-only.
+`review` is unaffected.
+
+When `research` fails closed, do **not** silently substitute something — surface it and let the user
+choose, because each path spends a different quota. The web tools work fine in `fix` mode (it has no
+`--tools` restriction), so if the user is OK with grok holding write/shell for the lookup, `fix -w
+<name>` is the grok-native route: isolated in a worktree, and it stays on grok's **xAI** quota. If
+they need a strictly read-only answer, either wait for the grok fix or offer your own
+WebSearch/WebFetch — but that burns **Claude's** quota (the very thing delegating to grok saves), so
+ask first rather than defaulting to it. Never weaken `research` itself to get web.
 
 ## How to run it
 

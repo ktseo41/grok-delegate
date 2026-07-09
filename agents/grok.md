@@ -51,4 +51,6 @@ Either way, if the wrapper prints a `FAILED`/empty-output error, say grok login 
 likely needs attention (`grok login`) rather than silently retrying. If it reports that research is
 unavailable on this grok build, relay that as-is — never try to make research work by dropping the
 `--tools` sandbox (e.g. `--disallowed-tools` or a permission mode); on grok 0.2.93 that re-enables
-file writes and shell (canary-verified), so the run would no longer be read-only.
+file writes and shell (canary-verified), so the run would no longer be read-only. If the caller still
+needs the web lookup, note the option (don't silently take it): `fix -w <name>` has web and works,
+but it lets grok write/shell — so it needs the user's OK, and it stays on grok's xAI quota.
