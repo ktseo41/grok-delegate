@@ -22,14 +22,18 @@ path differs: `ls ~/.claude/skills/grok-delegate/scripts/grok-run.sh`). Modes:
 Make exactly one wrapper call for the task you were handed, e.g.:
 
 ```bash
-~/.claude/skills/grok-delegate/scripts/grok-run.sh review \
-  "Review the diff in src/auth for correctness and security bugs only. Be concrete: file:line + why." \
-  --cwd /path/to/repo
+# review mode has no git/shell — grok can't compute a diff. To review a change, pipe the
+# diff in via "-" (stdin); to review code as-is, name the files for grok to read_file.
+{ echo "Review this staged diff in src/auth for correctness and security bugs only. file:line + why."; \
+  git -C /path/to/repo diff --staged -- src/auth; } \
+  | ~/.claude/skills/grok-delegate/scripts/grok-run.sh review - --cwd /path/to/repo
 ```
 
 grok starts with a **fresh context**, so make the prompt fully self-contained — restate the file
 paths, the goal, and any constraints. Never assume grok can see the parent conversation. Default to
 `review` when the ask is ambiguous; only use `fix` when the user clearly wants grok to change files.
+Because `review` has no git, never ask grok to "review the diff" — feed the diff in (stdin `-` for
+large ones, which the wrapper streams to grok via `--prompt-file`), or name concrete files to read.
 
 ## Return
 

@@ -65,10 +65,10 @@ scripts/grok-run.sh fix      "<prompt>" [grok args...]   # AUTONOMOUS: edits fil
 Examples — each is a user ask mapped to the delegation it triggers:
 
 ```bash
-# "grok review this diff" — read-only, cannot touch files
-scripts/grok-run.sh review \
-  "Review the diff in src/auth for correctness and security bugs. Be concrete: file:line + why." \
-  --cwd /path/to/repo
+# "grok review this diff" — read-only, cannot touch files. review has no git/shell, so
+# grok can't compute a diff itself: pipe it in via "-" (stdin), or name files for it to read.
+{ echo "Review this staged diff for correctness and security bugs. Be concrete: file:line + why."; \
+  git -C /path/to/repo diff --staged; } | scripts/grok-run.sh review - --cwd /path/to/repo
 
 # "ask grok how <LIBRARY> handles retries" — read-only + web
 scripts/grok-run.sh research \
@@ -88,6 +88,15 @@ wait
 
 Pass-through flags after the prompt: `-m grok-4.5`, `--max-turns N` (default 30), `--effort high`,
 `-w/--worktree NAME`. Env: `GROK_MODEL`, `GROK_MAXTURNS`.
+
+**Reviewing a diff:** `review` mode has no git or shell, so grok cannot run `git diff` — pass the
+prompt as `-` to stream instructions + diff from stdin (delivered to grok via `--prompt-file`, so
+there is no argument-length limit and grok sees the whole diff):
+
+```bash
+{ echo "Review this staged diff for correctness/security. file:line + why."; \
+  git -C /path/to/repo diff --staged; } | scripts/grok-run.sh review - --cwd /path/to/repo
+```
 
 ### Modes
 

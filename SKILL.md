@@ -52,10 +52,12 @@ skills dir). Use that absolute path everywhere the examples below write `$SKILL_
 the commands are copy-pasteable, e.g. `SKILL_DIR=~/.claude/skills/grok-delegate`.
 
 ```bash
-# 1. Read-only second opinion / code review (safe default — cannot touch files)
-"$SKILL_DIR/scripts/grok-run.sh" review \
-  "Review the diff in src/auth for correctness and security bugs only. Be concrete: file:line + why." \
-  --cwd /path/to/repo
+# 1. Read-only second opinion / code review (safe default — cannot touch files).
+#    review mode has NO git/shell, so grok CANNOT compute a diff itself. To review
+#    a change, pipe the diff in via "-" (stdin); to review code as-is, name files.
+{ echo "Review this staged diff for correctness and security bugs only. Be concrete: file:line + why."; \
+  git -C /path/to/repo diff --staged; } \
+  | "$SKILL_DIR/scripts/grok-run.sh" review - --cwd /path/to/repo
 
 # 2. Read-only + web research
 "$SKILL_DIR/scripts/grok-run.sh" research \
@@ -70,6 +72,18 @@ the commands are copy-pasteable, e.g. `SKILL_DIR=~/.claude/skills/grok-delegate`
 Pass-through args go after the prompt: `-m grok-4.5` (frontier; default is account-set),
 `--max-turns N` (wrapper defaults to 30), `-w/--worktree NAME` (isolated git worktree for `fix`),
 `--effort high`. Env: `GROK_MODEL`, `GROK_MAXTURNS`.
+
+**Reviewing a diff (important).** `review` has no git or shell, so grok cannot run
+`git diff` — it can only `read_file` the current working tree. Never tell it to "review
+the diff"; instead compute the diff yourself and feed it in. For a large diff, pass `-`
+as the prompt to stream instructions + diff from **stdin** (goes to grok via
+`--prompt-file`, so no ARG_MAX limit and grok sees it in full), keeping the diff out of
+your own context — it flows git → pipe → grok, billing xAI only:
+
+```bash
+{ echo "Review this staged diff for correctness/security only. file:line + why."; \
+  git -C /path/to/repo diff --staged; } | "$SKILL_DIR/scripts/grok-run.sh" review - --cwd /path/to/repo
+```
 
 ### Parallel / subagent-like fan-out
 
@@ -110,9 +124,9 @@ Each example is a real user ask → the delegation it maps to. `$SKILL_DIR` is s
 **Review / second opinion** — "grok review this diff", "cross-check with grok"
 
 ```bash
-"$SKILL_DIR/scripts/grok-run.sh" review \
-  "Review the staged diff for correctness and security bugs only. Be concrete: file:line + why." \
-  --cwd /path/to/repo
+# review has no git/shell — pipe the diff in via "-" (stdin) rather than asking grok to compute it
+{ echo "Review this staged diff for correctness and security bugs only. Be concrete: file:line + why."; \
+  git -C /path/to/repo diff --staged; } | "$SKILL_DIR/scripts/grok-run.sh" review - --cwd /path/to/repo
 ```
 
 **Current-facts research** — "ask grok how `<LIBRARY>` handles retries", "have grok compare X vs Y"

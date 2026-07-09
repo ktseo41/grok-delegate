@@ -15,6 +15,12 @@
 #   grok-run.sh research "<prompt>" [extra grok args...]   # read-only + web_search/fetch
 #   grok-run.sh fix      "<prompt>" [extra grok args...]   # AUTONOMOUS: edits files + shell
 #
+# Large prompts (e.g. instructions + a big `git diff`): pass "-" as the prompt to
+# stream the whole thing from stdin. It goes to grok via --prompt-file, so it
+# never hits ARG_MAX and grok gets it in full (no read_file pagination). The
+# read-only guard is unchanged — only prompt delivery differs:
+#   { echo "Review this diff:"; git -C /repo diff --staged; } | grok-run.sh review - --cwd /repo
+#
 # Extra args pass straight through to grok, e.g.:
 #   grok-run.sh review "..." -m grok-4.5 --cwd /path/to/repo --max-turns 40
 #   grok-run.sh fix    "..." -w feat-x            # run in an isolated git worktree
@@ -38,7 +44,26 @@ if ! command -v grok >/dev/null 2>&1; then
 fi
 
 MAXTURNS="${GROK_MAXTURNS:-30}"
-COMMON=(-p "$PROMPT" --output-format plain)
+COMMON=(--output-format plain)
+
+# Prompt delivery: normally -p "<prompt>". If the prompt is "-", stream the whole
+# thing from stdin into a temp file and hand it to grok via --prompt-file — lets a
+# caller pipe instructions + a large `git diff` without hitting ARG_MAX, and grok
+# receives it in full. This changes ONLY how the prompt is delivered; the --tools
+# read-only guard below is untouched.
+PROMPT_FILE=""
+if [[ "$PROMPT" == "-" ]]; then
+  PROMPT_FILE="$(mktemp "${TMPDIR:-/tmp}/grok-prompt.XXXXXX")"
+  trap 'rm -f "$PROMPT_FILE"' EXIT
+  cat >"$PROMPT_FILE"
+  if [[ ! -s "$PROMPT_FILE" ]]; then
+    echo "grok-run.sh: prompt was '-' but stdin was empty. Pipe the prompt in, e.g. | grok-run.sh review -" >&2
+    exit 2
+  fi
+  COMMON+=(--prompt-file "$PROMPT_FILE")
+else
+  COMMON+=(-p "$PROMPT")
+fi
 
 # grok errors on duplicate flags, so only inject defaults the caller did not already pass.
 _extra="$* "
