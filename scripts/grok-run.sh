@@ -4,10 +4,13 @@
 # Verified against grok 0.2.93. Key safety facts:
 #   * In headless mode, `grok -p ...` runs tools without a human to approve them, so it
 #     EDITS FILES unless the write tools are removed. `--permission-mode` is NOT a reliable
-#     guard here (tested: default/acceptEdits/auto/bypassPermissions/plan all wrote a canary
-#     file; only `dontAsk` blocked it). If ~/.grok/config.toml sets permission_mode =
-#     "always-approve" (or you pass --always-approve), edits happen with no prompt at all.
-#     The ONLY robust read-only guard is a tool allowlist via `--tools` — used by review/research.
+#     guard here — every mode (default/acceptEdits/auto/bypassPermissions/plan AND dontAsk)
+#     wrote a canary file in testing. An earlier run saw dontAsk not write, but that was an
+#     incidental headless refusal, not a read-only guarantee: with a permission_mode =
+#     "always-approve" config present, dontAsk writes too (verified on 0.2.93). If
+#     ~/.grok/config.toml sets that (or you pass --always-approve), edits happen with no
+#     prompt at all. The ONLY robust read-only guard is a tool allowlist via `--tools` —
+#     used by review/research.
 #   * A read-only agent asked to write will loop forever, so --max-turns is always set.
 #
 # Usage:
@@ -84,6 +87,18 @@ case "$MODE" in
   fix)
     # AUTONOMOUS. grok gets its full toolset and auto-approves everything.
     # Prefer running with -w/--worktree so changes land in an isolated git worktree.
+    # Warn (don't block — in-place fixes are sometimes intentional) when no worktree
+    # is requested, since fix then edits the working tree at --cwd directly.
+    _has_worktree=0
+    for _a in "$@"; do
+      case "$_a" in -w|--worktree|--worktree=*) _has_worktree=1 ;; esac
+    done
+    if [[ "$_has_worktree" -eq 0 ]]; then
+      echo "[grok-run] WARNING: fix auto-approves edits + shell and no -w/--worktree was given," >&2
+      echo "[grok-run]   so grok acts directly on the working tree at --cwd. Prefer 'fix ... -w" >&2
+      echo "[grok-run]   <name>' to isolate changes for review. Note: a worktree branches from" >&2
+      echo "[grok-run]   HEAD, so commit or stash uncommitted work first or grok won't see it." >&2
+    fi
     ARGS=(--always-approve "${COMMON[@]}" "$@")
     ;;
   *)

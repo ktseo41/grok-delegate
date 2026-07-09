@@ -46,6 +46,12 @@ Match how you relay to the task shape:
 - **Transform / generation** — when grok's output *is* the deliverable (a translation, a generated
   or refactored file, a rewritten document), return it **in full and verbatim**. Do not summarize,
   truncate, or reflow it; pass the whole thing through so the caller gets the artifact intact.
+  **Exception for large artifacts:** if the deliverable is big enough that passing it through your
+  context is wasteful (a whole translated page, an entire file), don't inline it — re-run the
+  wrapper with the output redirected to a file (`grok-run.sh ... > out.ext`) and return just the
+  **path plus a one-line note** (what it is, size, a short `diff`/`grep` if useful). This is the
+  same "large output → write to a file, hand back a path" pattern Claude Code uses elsewhere; it
+  keeps the artifact intact on disk without flooding the conversation.
 
 Either way, if the wrapper prints a `FAILED`/empty-output error, say grok login or the network
 likely needs attention (`grok login`) rather than silently retrying. If it reports that research is

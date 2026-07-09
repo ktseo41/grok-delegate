@@ -172,7 +172,11 @@ target (each a fresh grok context), then collect — see "Parallel / subagent-li
 | Autonomous implementation, "have grok fix it" | `fix` | Full toolset + auto-approve. **Always pair with `-w`** so edits are isolated and reviewable. |
 
 Default to `review` when the user is ambiguous. Only use `fix` when the user clearly wants grok to
-change files, and prefer running it in a worktree.
+change files, and prefer running it in a worktree. Two `fix -w` caveats (both general git-worktree
+behavior, not grok-specific): a worktree branches from **HEAD**, so commit or stash uncommitted work
+first or grok won't see it; and when it finishes, the edits sit in that worktree — surface the diff
+(`git -C <worktree> diff`) and let the user decide how to integrate (merge / PR / discard) rather
+than assuming.
 
 ## Handling the output
 
