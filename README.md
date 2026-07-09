@@ -125,6 +125,14 @@ tools just execute. The only robust guard is removing the tools entirely with `-
 what `review` (and, when it can build, `research`) does; `--disallowed-tools` is not a safe
 substitute — it also let grok write in testing. `fix` deliberately opts back in with `--always-approve`.
 
+**The read-only guarantee is regression-tested.** `evals/canary.sh` points `review` at a throwaway
+sandbox and orders grok to write four ways — append, create, shell `touch`, and an absolute path
+*outside* `--cwd` — then asserts nothing landed (detected by a full before/after tree snapshot, not a
+fixed list of filenames). A `fix`-mode positive control proves grok is genuinely write-capable, and a
+`git status` guard proves the test itself didn't dirty the repo; it exits non-zero if any write leaks.
+`evals/stub-regression.sh` covers the wrapper's argument handling offline, at zero xAI quota. Run both
+after touching the wrapper — see [`evals/README.md`](evals/README.md).
+
 **Known bug (grok 0.2.93):** a `--tools` allowlist that includes a web tool (`web_search`/`web_fetch`)
 fails to build the session, so `research` currently fails closed until grok fixes it upstream (the
 wrapper re-checks each run, so a newer grok recovers automatically). It reports this clearly rather
