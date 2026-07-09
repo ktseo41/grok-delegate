@@ -49,11 +49,24 @@ fi
 MAXTURNS="${GROK_MAXTURNS:-30}"
 COMMON=(--output-format plain)
 
+# Citation-loop guard (research only). grok 0.2.93 can leak its internal citation
+# sentinel (`_end_of_render_inline_citation`) into the output stream and repeat the
+# closing marker forever — one observed run spewed ~290k chars over ~9 min before it
+# was killed. The trigger is web-search citation rendering, so it only shows up in
+# research mode. Prepending an explicit "no inline citation markers" rule to the
+# prompt suppresses it (verified). This is a plain prompt prefix — it does NOT touch
+# the --tools read-only sandbox, and it applies to both the -p and --prompt-file paths.
+GUARD=""
+if [[ "$MODE" == "research" ]]; then
+  GUARD='[출력 규칙] 인라인 인용 마커나 각주 sentinel 토큰(예: _end_of_render_inline_citation)을 본문에 절대 쓰지 마라. 근거 URL은 리포트 맨 끝의 "출처" 목록에 평범한 마크다운 링크로만 모아라. 같은 문구·마커를 반복해서 출력하지 마라.'
+fi
+
 # Prompt delivery: normally -p "<prompt>". If the prompt is "-", stream the whole
 # thing from stdin into a temp file and hand it to grok via --prompt-file — lets a
 # caller pipe instructions + a large `git diff` without hitting ARG_MAX, and grok
 # receives it in full. This changes ONLY how the prompt is delivered; the --tools
-# read-only guard below is untouched.
+# read-only guard below is untouched. In research mode the citation GUARD above is
+# prepended to whichever delivery path is used.
 PROMPT_FILE=""
 if [[ "$PROMPT" == "-" ]]; then
   PROMPT_FILE="$(mktemp "${TMPDIR:-/tmp}/grok-prompt.XXXXXX")"
@@ -63,9 +76,17 @@ if [[ "$PROMPT" == "-" ]]; then
     echo "grok-run.sh: prompt was '-' but stdin was empty. Pipe the prompt in, e.g. | grok-run.sh review -" >&2
     exit 2
   fi
+  if [[ -n "$GUARD" ]]; then
+    # Prepend the guard as the first lines of the streamed prompt file.
+    { printf '%s\n\n' "$GUARD"; cat "$PROMPT_FILE"; } >"$PROMPT_FILE.g" && mv "$PROMPT_FILE.g" "$PROMPT_FILE"
+  fi
   COMMON+=(--prompt-file "$PROMPT_FILE")
 else
-  COMMON+=(-p "$PROMPT")
+  if [[ -n "$GUARD" ]]; then
+    COMMON+=(-p "$GUARD"$'\n\n'"$PROMPT")
+  else
+    COMMON+=(-p "$PROMPT")
+  fi
 fi
 
 # grok errors on duplicate flags, so only inject defaults the caller did not already
@@ -74,16 +95,29 @@ fi
 # duplicate flag -> grok errors) and false-matched a flag name that merely appeared
 # inside another arg's value (`--system-prompt "...--max-turns..."` -> default skipped
 # -> the read-only turn cap silently lost). Token + equals matching fixes both.
-_has_maxturns=0 _has_model=0
+_has_maxturns=0 _has_model=0 _has_session=0
 for _a in "$@"; do
   case "$_a" in
     --max-turns|--max-turns=*)          _has_maxturns=1 ;;
     -m|-m=*|--model|--model=*)          _has_model=1 ;;
+    # Any caller-supplied session control means we must NOT invent our own SID.
+    -s|-s=*|--session-id|--session-id=*|-r|-r=*|--resume|--resume=*|-c|-c=*|--continue|--continue=*) _has_session=1 ;;
   esac
 done
 [[ "$_has_maxturns" -eq 0 ]] && COMMON+=(--max-turns "$MAXTURNS")
 if [[ -n "${GROK_MODEL:-}" && "$_has_model" -eq 0 ]]; then
   COMMON+=(-m "$GROK_MODEL")
+fi
+
+# Pin a known session id so we can locate this run's signals.json afterwards for the
+# usage trailer (below). Without a fixed id, a "most recent session dir" heuristic
+# races under parallel fan-out and can read the wrong session's numbers. Only inject
+# when the caller passed no session flag of their own, and only if uuidgen is around;
+# the trailer is best-effort, so a missing SID just skips it, never fails the run.
+GROK_SID=""
+if [[ "$_has_session" -eq 0 ]] && command -v uuidgen >/dev/null 2>&1; then
+  GROK_SID="$(uuidgen | tr 'A-Z' 'a-z')"
+  COMMON+=(-s "$GROK_SID")
 fi
 
 case "$MODE" in
@@ -123,6 +157,25 @@ echo "[grok-run] mode=$MODE maxturns=$MAXTURNS model=${GROK_MODEL:-<account-defa
 ERRFILE="$(mktemp)"
 OUT="$(grok "${ARGS[@]}" 2>"$ERRFILE")"; RC=$?
 ERR="$(cat "$ERRFILE")"; rm -f "$ERRFILE"
+
+# grok usage trailer (best-effort). The whole point of delegating is to spend xAI
+# quota instead of Claude's, but a plain run surfaces NONE of grok's own usage — the
+# only numbers a courier sees are its own (Claude) tokens. Read this run's signals.json
+# (located by the SID we pinned above) and print grok's real usage to stderr so it lands
+# in the courier's summary. Fires on every exit path, including FAILED, so a wasted run
+# still reports what it burned. Never affects the run: any missing tool/file is skipped.
+if [[ -n "$GROK_SID" ]] && command -v jq >/dev/null 2>&1; then
+  _sigdir="$(find "$HOME/.grok/sessions" -maxdepth 2 -type d -name "$GROK_SID" 2>/dev/null | head -1)"
+  if [[ -n "$_sigdir" && -f "$_sigdir/signals.json" ]]; then
+    jq -r '"[grok-usage] ctxTokens=\(.contextTokensUsed // "?") "
+      + "wallSec=\(.sessionDurationSeconds // "?") "
+      + "toolCalls=\(.toolCallCount // "?") "
+      + "tools=\((.toolsUsed // []) | join(",") | if . == "" then "-" else . end) "
+      + "session='"${GROK_SID:0:8}"'"' \
+      "$_sigdir/signals.json" >&2 2>/dev/null \
+      || echo "[grok-usage] (signals.json unreadable; session=${GROK_SID:0:8})" >&2
+  fi
+fi
 
 if [[ $RC -ne 0 ]]; then
   echo "[grok-run] grok exited $RC." >&2
