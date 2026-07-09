@@ -126,8 +126,13 @@ what `review` (and, when it can build, `research`) does; `--disallowed-tools` is
 substitute — it also let grok write in testing. `fix` deliberately opts back in with `--always-approve`.
 
 **Known bug (grok 0.2.93):** a `--tools` allowlist that includes a web tool (`web_search`/`web_fetch`)
-fails to build the session, so `research` currently fails closed until grok fixes it upstream. The
-wrapper reports this clearly rather than dropping the read-only guard to work around it.
+fails to build the session, so `research` currently fails closed until grok fixes it upstream (the
+wrapper re-checks each run, so a newer grok recovers automatically). It reports this clearly rather
+than dropping the read-only guard to work around it. When you still need the web lookup, don't weaken
+`research` — pick a path by quota: `review` for read-only code work; **with your explicit OK to let
+grok write**, `fix -w <name>` (fix has web, runs isolated in a worktree, stays on grok's xAI quota);
+or, if you ask first, Claude's own WebSearch/WebFetch (spends Claude's quota — the thing delegating
+saves). Never silently substitute one for another.
 
 ## License
 
