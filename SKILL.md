@@ -35,7 +35,11 @@ instead of hand-rolling grok flags, unless you deliberately want autonomous edit
 
 ## How to run it
 
-Always go through the wrapper (resolve `$SKILL_DIR` = this skill's directory):
+Always go through the wrapper. It lives at `scripts/grok-run.sh` inside this skill's directory —
+when installed that is `~/.claude/skills/grok-delegate/scripts/grok-run.sh`. If you are unsure where
+the skill is, find it first: `ls ~/.claude/skills/grok-delegate/scripts/grok-run.sh` (or search your
+skills dir). Use that absolute path everywhere the examples below write `$SKILL_DIR`; set it once so
+the commands are copy-pasteable, e.g. `SKILL_DIR=~/.claude/skills/grok-delegate`.
 
 ```bash
 # 1. Read-only second opinion / code review (safe default — cannot touch files)
