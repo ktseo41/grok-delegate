@@ -86,6 +86,14 @@ expensive main-session model — override per-invocation or via `CLAUDE_CODE_SUB
 `@grok review the diff in src/auth`, or spawn several in one turn to fan out. Without it, delegation
 still works through the Bash wrapper above.
 
+**When not to use the courier.** It reads grok's output and re-emits it, so for a large *generated
+artifact* (a translated page, a whole file) that pass-through is wasted tokens. Prefer calling the
+wrapper directly and redirecting to a file — `grok-run.sh review "…translate, output the full HTML" >
+out.html` — so neither the courier nor the main context pays to shuttle it; then check only the part
+you need (a `diff`/`grep`). Rule of thumb: **want a summary → `@grok`; want the raw artifact →
+direct wrapper + `> file`.** The courier earns its cost on analysis (review/research), where
+summarizing and isolating grok's output is the point.
+
 ## Examples
 
 Each example is a real user ask → the delegation it maps to. `$SKILL_DIR` is set as in

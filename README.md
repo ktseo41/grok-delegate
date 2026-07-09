@@ -41,6 +41,11 @@ reasoning stays on grok (xAI quota); only the small courier turn bills to Claude
 pinned so the courier does not inherit an expensive main-session model. Delegate with, e.g.,
 `@grok review the diff in src/auth`. Without it, delegation still works by calling the wrapper directly.
 
+For a large generated artifact (a translated page, a whole file), skip the subagent and call the
+wrapper directly with output redirected to a file — `grok-run.sh review "…" > out.html` — since the
+courier would otherwise spend tokens shuttling the whole artifact through its context. Rule of thumb:
+want a summary → `@grok`; want the raw artifact → direct wrapper + `> file`.
+
 ### Requirements
 
 - The `grok` CLI on your `PATH`. Verified against grok 0.2.93.
