@@ -1,1 +1,7 @@
 .DS_Store
+
+# generated eval run artifacts (see evals/README.md — kept in the sibling *-workspace, not versioned)
+opt-run/
+loop.log
+opt-report.html
+*.local.log

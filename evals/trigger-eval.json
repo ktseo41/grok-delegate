@@ -1,0 +1,82 @@
+[
+  {
+    "query": "can you have grok take a look at my auth refactor in src/auth and see if it spots any security holes i missed",
+    "should_trigger": true
+  },
+  {
+    "query": "grok으로 이 마이그레이션 스크립트 크로스체크 해줘 migrations/0042_add_index.sql, 데이터 날아갈 위험 있나",
+    "should_trigger": true
+  },
+  {
+    "query": "i'm almost out of my claude usage for the month, can you offload this whole codebase review to grok instead of doing it yourself",
+    "should_trigger": true
+  },
+  {
+    "query": "run grok on these 4 handler files in parallel, one worker each, and check for race conditions in the retry logic",
+    "should_trigger": true
+  },
+  {
+    "query": "get a second opinion from a different model on whether this write-through cache design holds up — use grok for it",
+    "should_trigger": true
+  },
+  {
+    "query": "let grok fix the failing tests in the parser module and run pytest til it's green, but do it in a worktree so my working copy stays clean",
+    "should_trigger": true
+  },
+  {
+    "query": "ask grok to compare redis vs memcached for our session store and give me sources",
+    "should_trigger": true
+  },
+  {
+    "query": "delegate the boilerplate crud endpoints to grok while you focus on the tricky state machine, then i'll review both",
+    "should_trigger": true
+  },
+  {
+    "query": "i want another AI thats not you to double check this diff and catch blind spots you might have — you got a way to do that?",
+    "should_trigger": true
+  },
+  {
+    "query": "spin up grok as a subagent to audit the whole payments dir for injection bugs, read-only, dont let it change anything",
+    "should_trigger": true
+  },
+  {
+    "query": "codex로 이 세그폴트 원인 좀 파봐줘, 계속 같은 자리에서 죽어",
+    "should_trigger": false
+  },
+  {
+    "query": "deepseek한테 이 리서치 스윕 맡겨줘 — 2026년 국내 로보택시 규제 동향 원자료 수집",
+    "should_trigger": false
+  },
+  {
+    "query": "whats grok's api pricing these days vs claude opus? trying to figure out which is cheaper per million tokens",
+    "should_trigger": false
+  },
+  {
+    "query": "install the grok cli for me and walk me through logging in with my xai account",
+    "should_trigger": false
+  },
+  {
+    "query": "review this PR yourself and tell me if the error handling around the db transaction is actually solid",
+    "should_trigger": false
+  },
+  {
+    "query": "spawn a few subagents to search the codebase for every place we call the payments API and map out the call sites",
+    "should_trigger": false
+  },
+  {
+    "query": "explain what 'grok' means in Stranger in a Strange Land, my book club is arguing about it",
+    "should_trigger": false
+  },
+  {
+    "query": "run my test suite and fix whatever's broken, i think the last merge introduced a regression in the date parsing",
+    "should_trigger": false
+  },
+  {
+    "query": "compare postgres vs sqlite for a single-node analytics cache and tell me which you'd pick",
+    "should_trigger": false
+  },
+  {
+    "query": "can you get me a second opinion on my resume before i send it to the recruiter tomorrow",
+    "should_trigger": false
+  }
+]
