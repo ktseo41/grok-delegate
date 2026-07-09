@@ -10,8 +10,8 @@
 #                wrapper present). A FAIL is a real regression and sets a non-zero
 #                exit; treat it as ship-blocking.
 #   XFAIL      — a KNOWN-OPEN bug/gap we deliberately reproduce so it can't be
-#                forgotten (M1/B12 flag dedup, B3 positional prompt, B4 -w= detect,
-#                B5 output-format passthrough). XFAIL does NOT fail the build.
+#                forgotten (B3 positional prompt, B5 output-format passthrough).
+#                XFAIL does NOT fail the build.
 #                If an XFAIL flips to XPASS the bug was fixed — update this suite
 #                (turn that assertion into a PASS/FAIL contract). XPASS is loud but
 #                still does not set a non-zero exit.
@@ -181,20 +181,17 @@ fi
 rm -rf "$D"
 
 # ---------------------------------------------------------------------------
-echo "=== B4: -w=name worktree form not detected (KNOWN GAP — expect XFAIL) ==="
+echo "=== B4: -w=name short equals worktree form is recognized (no false warning) ==="
 D="$(mktemp -d)"
 mkstub "$D" <<'EOS'
 #!/bin/sh
 echo fixed
 exit 0
 EOS
-# fix with -w=feat is a worktree request, but the case pattern misses -w=* so it warns.
+# fix -w=feat is a worktree request; the case pattern now includes -w=* so it must NOT warn.
 run "$D" fix "x" --cwd /tmp -w=feat >/dev/null 2>"$D/e"
-if grep -q WARNING "$D/e"; then
-  xfail "fix -w=feat still warns (short equals form not recognized as a worktree)"
-else
-  xpass "fix -w=feat recognized as a worktree (no false warning)"
-fi
+grep -q WARNING "$D/e" && fail "fix -w=feat should be silent" "warned (short equals form not recognized)" \
+                       || pass "fix -w=feat -> no warning (short equals worktree recognized)"
 rm -rf "$D"
 
 # ---------------------------------------------------------------------------
@@ -262,7 +259,7 @@ fi
 # ---------------------------------------------------------------------------
 echo
 echo "summary: PASS=$PASS FAIL=$FAIL XFAIL=$XFAIL XPASS=$XPASS"
-[[ "$XFAIL" -gt 0 ]] && echo "  (XFAIL = known-open bugs reproduced: B3, B4, B5 — see the backlog docs)"
+[[ "$XFAIL" -gt 0 ]] && echo "  (XFAIL = known-open bugs reproduced: B3, B5 — see the backlog docs)"
 [[ "$XPASS" -gt 0 ]] && echo "  ACTION: $XPASS known bug(s) look fixed — promote the XPASS assertions to PASS/FAIL contracts"
 echo "exit status reflects FAIL (real regressions) only; XFAIL/XPASS do not fail the build."
 exit "$FAIL"

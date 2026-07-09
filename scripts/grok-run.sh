@@ -102,7 +102,7 @@ case "$MODE" in
     # is requested, since fix then edits the working tree at --cwd directly.
     _has_worktree=0
     for _a in "$@"; do
-      case "$_a" in -w|--worktree|--worktree=*) _has_worktree=1 ;; esac
+      case "$_a" in -w|-w=*|--worktree|--worktree=*) _has_worktree=1 ;; esac
     done
     if [[ "$_has_worktree" -eq 0 ]]; then
       echo "[grok-run] WARNING: fix auto-approves edits + shell and no -w/--worktree was given," >&2
