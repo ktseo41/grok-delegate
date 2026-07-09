@@ -19,8 +19,8 @@ skill wraps. Common myths to correct if the user repeats them:
 Why grok is worth delegating to: it is a **different model family (grok-4.5)** → genuinely
 independent errors for cross-checking, and it bills to a **separate xAI quota** (logged in via
 `grok login`), so offloading to it does **not** consume your Claude usage limit — it is a separate
-resource pool. It always starts with a **fresh context**, so hand it self-contained prompts; never
-assume it can see this conversation.
+resource pool. Unlike a *forked* Claude subagent that inherits this conversation, grok always starts
+with a **fresh context** — hand it self-contained prompts; never assume it can see this conversation.
 
 ## The one safety fact that matters
 
@@ -31,7 +31,9 @@ canary file; only `dontAsk` blocked it. And if `~/.grok/config.toml` has
 `permission_mode = "always-approve"` (or you pass `--always-approve`), edits happen with no prompt
 at all. The **only** robust read-only guard is a tool allowlist (`--tools "read_file,grep,list_dir"`),
 which removes the write and shell tools entirely. The wrapper enforces this per mode — use it
-instead of hand-rolling grok flags, unless you deliberately want autonomous edits.
+instead of hand-rolling grok flags, unless you deliberately want autonomous edits. (This mirrors how
+Claude Code's own built-in Explore/Plan subagents stay read-only: Write and Edit are denied at the
+tool level, not via a permission mode.)
 
 ## How to run it
 
@@ -68,7 +70,58 @@ grok has no in-Claude subagent binding, so parallelism = **multiple background B
 `run_in_background: true` in one message; you are re-invoked as each finishes. Use this for: review
 the same diff from N angles, or split independent files across N grok workers. Each call is a fresh
 grok context — make every prompt self-contained. (grok also has its own `--best-of-n` and internal
-`task` subagents, but cross-Claude parallelism is background Bash.)
+`task` subagents, but cross-Claude parallelism is background Bash.) These background runs show up in
+`/tasks`. Claude Code's sanctioned way to make a non-Claude tool a first-class agent is an MCP server;
+grok ships none today, so background Bash is the supported route.
+
+### Optional: the `grok` dispatcher subagent
+
+For native subagent ergonomics — `@grok` invocation, `/tasks` monitoring, real Agent-tool
+parallelism, and grok's output kept **out of the main context** (only a summary returns) — install
+the bundled dispatcher: `./install.sh --with-subagent` copies `agents/grok.md` to
+`~/.claude/agents/grok.md`. It is a thin courier (`tools: Bash`, `model: sonnet`) whose only job is
+to run `grok-run.sh` once and relay the findings; the heavy reasoning stays on grok (xAI quota), so
+only the small courier turn is Claude's. `model: sonnet` is pinned so it does not `inherit` an
+expensive main-session model — override per-invocation or via `CLAUDE_CODE_SUBAGENT_MODEL`. Then just
+`@grok review the diff in src/auth`, or spawn several in one turn to fan out. Without it, delegation
+still works through the Bash wrapper above.
+
+## Examples
+
+Each example is a real user ask → the delegation it maps to. `$SKILL_DIR` is set as in
+"How to run it"; `<LIBRARY>`/paths are placeholders. Keep prompts self-contained — grok starts fresh.
+
+**Review / second opinion** — "grok review this diff", "cross-check with grok"
+
+```bash
+"$SKILL_DIR/scripts/grok-run.sh" review \
+  "Review the staged diff for correctness and security bugs only. Be concrete: file:line + why." \
+  --cwd /path/to/repo
+```
+
+**Current-facts research** — "ask grok how `<LIBRARY>` handles retries", "have grok compare X vs Y"
+
+```bash
+"$SKILL_DIR/scripts/grok-run.sh" research \
+  "How does <LIBRARY> implement retry/backoff? Cite the specific files and docs." --cwd /path/to/repo
+```
+
+**Offload an autonomous fix** — "have grok fix the failing auth test"
+
+```bash
+"$SKILL_DIR/scripts/grok-run.sh" fix \
+  "Fix the failing test in tests/auth_test.py and run pytest until green." \
+  --cwd /path/to/repo -w grok-fix
+```
+
+**Parallel fan-out** — "have grok review these modules in parallel". One background Bash call per
+target (each a fresh grok context), then collect — see "Parallel / subagent-like fan-out" above.
+
+```bash
+# launch each with run_in_background: true, then relay findings as each returns
+"$SKILL_DIR/scripts/grok-run.sh" review "Review src/a.py for concurrency bugs. file:line + why." --cwd /path/to/repo
+"$SKILL_DIR/scripts/grok-run.sh" review "Review src/b.py for concurrency bugs. file:line + why." --cwd /path/to/repo
+```
 
 ## Choosing mode
 

@@ -26,9 +26,20 @@ git clone https://github.com/ktseo41/grok-delegate.git ~/.claude/skills/grok-del
 Or use the installer (copies into `~/.claude/skills/grok-delegate` by default):
 
 ```bash
-./install.sh                 # -> ~/.claude/skills/grok-delegate
-./install.sh --dest /path    # -> /path/grok-delegate
+./install.sh                    # -> ~/.claude/skills/grok-delegate
+./install.sh --dest /path       # -> /path/grok-delegate
+./install.sh --with-subagent    # also install the 'grok' subagent (see below)
 ```
+
+### Optional: use grok as a native subagent
+
+Pass `--with-subagent` to also copy `agents/grok.md` to `~/.claude/agents/grok.md`. It is a thin
+dispatcher subagent (`tools: Bash`, `model: sonnet`) that runs `grok-run.sh` in its own context and
+relays only a summary — so you get `@grok` invocation, `/tasks` monitoring, and real parallel fan-out
+via the Agent tool, with grok's verbose output kept out of your main conversation. The heavy
+reasoning stays on grok (xAI quota); only the small courier turn bills to Claude. `model: sonnet` is
+pinned so the courier does not inherit an expensive main-session model. Delegate with, e.g.,
+`@grok review the diff in src/auth`. Without it, delegation still works by calling the wrapper directly.
 
 ### Requirements
 
@@ -46,18 +57,28 @@ scripts/grok-run.sh research "<prompt>" [grok args...]   # read-only + web searc
 scripts/grok-run.sh fix      "<prompt>" [grok args...]   # AUTONOMOUS: edits files + shell
 ```
 
-Examples:
+Examples — each is a user ask mapped to the delegation it triggers:
 
 ```bash
-# Read-only code review (cannot touch files)
+# "grok review this diff" — read-only, cannot touch files
 scripts/grok-run.sh review \
   "Review the diff in src/auth for correctness and security bugs. Be concrete: file:line + why." \
   --cwd /path/to/repo
 
-# Autonomous fix, isolated in a git worktree
+# "ask grok how <LIBRARY> handles retries" — read-only + web
+scripts/grok-run.sh research \
+  "How does <LIBRARY> implement retry/backoff? Cite the specific files and docs." \
+  --cwd /path/to/repo
+
+# "have grok fix the failing test" — autonomous, isolated in a git worktree
 scripts/grok-run.sh fix \
   "Fix the failing test in tests/test_parser.py and run pytest until green." \
   --cwd /path/to/repo -w grok-fix
+
+# "review these modules in parallel" — one background run per target, then collect
+scripts/grok-run.sh review "Review src/a.py for concurrency bugs. file:line + why." --cwd /path/to/repo &
+scripts/grok-run.sh review "Review src/b.py for concurrency bugs. file:line + why." --cwd /path/to/repo &
+wait
 ```
 
 Pass-through flags after the prompt: `-m grok-4.5`, `--max-turns N` (default 30), `--effort high`,
