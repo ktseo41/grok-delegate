@@ -81,7 +81,7 @@ the commands are copy-pasteable, e.g. `SKILL_DIR=~/.claude/skills/grok-delegate`
 
 Pass-through args go after the prompt: `-m grok-4.5` (frontier; default is account-set),
 `--max-turns N` (wrapper defaults to 30), `-w/--worktree NAME` (isolated git worktree for `fix`),
-`--effort high`. Env: `GROK_MODEL`, `GROK_MAXTURNS`.
+`--effort high`. Space or `=` form both work (`--max-turns=40`). Env: `GROK_MODEL`, `GROK_MAXTURNS`.
 
 **Reviewing a diff (important).** `review` has no git or shell, so grok cannot run
 `git diff` — it can only `read_file` the current working tree. Never tell it to "review

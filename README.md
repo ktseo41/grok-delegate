@@ -87,7 +87,7 @@ wait
 ```
 
 Pass-through flags after the prompt: `-m grok-4.5`, `--max-turns N` (default 30), `--effort high`,
-`-w/--worktree NAME`. Env: `GROK_MODEL`, `GROK_MAXTURNS`.
+`-w/--worktree NAME` (space or `=` form both work). Env: `GROK_MODEL`, `GROK_MAXTURNS`.
 
 **Reviewing a diff:** `review` mode has no git or shell, so grok cannot run `git diff` — pass the
 prompt as `-` to stream instructions + diff from stdin (delivered to grok via `--prompt-file`, so

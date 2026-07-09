@@ -68,10 +68,21 @@ else
   COMMON+=(-p "$PROMPT")
 fi
 
-# grok errors on duplicate flags, so only inject defaults the caller did not already pass.
-_extra="$* "
-[[ "$_extra" != *"--max-turns "* ]] && COMMON+=(--max-turns "$MAXTURNS")
-if [[ -n "${GROK_MODEL:-}" && "$_extra" != *"-m "* && "$_extra" != *"--model "* ]]; then
+# grok errors on duplicate flags, so only inject defaults the caller did not already
+# pass. Scan the actual argv TOKENS (not a joined string): a joined-string substring
+# test both missed the equals form (`--max-turns=40` -> default injected too ->
+# duplicate flag -> grok errors) and false-matched a flag name that merely appeared
+# inside another arg's value (`--system-prompt "...--max-turns..."` -> default skipped
+# -> the read-only turn cap silently lost). Token + equals matching fixes both.
+_has_maxturns=0 _has_model=0
+for _a in "$@"; do
+  case "$_a" in
+    --max-turns|--max-turns=*)          _has_maxturns=1 ;;
+    -m|-m=*|--model|--model=*)          _has_model=1 ;;
+  esac
+done
+[[ "$_has_maxturns" -eq 0 ]] && COMMON+=(--max-turns "$MAXTURNS")
+if [[ -n "${GROK_MODEL:-}" && "$_has_model" -eq 0 ]]; then
   COMMON+=(-m "$GROK_MODEL")
 fi
 
