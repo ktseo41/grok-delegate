@@ -109,11 +109,16 @@ asking grok to append to a canary file under each mode:
 | `auto` | yes |
 | `bypassPermissions` | yes |
 | `plan` | yes |
-| `dontAsk` | no (blocked) |
+| `dontAsk` | yes |
 
-Only `dontAsk` blocked the write — because in headless mode there is no human to approve, most modes
-just execute. The robust guard is removing the tools entirely with `--tools`, which is what the
-`review` and `research` modes do. `fix` deliberately opts back in with `--always-approve`.
+**No permission mode blocked the write** in headless mode — there is no human to approve, so the
+tools just execute. The only robust guard is removing the tools entirely with `--tools`, which is
+what `review` (and, when it can build, `research`) does; `--disallowed-tools` is not a safe
+substitute — it also let grok write in testing. `fix` deliberately opts back in with `--always-approve`.
+
+**Known bug (grok 0.2.93):** a `--tools` allowlist that includes a web tool (`web_search`/`web_fetch`)
+fails to build the session, so `research` currently fails closed until grok fixes it upstream. The
+wrapper reports this clearly rather than dropping the read-only guard to work around it.
 
 ## License
 

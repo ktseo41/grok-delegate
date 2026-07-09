@@ -25,15 +25,23 @@ with a **fresh context** — hand it self-contained prompts; never assume it can
 ## The one safety fact that matters
 
 In headless mode there is no human to approve tool calls, so `grok -p "…"` **runs its tools —
-including file edits and shell — on its own**. `--permission-mode` is not a reliable brake: in
-testing, `default`, `acceptEdits`, `auto`, `bypassPermissions`, and `plan` all let grok modify a
-canary file; only `dontAsk` blocked it. And if `~/.grok/config.toml` has
+including file edits and shell — on its own**. `--permission-mode` is not a reliable brake:
+canary-tested on grok 0.2.93, **every** mode — `default`, `acceptEdits`, `auto`, `bypassPermissions`,
+`plan`, and even `dontAsk` — let grok write a file. And if `~/.grok/config.toml` has
 `permission_mode = "always-approve"` (or you pass `--always-approve`), edits happen with no prompt
 at all. The **only** robust read-only guard is a tool allowlist (`--tools "read_file,grep,list_dir"`),
-which removes the write and shell tools entirely. The wrapper enforces this per mode — use it
-instead of hand-rolling grok flags, unless you deliberately want autonomous edits. (This mirrors how
-Claude Code's own built-in Explore/Plan subagents stay read-only: Write and Edit are denied at the
-tool level, not via a permission mode.)
+which removes the write and shell tools entirely — verified: with it, repeated multi-vector canary
+attempts (append, create, shell) all failed to touch anything. The wrapper enforces this per mode —
+use it instead of hand-rolling grok flags, unless you deliberately want autonomous edits. (This
+mirrors how Claude Code's own built-in Explore/Plan subagents stay read-only: Write and Edit are
+denied at the tool level, not via a permission mode.)
+
+**grok 0.2.93 research-mode bug — do not "fix" it the unsafe way.** On this build, adding a web tool
+to a `--tools` allowlist fails to build the session (upstream error naming `run_terminal_cmd` /
+`auto_background_on_timeout`), so `research` currently **fails closed** — it cannot run until grok
+ships a fix. If grok reports that `--tools` is broken and suggests `--disallowed-tools` or a
+permission mode to get web working, do **not** take it: those build fine but re-enable file writes
+and shell (canary-verified), so the run would no longer be read-only. `review` is unaffected.
 
 ## How to run it
 

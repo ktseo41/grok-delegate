@@ -69,10 +69,30 @@ esac
 
 echo "[grok-run] mode=$MODE maxturns=$MAXTURNS model=${GROK_MODEL:-<account-default>}" >&2
 
-OUT="$(grok "${ARGS[@]}" 2>/dev/null)"; RC=$?
+ERRFILE="$(mktemp)"
+OUT="$(grok "${ARGS[@]}" 2>"$ERRFILE")"; RC=$?
+ERR="$(cat "$ERRFILE")"; rm -f "$ERRFILE"
 
 if [[ $RC -ne 0 ]]; then
-  echo "[grok-run] grok exited $RC. Partial output below (if any):" >&2
+  echo "[grok-run] grok exited $RC." >&2
+fi
+
+# Known grok 0.2.93 bug: adding a web tool to a --tools allowlist fails to build the session
+# ("agent building failed: ... run_terminal_cmd ... auto_background_on_timeout"). This breaks
+# research mode. Do NOT "fix" it by dropping the allowlist or switching to --disallowed-tools /
+# --permission-mode: those build fine but re-enable file writes and shell (canary-verified), so
+# the run would no longer be read-only. Fail closed instead — research returns once grok fixes it.
+if grep -qiE 'agent building failed|auto_background_on_timeout' <<<"$ERR"; then
+  if [[ "$MODE" == "research" ]]; then
+    echo "[grok-run] FAILED: research mode is unavailable on this grok build (0.2.93)." >&2
+    echo "[grok-run]   grok can't combine web tools with a read-only --tools allowlist" >&2
+    echo "[grok-run]   (upstream session-build bug). Not worked around on purpose: dropping the" >&2
+    echo "[grok-run]   allowlist would re-enable writes/shell. Use 'review' for read-only code work." >&2
+  else
+    echo "[grok-run] FAILED: grok could not build the session:" >&2
+    printf '%s\n' "$ERR" | head -3 >&2
+  fi
+  exit "${RC:-1}"
 fi
 
 # Empty output almost always means auth expired or a transport error — treat as failure.

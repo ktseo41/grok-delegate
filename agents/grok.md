@@ -44,4 +44,7 @@ Match how you relay to the task shape:
   truncate, or reflow it; pass the whole thing through so the caller gets the artifact intact.
 
 Either way, if the wrapper prints a `FAILED`/empty-output error, say grok login or the network
-likely needs attention (`grok login`) rather than silently retrying.
+likely needs attention (`grok login`) rather than silently retrying. If it reports that research is
+unavailable on this grok build, relay that as-is — never try to make research work by dropping the
+`--tools` sandbox (e.g. `--disallowed-tools` or a permission mode); on grok 0.2.93 that re-enables
+file writes and shell (canary-verified), so the run would no longer be read-only.
