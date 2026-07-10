@@ -57,9 +57,11 @@ Claude Code invokes the skill automatically when you ask it to delegate to grok.
 the wrapper directly:
 
 ```bash
-scripts/grok-run.sh review   "<prompt>" [grok args...]   # read-only, no web   (default)
-scripts/grok-run.sh research "<prompt>" [grok args...]   # read-only + web search/fetch
-scripts/grok-run.sh fix      "<prompt>" [grok args...]   # AUTONOMOUS: edits files + shell
+scripts/grok-run.sh review      "<prompt>" [grok args...]  # read-only, no web   (default)
+scripts/grok-run.sh research    "<prompt>" [grok args...]  # read-only + web search/fetch
+scripts/grok-run.sh research-rw "<prompt>" [grok args...]  # web WITHOUT the read-only sandbox
+                                          # (needs your explicit OK; throwaway temp dir)
+scripts/grok-run.sh fix         "<prompt>" [grok args...]  # AUTONOMOUS: edits files + shell
 ```
 
 Examples — each is a user ask mapped to the delegation it triggers:
@@ -104,7 +106,16 @@ there is no argument-length limit and grok sees the whole diff):
 | --- | --- | --- |
 | `review` (default) | `read_file`, `grep`, `list_dir` | Second opinion, code review — cannot modify the repo. |
 | `research` | read-only + `web_search`, `web_fetch` | Comparisons, current docs/facts. |
+| `research-rw` | full toolset + `--always-approve`, throwaway temp cwd | Web research while `research` fails closed on grok 0.2.93. **Not read-only** — requires your explicit OK. |
 | `fix` | full toolset + `--always-approve` | Autonomous implementation. Pair with `-w` for isolation. |
+
+**Web-collection gate (research modes).** The worst research failure observed in practice is a
+plausible answer produced **without any web call** — exit 0, normal length, written from model
+memory (4 of 12 workers on a real fan-out). The wrapper reads grok's own usage signals after each
+`research`/`research-rw` run and **fails the run (non-zero exit)** if no `web_search`/`web_fetch`
+was ever called; the body is still printed for inspection. Bypass deliberately with
+`GROK_ALLOW_NOWEB=1`. Every run also prints a `[grok-usage]` trailer
+(`ctxTokens=… wallSec=… toolCalls=… tools=…`) so you can see what the delegation cost on the xAI side.
 
 ## The safety detail
 
@@ -141,6 +152,17 @@ than dropping the read-only guard to work around it. When you still need the web
 grok write**, `fix -w <name>` (fix has web, runs isolated in a worktree, stays on grok's xAI quota);
 or, if you ask first, Claude's own WebSearch/WebFetch (spends Claude's quota — the thing delegating
 saves). Never silently substitute one for another.
+
+## Does delegating actually help?
+
+Measured, twice. Two controlled eval rounds (12-central-bank lookup, then a 12-currency
+real-policy-rate task with planted judgment traps) compared **orchestrator + grok fan-out**
+against solo sonnet, solo fable, solo grok, and advisor-assisted arms — blind-judged, with
+pre-registered hypotheses and raw per-model token accounting. The fan-out structure was the only
+arm with zero wrong cells across both rounds (**142/142**), while solo fable and solo grok failed
+the *same* trap cells — evidence that the win comes from worker-collection + orchestrator
+re-verification, not from any single model. Method, numbers, caveats, and a reusable checklist
+for benchmarking other delegates: [`docs/orchestration-eval.md`](docs/orchestration-eval.md).
 
 ## License
 

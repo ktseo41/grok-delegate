@@ -71,6 +71,15 @@ Match how you relay to the task shape:
 Either way, if the wrapper prints a `FAILED`/empty-output error, say grok login or the network
 likely needs attention (`grok login`) rather than silently retrying.
 
+One `FAILED` verdict is different: **"made no web tool call"** on a `research`/`research-rw` run.
+The wrapper detected (from grok's own usage signals) that grok answered from model memory without
+collecting anything — the output is printed but must **not** be relayed as verified research; on a
+real fan-out this hit 4 of 12 workers, all with plausible-looking output. Retry **once** with the
+prompt strengthened to demand `web_fetch` + a verbatim quote per claim (observed recovery is only
+~1 in 4). If the retry is gated too, report the delegation as failed and hand back the choice:
+the caller collects the facts itself (Claude quota) or drops the item — do not launder grok's
+memory-only answer as research.
+
 If it reports that **research is unavailable on this grok build** (fail-closed: grok 0.2.93 cannot
 combine web tools with the read-only `--tools` sandbox), do **not** silently work around it, and do
 **not** just fall back on your own. Stop and hand the decision back to the caller as an explicit

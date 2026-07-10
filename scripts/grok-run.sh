@@ -35,6 +35,8 @@
 # Env:
 #   GROK_MODEL   default model (else grok's account default, currently grok-4.5)
 #   GROK_MAXTURNS default max turns (default 30)
+#   GROK_ALLOW_NOWEB=1  skip the web-collection gate (research/research-rw runs that
+#                make no web tool call normally FAIL — see the gate near the end)
 set -uo pipefail
 
 MODE="${1:-review}"; shift || true
@@ -111,13 +113,21 @@ fi
 # inside another arg's value (`--system-prompt "...--max-turns..."` -> default skipped
 # -> the read-only turn cap silently lost). Token + equals matching fixes both.
 _has_maxturns=0 _has_model=0 _has_session=0
+# Also capture the EFFECTIVE turn cap for the log line below. Logging the unused
+# env default misled a real run: a `--max-turns 120` call still printed
+# "maxturns=30", making the log claim a cap the run did not have.
+_maxturns_eff="$MAXTURNS"
+_prev=""
 for _a in "$@"; do
   case "$_a" in
-    --max-turns|--max-turns=*)          _has_maxturns=1 ;;
+    --max-turns=*)                      _has_maxturns=1; _maxturns_eff="${_a#*=}" ;;
+    --max-turns)                        _has_maxturns=1 ;;
     -m|-m=*|--model|--model=*)          _has_model=1 ;;
     # Any caller-supplied session control means we must NOT invent our own SID.
     -s|-s=*|--session-id|--session-id=*|-r|-r=*|--resume|--resume=*|-c|-c=*|--continue|--continue=*) _has_session=1 ;;
   esac
+  [[ "$_prev" == "--max-turns" ]] && _maxturns_eff="$_a"
+  _prev="$_a"
 done
 [[ "$_has_maxturns" -eq 0 ]] && COMMON+=(--max-turns "$MAXTURNS")
 if [[ -n "${GROK_MODEL:-}" && "$_has_model" -eq 0 ]]; then
@@ -192,7 +202,7 @@ case "$MODE" in
     ;;
 esac
 
-echo "[grok-run] mode=$MODE maxturns=$MAXTURNS model=${GROK_MODEL:-<account-default>}" >&2
+echo "[grok-run] mode=$MODE maxturns=$_maxturns_eff model=${GROK_MODEL:-<account-default>}" >&2
 
 ERRFILE="$(mktemp)"
 OUT="$(grok "${ARGS[@]}" 2>"$ERRFILE")"; RC=$?
@@ -204,9 +214,12 @@ ERR="$(cat "$ERRFILE")"; rm -f "$ERRFILE"
 # (located by the SID we pinned above) and print grok's real usage to stderr so it lands
 # in the courier's summary. Fires on every exit path, including FAILED, so a wasted run
 # still reports what it burned. Never affects the run: any missing tool/file is skipped.
+GROK_TOOLSUSED="" GROK_HAVE_SIGNALS=0
 if [[ -n "$GROK_SID" ]] && command -v jq >/dev/null 2>&1; then
   _sigdir="$(find "$HOME/.grok/sessions" -maxdepth 2 -type d -name "$GROK_SID" 2>/dev/null | head -1)"
   if [[ -n "$_sigdir" && -f "$_sigdir/signals.json" ]]; then
+    # Keep the tool list around for the web-collection gate below.
+    GROK_TOOLSUSED="$(jq -r '(.toolsUsed // []) | join(",")' "$_sigdir/signals.json" 2>/dev/null)" && GROK_HAVE_SIGNALS=1
     jq -r '"[grok-usage] ctxTokens=\(.contextTokensUsed // "?") "
       + "wallSec=\(.sessionDurationSeconds // "?") "
       + "toolCalls=\(.toolCallCount // "?") "
@@ -264,6 +277,30 @@ if [[ -z "${OUT//[[:space:]]/}" ]]; then
   # to 1 when RC is *unset*, and RC is always set by `RC=$?` above, so a grok 0
   # sailed straight through as a success code. Preserve a real non-zero grok code,
   # otherwise force 1.
+  exit $(( RC == 0 ? 1 : RC ))
+fi
+
+# Web-collection gate (research / research-rw). A web-mode run that never called a
+# web tool "researched" from model memory: on a real 12-worker fan-out, 4 workers
+# returned exit 0 with plausible, normal-sized, entirely uncollected output — the
+# usage trailer's tool list was the ONLY signal (nothing in exit code, size, or the
+# text itself). Enforce the check here so every caller gets it, not just one that
+# remembers to parse the trailer. The body is still printed (below) so nothing is
+# lost, but the exit code says "do not use this as research". Best-effort like the
+# trailer: without signals.json the gate cannot judge and stays silent. Retries of a
+# gated run recover only ~1 in 4 — prefer one retry that explicitly demands web_fetch
+# per claim, then collect the facts yourself. GROK_ALLOW_NOWEB=1 skips the gate for a
+# deliberately memory-only run through a web mode.
+if [[ "$MODE" == "research" || "$MODE" == "research-rw" ]] \
+   && [[ "$GROK_HAVE_SIGNALS" -eq 1 && "${GROK_ALLOW_NOWEB:-0}" != "1" ]] \
+   && ! grep -qE '(^|,)web_(search|fetch)(,|$)' <<<"$GROK_TOOLSUSED"; then
+  echo "[grok-run] FAILED: $MODE run made no web tool call (tools=${GROK_TOOLSUSED:--})." >&2
+  echo "[grok-run]   The output was produced without any web collection — treat it as recalled" >&2
+  echo "[grok-run]   from model memory, not research. It is still printed to stdout for" >&2
+  echo "[grok-run]   inspection, but the non-zero exit means: do not relay it as verified fact." >&2
+  echo "[grok-run]   Retry once demanding web_fetch + verbatim quote per claim, or collect" >&2
+  echo "[grok-run]   directly. GROK_ALLOW_NOWEB=1 bypasses this gate on purpose." >&2
+  printf '%s\n' "$OUT"
   exit $(( RC == 0 ? 1 : RC ))
 fi
 

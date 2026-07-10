@@ -170,6 +170,70 @@ printf '%s\n' "$out" | grep -q '^<env-default>$' && fail "model equals dedup" "i
 rm -rf "$D"
 
 # ---------------------------------------------------------------------------
+echo "=== H6: web-collection gate (research run with no web tool call -> FAILED) ==="
+# A stub that behaves like the real failure we observed: exit 0, plausible-sized
+# output, but signals.json shows no web tool was used. The stub extracts the -s SID
+# the wrapper pinned and writes signals.json where the wrapper will look (under
+# \$HOME, which the test points at a temp dir).
+D="$(mktemp -d)"
+mkstub "$D" <<'EOS'
+#!/usr/bin/env bash
+sid=""; prev=""
+for a in "$@"; do [ "$prev" = "-s" ] && sid="$a"; prev="$a"; done
+if [ -n "$sid" ]; then
+  mkdir -p "$HOME/.grok/sessions/$sid"
+  printf '{"contextTokensUsed":8222,"sessionDurationSeconds":29,"toolCallCount":%s,"toolsUsed":[%s]}' \
+    "${STUB_TOOLCALLS:-0}" "${STUB_TOOLS:-}" > "$HOME/.grok/sessions/$sid/signals.json"
+fi
+echo "plausible but entirely uncollected research findings"
+exit 0
+EOS
+if command -v uuidgen >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+  # (a) research + no web tools -> non-zero, FAILED verdict, body still on stdout
+  out="$(HOME="$D" PATH="$D:$PATH" bash "$W" research "x" 2>"$D/e")"; rc=$?
+  if [[ "$rc" -ne 0 ]] && grep -q 'FAILED.*no web tool call' "$D/e" && [[ "$out" == *uncollected* ]]; then
+    pass "research + toolsUsed=[] -> non-zero FAILED, body preserved on stdout"
+  else
+    fail "no-web gate (research)" "rc=$rc"
+  fi
+  # (b) research-rw is gated too
+  HOME="$D" PATH="$D:$PATH" bash "$W" research-rw "x" >/dev/null 2>"$D/e"; rc=$?
+  [[ "$rc" -ne 0 ]] && grep -q 'FAILED.*no web tool call' "$D/e" \
+    && pass "research-rw + toolsUsed=[] -> non-zero FAILED" \
+    || fail "no-web gate (research-rw)" "rc=$rc"
+  # (c) a web tool call present -> success
+  out="$(HOME="$D" PATH="$D:$PATH" STUB_TOOLS='"web_fetch"' bash "$W" research "x" 2>"$D/e")"; rc=$?
+  [[ "$rc" -eq 0 && "$out" == *uncollected* ]] \
+    && pass "research + toolsUsed=[web_fetch] -> success 0" \
+    || fail "no-web gate false positive" "rc=$rc"
+  # (d) explicit bypass
+  HOME="$D" PATH="$D:$PATH" GROK_ALLOW_NOWEB=1 bash "$W" research "x" >/dev/null 2>&1; rc=$?
+  [[ "$rc" -eq 0 ]] && pass "GROK_ALLOW_NOWEB=1 -> gate bypassed" \
+                    || fail "gate bypass" "rc=$rc"
+  # (e) review is never gated (no web tools by design)
+  HOME="$D" PATH="$D:$PATH" bash "$W" review "x" >/dev/null 2>&1; rc=$?
+  [[ "$rc" -eq 0 ]] && pass "review + toolsUsed=[] -> not gated" \
+                    || fail "review gated by mistake" "rc=$rc"
+else
+  info "uuidgen or jq missing — no-web gate tests skipped (gate is best-effort without them)"
+fi
+rm -rf "$D"
+
+# ---------------------------------------------------------------------------
+echo "=== H7: log line reports the EFFECTIVE turn cap, not the unused default ==="
+D="$(mktemp -d)"; argv_stub "$D"
+run "$D" review "x" --max-turns 120 >/dev/null 2>"$D/e"
+grep -q 'maxturns=120' "$D/e" && pass "--max-turns 120 -> log says maxturns=120" \
+                              || fail "effective maxturns (space form)" "$(grep -o 'maxturns=[^ ]*' "$D/e")"
+run "$D" review "x" --max-turns=99 >/dev/null 2>"$D/e"
+grep -q 'maxturns=99' "$D/e" && pass "--max-turns=99 -> log says maxturns=99" \
+                             || fail "effective maxturns (equals form)" "$(grep -o 'maxturns=[^ ]*' "$D/e")"
+run "$D" review "x" >/dev/null 2>"$D/e"
+grep -q 'maxturns=30' "$D/e" && pass "no caller cap -> log says default 30" \
+                             || fail "default maxturns log" "$(grep -o 'maxturns=[^ ]*' "$D/e")"
+rm -rf "$D"
+
+# ---------------------------------------------------------------------------
 echo "=== B3: a flag in the prompt position becomes the prompt (KNOWN BUG — expect XFAIL) ==="
 D="$(mktemp -d)"; argv_stub "$D"
 # `review --cwd /repo "real"` -> PROMPT=--cwd, so grok gets -p "--cwd".

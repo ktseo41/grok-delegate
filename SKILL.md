@@ -120,6 +120,13 @@ grok context — make every prompt self-contained. (grok also has its own `--bes
 `/tasks`. Claude Code's sanctioned way to make a non-Claude tool a first-class agent is an MCP server;
 grok ships none today, so background Bash is the supported route.
 
+**Turn-budget sizing.** The wrapper's default `--max-turns 30` fits a **single-topic** worker
+comfortably (observed: 3–17 tool calls per topic). A monolithic run covering many topics does not:
+a real 12-topic solo research run died mid-task at the default cap and needed `--max-turns 120` to
+finish. Prefer fan-out (one worker per topic) — each stays within the default cap, failures and
+retries are per-topic instead of all-or-nothing, and the whole wave finishes in roughly one
+worker's wall-clock.
+
 ### Optional: the `grok` dispatcher subagent
 
 For native subagent ergonomics — `@grok` invocation, `/tasks` monitoring, real Agent-tool
@@ -201,6 +208,17 @@ For `review`, then **independently verify** grok's claims against the actual cod
 them as fact — a different model is a different set of blind spots, not an oracle.
 Empty output or a non-zero exit → the wrapper reports failure (usually an expired `grok login` or a
 network error); tell the user to run `grok login` rather than silently retrying.
+
+**The no-collection failure mode (wrapper-gated).** The worst research failure is not a crash but a
+**plausible answer produced without any collection**: on a real 12-worker fan-out, 4 workers exited
+0 with normal-sized, entirely made-from-memory output — indistinguishable from success except in
+grok's own usage signals. The wrapper now enforces this: a `research`/`research-rw` run whose
+signals show **no `web_search`/`web_fetch` call exits non-zero** with a `FAILED: … no web tool call`
+verdict (body still printed for inspection). Treat that exit as "not research": retry **once** with
+the prompt strengthened to demand `web_fetch` + a verbatim quote per claim — observed recovery is
+only ~1 in 4, and the failure tends to recur on the same prompts — then collect the facts yourself
+instead of retrying further. `GROK_ALLOW_NOWEB=1` bypasses the gate for a deliberately memory-only
+run. The gate is best-effort (needs `uuidgen`/`jq`/grok's `signals.json`, like the usage trailer).
 
 **Verifying research output.** For web research the same verify-not-oracle rule applies, but
 verification spends **Claude's** quota — the thing delegation saves — so budget it instead of
