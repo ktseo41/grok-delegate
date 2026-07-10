@@ -14,9 +14,13 @@
 #   * A read-only agent asked to write will loop forever, so --max-turns is always set.
 #
 # Usage:
-#   grok-run.sh review   "<prompt>" [extra grok args...]   # read-only, no web        (default)
-#   grok-run.sh research "<prompt>" [extra grok args...]   # read-only + web_search/fetch
-#   grok-run.sh fix      "<prompt>" [extra grok args...]   # AUTONOMOUS: edits files + shell
+#   grok-run.sh review      "<prompt>" [extra grok args...]  # read-only, no web       (default)
+#   grok-run.sh research    "<prompt>" [extra grok args...]  # read-only + web_search/fetch
+#   grok-run.sh research-rw "<prompt>" [extra grok args...]  # web WITHOUT the read-only
+#                                    # sandbox (needs user OK) — runs like fix, pointed at a
+#                                    # throwaway temp dir unless --cwd is given. For repo-less
+#                                    # web research while `research` fails closed on 0.2.93.
+#   grok-run.sh fix         "<prompt>" [extra grok args...]  # AUTONOMOUS: edits files + shell
 #
 # Large prompts (e.g. instructions + a big `git diff`): pass "-" as the prompt to
 # stream the whole thing from stdin. It goes to grok via --prompt-file, so it
@@ -49,17 +53,28 @@ fi
 MAXTURNS="${GROK_MAXTURNS:-30}"
 COMMON=(--output-format plain)
 
-# Citation-loop guard (research only). grok 0.2.93 can leak its internal citation
-# sentinel (`_end_of_render_inline_citation`) into the output stream and repeat the
-# closing marker forever — one observed run spewed ~290k chars over ~9 min before it
-# was killed. The trigger is web-search citation rendering, so it only shows up in
-# research mode. Prepending an explicit "no inline citation markers" rule to the
-# prompt suppresses it (verified). This is a plain prompt prefix — it does NOT touch
-# the --tools read-only sandbox, and it applies to both the -p and --prompt-file paths.
+# Web-mode prompt guard (research and research-rw). Two parts:
+#   * Citation-loop guard: grok 0.2.93 can leak its internal citation sentinel
+#     (`_end_of_render_inline_citation`) into the output stream and repeat the closing
+#     marker forever — one observed run spewed 290k chars over 9 min before it was
+#     killed. The trigger is web-search citation rendering, so it applies to any
+#     web-enabled run. An explicit "no inline citation markers" rule suppresses it
+#     (verified).
+#   * Collection rules: no circumventing bot protection (observed on a real run: a
+#     research-rw worker used run_terminal_command to get around a 403 — exactly the
+#     unattended-shell behavior this skill exists to prevent), retry blocked sites via
+#     domain-limited web_search instead of more fetches (a fetch-retry against a
+#     blocked site cost 3x the median run), and verbatim quote + URL per claim so
+#     downstream verification stays cheap.
+# This is a plain prompt prefix — it does NOT touch the --tools sandbox (research) and
+# is NOT a sandbox itself (research-rw). It applies to both -p and --prompt-file paths.
 GUARD=""
-if [[ "$MODE" == "research" ]]; then
-  GUARD='[출력 규칙] 인라인 인용 마커나 각주 sentinel 토큰(예: _end_of_render_inline_citation)을 본문에 절대 쓰지 마라. 근거 URL은 리포트 맨 끝의 "출처" 목록에 평범한 마크다운 링크로만 모아라. 같은 문구·마커를 반복해서 출력하지 마라.'
-fi
+case "$MODE" in
+  research|research-rw)
+    GUARD='[출력 규칙] 인라인 인용 마커나 각주 sentinel 토큰(예: _end_of_render_inline_citation)을 본문에 절대 쓰지 마라. 근거 URL은 리포트 맨 끝의 "출처" 목록에 평범한 마크다운 링크로만 모아라. 같은 문구·마커를 반복해서 출력하지 마라.
+[수집 규칙] 사이트가 fetch를 차단하면(403·봇 방어) 우회하지 마라 — User-Agent 위장, 터미널/셸을 통한 fetch, 프록시 경유 전부 금지다. 대신 그 도메인으로 한정한 web_search로 같은 정보를 찾고, 그래도 확인이 안 되면 그 항목을 "미확인"으로 명시해서 보고하라. 사실 주장에는 원문 축자 인용과 출처 URL을 붙여라.'
+    ;;
+esac
 
 # Prompt delivery: normally -p "<prompt>". If the prompt is "-", stream the whole
 # thing from stdin into a temp file and hand it to grok via --prompt-file — lets a
@@ -129,6 +144,31 @@ case "$MODE" in
     # Read-only + web. Still cannot edit files or run shell.
     ARGS=(--tools "read_file,grep,list_dir,web_search,web_fetch" "${COMMON[@]}" "$@")
     ;;
+  research-rw)
+    # Web research WITHOUT the read-only sandbox — the sanctioned fallback while grok
+    # 0.2.93 cannot combine web tools with a --tools allowlist (research fails closed).
+    # Runs like fix (--always-approve, full toolset incl. shell), so it REQUIRES the
+    # user's explicit OK, same as fix. Unless the caller passed --cwd, the run is
+    # pointed at a fresh throwaway temp dir so stray writes land nowhere that matters.
+    # That isolation is ADVISORY ONLY: grok keeps shell and can reach outside the cwd
+    # (the canary suite's out-of-cwd vector demonstrates this class of escape). The
+    # prompt GUARD above forbids shell-based fetch and UA spoofing, but a prompt is
+    # not a sandbox. The temp dir is left in place after the run for inspection.
+    _has_cwd=0
+    for _a in "$@"; do
+      case "$_a" in --cwd|--cwd=*) _has_cwd=1 ;; esac
+    done
+    ARGS=(--always-approve "${COMMON[@]}" "$@")
+    if [[ "$_has_cwd" -eq 0 ]]; then
+      RW_DIR="$(mktemp -d "${TMPDIR:-/tmp}/grok-research-rw.XXXXXX")"
+      ARGS+=(--cwd "$RW_DIR")
+      echo "[grok-run] research-rw: throwaway cwd $RW_DIR (kept after the run for inspection)." >&2
+    else
+      echo "[grok-run] research-rw: using caller-supplied --cwd." >&2
+    fi
+    echo "[grok-run] research-rw is NOT read-only: grok holds write+shell; the temp-dir/cwd" >&2
+    echo "[grok-run]   isolation is advisory only. Use only with the user's explicit OK." >&2
+    ;;
   fix)
     # AUTONOMOUS. grok gets its full toolset and auto-approves everything.
     # Prefer running with -w/--worktree so changes land in an isolated git worktree.
@@ -147,7 +187,7 @@ case "$MODE" in
     ARGS=(--always-approve "${COMMON[@]}" "$@")
     ;;
   *)
-    echo "grok-run.sh: unknown mode '$MODE' (use review|research|fix)" >&2
+    echo "grok-run.sh: unknown mode '$MODE' (use review|research|research-rw|fix)" >&2
     exit 2
     ;;
 esac
@@ -174,6 +214,13 @@ if [[ -n "$GROK_SID" ]] && command -v jq >/dev/null 2>&1; then
       + "session='"${GROK_SID:0:8}"'"' \
       "$_sigdir/signals.json" >&2 2>/dev/null \
       || echo "[grok-usage] (signals.json unreadable; session=${GROK_SID:0:8})" >&2
+  else
+    # A run that dies before grok builds a session (auth failure, session-build bug,
+    # transport error) leaves no signals.json at all. Say so explicitly instead of
+    # skipping silently, so a courier never mistakes "no trailer" for "no cost" —
+    # observed on a real fan-out where the one failed worker was the only run with
+    # no usage line.
+    echo "[grok-usage] (no signals.json — run likely failed before a session was built; session=${GROK_SID:0:8})" >&2
   fi
 fi
 
@@ -191,8 +238,10 @@ if grep -qiE 'agent building failed|auto_background_on_timeout' <<<"$ERR"; then
     echo "[grok-run] FAILED: research mode is unavailable on this grok build (0.2.93)." >&2
     echo "[grok-run]   grok can't combine web tools with a read-only --tools allowlist" >&2
     echo "[grok-run]   (upstream session-build bug). Not worked around on purpose: dropping the" >&2
-    echo "[grok-run]   allowlist would re-enable writes/shell. Use 'review' for read-only code work," >&2
-    echo "[grok-run]   or (with the user's OK to let grok write) 'fix -w <name>' — it has web." >&2
+    echo "[grok-run]   allowlist would re-enable writes/shell. Use 'review' for read-only code work." >&2
+    echo "[grok-run]   With the user's explicit OK to let grok hold write+shell: 'research-rw'" >&2
+    echo "[grok-run]   (repo-less web research, throwaway temp dir) or 'fix -w <name>' (repo work," >&2
+    echo "[grok-run]   isolated worktree) — both have web." >&2
   else
     echo "[grok-run] FAILED: grok could not build the session:" >&2
     printf '%s\n' "$ERR" | head -3 >&2

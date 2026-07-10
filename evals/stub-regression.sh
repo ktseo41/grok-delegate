@@ -126,7 +126,7 @@ grep -q WARNING "$D/e" && fail "review must not warn" "warned" || pass "review -
 rm -rf "$D"
 
 # ---------------------------------------------------------------------------
-echo "=== H3: research fail-closed message points to 'fix -w', not to dropping the guard ==="
+echo "=== H3: research fail-closed message points to research-rw / 'fix -w', not to dropping the guard ==="
 D="$(mktemp -d)"
 mkstub "$D" <<'EOS'
 #!/bin/sh
@@ -135,10 +135,11 @@ exit 1
 EOS
 run "$D" research "latest vite" --cwd /tmp >/dev/null 2>"$D/e"; rc=$?
 if [[ "$rc" -ne 0 ]] \
+   && grep -qi 'research-rw' "$D/e" \
    && grep -qi 'fix -w' "$D/e" \
-   && grep -qi "user's OK" "$D/e" \
+   && grep -qiE "user's (explicit )?OK" "$D/e" \
    && ! grep -qiE 'disallowed-tools|permission-mode' "$D/e"; then
-  pass "research FAILED msg suggests 'fix -w' (user OK) and not a guard-dropping workaround"
+  pass "research FAILED msg suggests research-rw / 'fix -w' (user OK), not a guard-dropping workaround"
 else
   fail "research fail-closed message" "rc=$rc; check wording in grok-run.sh"
 fi

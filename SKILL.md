@@ -46,10 +46,18 @@ but re-enable file writes and shell (canary-verified), so the run would no longe
 `review` is unaffected.
 
 When `research` fails closed, do **not** silently substitute something — surface it and let the user
-choose, because each path spends a different quota. The web tools work fine in `fix` mode (it has no
-`--tools` restriction), so if the user is OK with grok holding write/shell for the lookup, `fix -w
-<name>` is the grok-native route: isolated in a worktree, and it stays on grok's **xAI** quota. If
-they need a strictly read-only answer, either wait for the grok fix or offer your own
+choose, because each path spends a different quota. The web tools work fine without the allowlist,
+so with the user's **explicit OK** to let grok hold write/shell for the lookup there are two
+grok-native routes, both on grok's **xAI** quota:
+
+- **`research-rw`** — for repo-less web research (facts, comparisons, data collection). Runs like
+  `fix` but the wrapper points it at a fresh throwaway temp dir, so stray writes land nowhere that
+  matters. That isolation is **advisory only**: grok keeps shell and can reach outside the cwd, so
+  this needs the same user OK as `fix`. The wrapper's prompt guard forbids shell-based fetch and
+  UA spoofing, but a prompt is not a sandbox.
+- **`fix -w <name>`** — for research anchored in a repo, with edits isolated in a worktree.
+
+If the user needs a strictly read-only answer, either wait for the grok fix or offer your own
 WebSearch/WebFetch — but that burns **Claude's** quota (the very thing delegating to grok saves), so
 ask first rather than defaulting to it. Never weaken `research` itself to get web.
 
@@ -72,6 +80,12 @@ the commands are copy-pasteable, e.g. `SKILL_DIR=~/.claude/skills/grok-delegate`
 # 2. Read-only + web research
 "$SKILL_DIR/scripts/grok-run.sh" research \
   "Compare Postgres vs SQLite for a single-node analytics cache. Cite sources." --cwd /path/to/repo
+
+# 2b. Web research while `research` fails closed on grok 0.2.93 — ONLY with the user's
+#     explicit OK (grok holds write+shell; the wrapper isolates it in a throwaway temp
+#     dir, but that isolation is advisory, not a sandbox). No --cwd needed.
+"$SKILL_DIR/scripts/grok-run.sh" research-rw \
+  "What is the current ECB deposit facility rate? Quote the official page verbatim with the URL."
 
 # 3. AUTONOMOUS fix (grok edits files + runs shell). Isolate with a worktree:
 "$SKILL_DIR/scripts/grok-run.sh" fix \
@@ -169,6 +183,7 @@ target (each a fresh grok context), then collect — see "Parallel / subagent-li
 | --- | --- | --- |
 | Second opinion, code review, "is this right?" | `review` | Cannot modify the repo. Safe by construction. |
 | Needs current web facts, comparisons, docs | `research` | Read-only + `web_search`/`web_fetch`. |
+| Web research while `research` fails closed (0.2.93), user OK'd write/shell | `research-rw` | Like `fix` with web, pointed at a throwaway temp dir. Isolation is advisory — requires the user's explicit OK. |
 | Autonomous implementation, "have grok fix it" | `fix` | Full toolset + auto-approve. **Always pair with `-w`** so edits are isolated and reviewable. |
 
 Default to `review` when the user is ambiguous. Only use `fix` when the user clearly wants grok to
@@ -182,10 +197,28 @@ than assuming.
 
 The wrapper prints grok's final text to stdout (plain). Relay the substance to the user — do not
 dump the whole transcript verbatim; summarize findings and quote the specific lines that matter.
-For `review`/`research`, then **independently verify** grok's claims against the actual code before
-presenting them as fact — a different model is a different set of blind spots, not an oracle.
+For `review`, then **independently verify** grok's claims against the actual code before presenting
+them as fact — a different model is a different set of blind spots, not an oracle.
 Empty output or a non-zero exit → the wrapper reports failure (usually an expired `grok login` or a
 network error); tell the user to run `grok login` rather than silently retrying.
+
+**Verifying research output.** For web research the same verify-not-oracle rule applies, but
+verification spends **Claude's** quota — the thing delegation saves — so budget it instead of
+re-collecting everything:
+
+- **Spot-check, don't re-fetch all**: verify every claim that looks off or diverges from what you
+  expect, plus a small sample of the rest — not a full second collection pass.
+- **Make verification cheap upstream**: have the research prompt demand a verbatim quote + source
+  URL per claim (the wrapper's web-mode prompt guard asks for this too). Checking a quote is far
+  cheaper than re-deriving a fact, and WebFetch's small summary model is known to misread years and
+  numbers in tables — a verbatim quote is what you check it against.
+- **When an official site 403s direct fetch**: use a domain-limited WebSearch (`allowed_domains`
+  pinned to the official domain) — verified to work on sites that block fetch (central-bank sites,
+  Cloudflare/Akamai fronts). Never spoof a User-Agent or otherwise circumvent bot protection, on
+  either the Claude side or the grok side.
+- **Retrying a grok worker that failed on a blocked site**: change the strategy, not just the run —
+  tell the retry to use domain-limited `web_search` instead of `web_fetch` (a fetch-heavy retry
+  against a blocked site cost 3x the median worker on a real fan-out).
 
 ## When NOT to use grok
 

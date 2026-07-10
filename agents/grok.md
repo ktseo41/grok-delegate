@@ -16,6 +16,9 @@ path differs: `ls ~/.claude/skills/grok-delegate/scripts/grok-run.sh`). Modes:
 
 - `review` — read-only code review / second opinion. Default. Cannot touch files.
 - `research` — read-only + web (`web_search`/`web_fetch`) for current facts and comparisons.
+- `research-rw` — web research **without** the read-only sandbox (grok holds write+shell; the
+  wrapper isolates it in a throwaway temp dir, but that is advisory, not a sandbox). Only use it
+  when the task you were handed says the user explicitly OK'd it — never pick it on your own.
 - `fix` — **AUTONOMOUS**: grok edits files and runs shell. Always add `-w <name>` so its edits land
   in an isolated git worktree you can review.
 
@@ -73,12 +76,17 @@ combine web tools with the read-only `--tools` sandbox), do **not** silently wor
 **not** just fall back on your own. Stop and hand the decision back to the caller as an explicit
 three-way choice for the user — you cannot pick for them:
 
-1. **`fix -w <name>`** — grok gets web and this works, but `fix` lets grok write files and run shell,
-   so it needs the user's OK; edits land in an isolated git worktree to review, and it stays on
-   grok's xAI quota.
+1. **`research-rw`** (repo-less web research, throwaway temp dir) or **`fix -w <name>`**
+   (repo-anchored, isolated worktree) — grok gets web and this works, but either way grok holds
+   write and shell, so it needs the user's explicit OK; both stay on grok's xAI quota.
 2. **Claude's own web search** — the main session does the lookup instead (Claude quota, no grok).
 3. **Proceed without web** — answer from existing knowledge, clearly flagged as unverified.
 
 Never make research work by dropping the `--tools` sandbox (e.g. `--disallowed-tools` or a permission
 mode); on grok 0.2.93 that re-enables file writes and shell (canary-verified), so the run would no
 longer be read-only.
+
+One collection norm, both sides of the delegation: if a site blocks fetching (403, bot protection),
+do **not** circumvent it — no User-Agent spoofing, no shell/curl fetch, no proxies. The wrapper's
+prompt guard tells grok the same; the fallback is a search limited to that domain, or reporting the
+item as unverified.
