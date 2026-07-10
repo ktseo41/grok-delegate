@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 382" width="1000" height="382" role="img" aria-label="Round 1 raw tokens per model">
+<rect width="1000" height="382" rx="8" fill="#fcfcfb"/>
+<text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Round 1 — raw tokens per model (input / output)</text>
+<text x="20" y="48" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Bars stacked by model; cache tokens in the doc table. Dashed green: grok's final-context total — its own meter, no in/out split.</text>
+<rect x="20" y="57" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="34" y="66" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable</text>
+<rect x="100" y="57" width="10" height="10" rx="2" fill="#1baf7a"/>
+<text x="114" y="66" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet</text>
+<rect x="188" y="57" width="10" height="10" rx="2" fill="#eda100"/>
+<text x="202" y="66" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">haiku</text>
+<rect x="268" y="57" width="10" height="10" rx="2" fill="#4a3aa7"/>
+<text x="282" y="66" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">deepseek</text>
+<rect x="372" y="57" width="10" height="10" rx="2" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
+<text x="386" y="66" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok (ctx)</text>
+<text x="195" y="80" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Input tokens</text>
+<text x="185" y="109" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok workers</text>
+<rect x="195.1" y="92" width="14.7" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="209.8" y="92" width="19.5" height="16" rx="3" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
+<text x="237.3408685714286" y="109" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3k + 468k + ctx 621k</text>
+<text x="185" y="145" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek workers</text>
+<rect x="195.1" y="128" width="51.2" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="246.3" y="128" width="267.9" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
+<text x="522.1517371428572" y="145" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4k + 1.63M + 8.52M</text>
+<text x="185" y="181" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet workers</text>
+<rect x="195.4" y="164" width="3.5" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="198.9" y="164" width="118.2" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="325.17461142857144" y="181" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">13k + 113k + 3.76M</text>
+<text x="185" y="217" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo</text>
+<rect x="195.0" y="200" width="1.5" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="195.6" y="200" width="50.3" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="253.85472857142858" y="217" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">19k + 1.60M</text>
+<text x="185" y="253" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable solo</text>
+<rect x="195.3" y="236" width="42.8" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="246.06682285714285" y="253" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">8k + 1.36M</text>
+<text x="185" y="289" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo</text>
+<rect x="195.0" y="272" width="4.5" height="16" rx="3" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
+<text x="207.45613142857144" y="289" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">ctx 142k</text>
+<line x1="195" y1="308" x2="525" y2="308" stroke="#c3c2b7"/>
+<text x="195" y="322" font-size="10" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
+<text x="525" y="322" font-size="10" fill="#898781" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">10.50M</text>
+<text x="690" y="80" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Output tokens</text>
+<rect x="690.0" y="92" width="36.8" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="726.8" y="92" width="3.6" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="738.4666666666667" y="109" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">33k + 3k</text>
+<rect x="690.0" y="128" width="73.2" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="763.2" y="128" width="18.5" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="781.7" y="128" width="109.5" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
+<text x="898.0" y="145" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">66k + 17k + 99k</text>
+<rect x="690.0" y="164" width="44.8" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="734.8" y="164" width="98.7" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="833.4" y="164" width="42.3" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="883.73" y="181" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">40k + 89k + 38k</text>
+<rect x="690.0" y="200" width="35.0" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="725.0" y="200" width="24.9" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="757.8688888888889" y="217" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">31k + 22k</text>
+<rect x="690.0" y="236" width="55.4" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="745.4" y="236" width="15.7" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="769.06" y="253" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">50k + 14k</text>
+<text x="698.0" y="289" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">—</text>
+<line x1="690" y1="308" x2="890" y2="308" stroke="#c3c2b7"/>
+<text x="690" y="322" font-size="10" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
+<text x="890" y="322" font-size="10" fill="#898781" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">180k</text>
+</svg>
