@@ -32,16 +32,16 @@ ACC_R1 = [
     ("fable + deepseek workers",   0,    "70/70 · 100%",   False),
     ("fable + sonnet workers",     1,    "69/70 · 98.6%",  False),
     ("fable solo",                 1,    "69/70 · 98.6%",  False),
-    ("grok solo",                  1,    "66/67 · 98.5%*", True),
+    ("grok solo",                  1,    "66/67 · 98.5%†", True),
     ("sonnet solo",                2,    "68/70 · 97.1%",  False),
 ]
 NOTE_R1 = ["Worker failures: grok 7/12 first-wave silent no-collection, all recovered by retry; deepseek and sonnet workers 0/12."]
 ACC_R2 = [
     ("fable + grok workers",       0,    "72/72 · 100%",   False),
-    ("fable + deepseek workers",   0,    "71/71 · 100%*",  True),
+    ("fable + deepseek workers",   0,    "71/71 · 100%†",  True),
     ("sonnet solo (avg of 3)",     1.67, "70.3/72 · 97.7%", False),
     ("fable solo",                 4,    "68/72 · 94.4%",  False),
-    ("grok solo",                  4,    "67/71 · 94.4%*", True),
+    ("grok solo",                  4,    "67/71 · 94.4%†", True),
 ]
 NOTE_R2 = ["Final worker failures: grok 3/12, deepseek 5/12 — those topics were collected by the orchestrator itself.",
            "sonnet solo runs: 72/72, 70/72, 69/72."]
@@ -106,7 +106,7 @@ def chart_accuracy(round_no, rows, denom_note, extra_note=()):
     s = svg_open(W, H, f"Round {round_no} cells lost per configuration")
     s += text(20, 30, f"Round {round_no} — cells lost ({denom_note})", 15, INK, weight="600")
     s += text(20, 48, "Lighter bars: scored vs the frozen answer key, not blind; "
-                      "* = unverifiable cells excluded.", 11, INK2)
+                      "† = unverifiable cells excluded.", 11, INK2)
     for i, line in enumerate(extra_note):
         s += text(20, 64 + 16 * i, line, 11, INK2)
     x0, xmax, vmax = 250, W - 130, 5

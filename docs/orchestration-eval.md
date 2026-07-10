@@ -7,9 +7,9 @@ with other workers (fable + sonnet workers, fable + deepseek workers), three sol
 consultation tool, advisor(fable).
 
 Raw artifacts (prompts, harnesses, per-run `run.json`, worker outputs, blind copies, judge
-scoreboards) are kept outside this repo in a private experiment workspace. The raw data uses
-code names like c0–c6; this page uses configuration names throughout and transcribes every
-number, so the results are readable without the raw data.
+scoreboards) are kept outside this repo in a private experiment workspace. This page uses
+configuration names throughout and transcribes every number, so the results are readable
+without the raw data.
 
 ## TL;DR
 
@@ -54,7 +54,15 @@ itself" — and in round 2 that fallback actually fired for 3/12 currency areas 
 workers and 5/12 with deepseek workers (in round 1, workers collected everything in both
 configurations). So each score measures the **whole procedure — collection + re-verification
 + fallback — not the worker model**; worker quality shows up in the failure rates above and
-in the cost section below, not in the score. Also, the sonnet-worker configuration (round 1
+in the cost section below, not in the score. Round 1's "7/12 first-wave silent
+no-collection" needs the same care: those grok workers did not crash. They exited cleanly
+with plausible, complete-looking reports **written entirely from model memory, without a
+single web call** — grok judged it already knew central-bank policy rates and skipped the
+research; nothing in the exit code, file size, or text gave it away, only the tool-call list
+in the wrapper's usage trailer. A retry whose prompt explicitly requires fetching real pages
+recovered all 7 (5–10 web calls each), and the wrapper has since been changed to
+automatically fail any research run with zero web calls (the web-collection gate — see the
+lessons section). Also, the sonnet-worker configuration (round 1
 only) did let one error through its verification pass, and has not yet been run on the
 judgment-trap task.
 
@@ -62,7 +70,9 @@ judgment-trap task.
 
 - **Round 1 — lookup.** Current monetary-policy settings of 12 central banks, 6 fields each
   (instrument name, value, last-change date, magnitude/direction, next meeting, verbatim
-  decision-statement quote + URL). Official sources only. Every configuration scored 94–100%
+  decision-statement quote + URL). Official sources only. 12 × 6 = 72 possible cells, but
+  the Singapore (MAS) website was down for maintenance throughout, so 2 of its cells could
+  not be scored — every round-1 score is out of 70. Every configuration scored 94–100%
   — the task was easy enough that everyone bunched up near the ceiling, so it could not
   discriminate; only the citation field separated configurations.
 - **Round 2 — judgment traps.** Real policy rate of 12 currency areas: policy rate (central
@@ -105,10 +115,19 @@ judgment-trap task.
   also pre-declared in the harness prompts.
 - **Raw per-model token reporting.** Tokens are reported per model (fable / sonnet / haiku /
   grok / deepseek) as raw values; models with different prices are never summed into one
-  number. Claude-side figures come from `run.json` model-usage data; grok's own spend from
-  the wrapper's `[grok-usage]` trailer (ctxTokens, wall seconds, tool calls per worker).
-- **Tool discipline.** All configurations: no skills, no MCP, no subagents; web =
-  WebSearch/WebFetch only (or grok's `web_search`/`web_fetch`); no curl; bot-blocked sites
+  number. (haiku-4.5 is not a tested configuration — it is the model Claude Code's WebSearch
+  uses automatically to summarize fetched pages, so it shows up in every Claude-side run.)
+  Claude-side figures come from `run.json` model-usage data; grok's own spend from the
+  wrapper's `[grok-usage]` trailer (ctxTokens, wall seconds, tool calls per worker). The
+  wrapper is this repo's `scripts/grok-run.sh`, the launch script every grok run here goes
+  through: the grok CLI reports no usage on its own, so the wrapper appends this trailer
+  after each session, and it also enforces the run-mode guardrails (tool allowlists, the
+  web-collection gate described below).
+- **Tool discipline.** All configurations: no skills, no MCP; subagents only where they
+  *are* the configuration's worker channel (the sonnet-worker configuration spawns its
+  workers via the Agent tool; grok and deepseek workers run through their external CLIs),
+  never as an extra helper on top; web = WebSearch/WebFetch only (or grok's
+  `web_search`/`web_fetch`); no curl; bot-blocked sites
   (403) handled by domain-limited search, never circumvention.
 
 ## Tokens and potential cost (raw per model)
@@ -134,7 +153,9 @@ judgment-trap task.
 | | haiku-4.5 | 1,361,978 | 14,115 | 0 | 0 |
 | grok solo | grok-4.5 (1 session) — ctxTokens 141,786³ | — | — | — | — |
 
-¹ includes 5,749,120 cached input. ² includes 47,294 reasoning tokens. ³ the grok CLI
+¹ includes 5,749,120 cached input — deepseek's meter counts cache hits *inside* its input
+total, unlike Claude's separate cache columns, so it is a footnote here rather than a value
+in those columns. ² includes 47,294 reasoning tokens. ³ the grok CLI
 exposes no billable in/out split, only the session's final context size (ctxTokens) — a
 separate meter, not summable with the other columns. haiku rows are the
 WebSearch summarizer's automatic usage on the Claude side — a proxy for how much web
@@ -301,7 +322,14 @@ these numbers, keep the frame and swap the configuration:
   (round-2 shape): it was the only worker configuration whose verification pass let an error
   through in round 1, and it has not been tested against traps. ② A haiku-worker
   configuration would add one more data point to "pick workers by failure rate × external
-  price".
+  price". ③ Decompose the structure to see which part carries the result — the current
+  design cannot separate "having a re-verification workflow" from "delegating to workers".
+  Three probes: (a) fable + grok workers *without* the re-verification pass (delegation
+  only — does independent collection alone hold up?); (b) a solo model given the same
+  collect-then-re-verify workflow in its prompt (workflow only — with the caveat that a
+  model re-checking its own answers risks anchoring on them); (c) cross-model verification —
+  one model collects, a different model family re-verifies — which would control for that
+  anchoring.
 - **grok 0.2.93's `research` mode fails closed** (upstream bug combining web tools with the
   read-only allowlist), so the eval workers ran `research-rw` with the user's explicit OK.
   When xAI ships the fix, the same frame can compare `research` (read-only) workers directly.
