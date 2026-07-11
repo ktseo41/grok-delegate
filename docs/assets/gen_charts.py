@@ -88,13 +88,12 @@ ACC_R1 = [
     ("fable + grok workers",       0,    "72/72 · 100%"),
     ("fable + sonnet workers",     0,    "72/72 · 100%"),
     ("grok solo",                  0,    "72/72 · 100%"),
+    ("fable + deepseek workers",   1,    "71/72 · 98.6%"),
     ("fable solo",                 1,    "71/72 · 98.6%"),
     ("sonnet solo",                2,    "70/72 · 97.2%"),
 ]
-NOTE_R1 = ["fable + deepseek workers is off this scale: 12/72 — every cell its workers completed was",
-           "correct, but 10/12 workers died to infrastructure (codex tool regression + OpenRouter credit outage)."]
-NOTE_R1_KO = ["fable + deepseek 워커는 이 척도 밖: 12/72 — 완주한 12셀은 전부 정답이지만,",
-              "워커 10/12이 인프라 문제(codex 도구 회귀 + OpenRouter 크레딧 소진)로 빈 채 끝났다."]
+NOTE_R1 = []
+NOTE_R1_KO = []
 ACC_R2 = [
     ("fable + grok workers",       0,    "72/72 · 100%"),
     ("sonnet solo (avg of 3)",     2.67, "69.3/72 · 96.3%"),
@@ -114,8 +113,8 @@ NOTE_R2_KO = ["fable + deepseek 워커는 이 척도 밖: 24/72 — 완주한 24
 # split), drawn as a dashed segment on the input panel.
 TOKENS_R1 = [
     ("fable + grok workers",     [("fable", 3025, 16184)], 735055),
-    ("fable + deepseek workers", [("fable", 7711, 26371),
-                                  ("deepseek", 928845, 19389)], None),
+    ("fable + deepseek workers", [("fable", 3176, 18750),
+                                  ("deepseek", 18661070, 187377)], None),
     ("fable + sonnet workers",   [("fable", 10123, 24916), ("sonnet", 116460, 52193),
                                   ("haiku", 2895427, 30475)], None),
     ("sonnet solo",              [("sonnet", 18816, 31487), ("haiku", 1599289, 22395)], None),
@@ -143,7 +142,7 @@ COST_R1 = [
     ("fable + grok workers",     2.69, ("quota",
         "≈5%p of weekly SuperGrok quota (scaled by ctxTokens)",
         "SuperGrok 주간 쿼터 ≈5%p (ctxTokens 비례 추정)")),
-    ("fable + deepseek workers", 5.06, ("deepseek", 0.09, 0.09)),
+    ("fable + deepseek workers", 3.11, ("deepseek", 1.71, 1.71)),
     ("fable + sonnet workers",   11.05, None),
     ("sonnet solo",              5.49, None),
     ("fable solo",               8.84, None),
@@ -329,7 +328,7 @@ if __name__ == "__main__":
         "r2-accuracy.svg": lambda lang: chart_accuracy(2, ACC_R2,
             "of 72 fields" if lang == "en" else "72개 필드 기준",
             NOTE_R2 if lang == "en" else NOTE_R2_KO, lang=lang, vmax=8),
-        "r1-tokens.svg":   lambda lang: chart_tokens(1, TOKENS_R1, 3_200_000, 120_000, lang=lang),
+        "r1-tokens.svg":   lambda lang: chart_tokens(1, TOKENS_R1, 20_000_000, 200_000, lang=lang),
         "r2-tokens.svg":   lambda lang: chart_tokens(2, TOKENS_R2, 4_200_000, 130_000, lang=lang),
         "r1-cost.svg":     lambda lang: chart_cost(1, COST_R1, lang=lang),
         "r2-cost.svg":     lambda lang: chart_cost(2, COST_R2, lang=lang),

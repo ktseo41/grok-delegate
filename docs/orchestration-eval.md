@@ -27,7 +27,7 @@ that adds one scored the same with grok workers and only multiplied the Claude b
 | Configuration | Round 1 (lookup task) | Round 2 (judgment-trap task) |
 | --- | --- | --- |
 | **fable + grok workers** | **72/72 (100%)** — 7.4 min, 12/12 workers on the first wave, zero retries; cheapest Claude-side run of the whole eval ($2.69) | **72/72 (100%)** — 9.5 min, cheapest Claude-side run of round 2 ($2.97) |
-| fable + deepseek workers | 12/72 — every completed cell correct (12/12); 10/12 topics lost to infrastructure, not the model (a codex CLI tool-serialization regression, then the OpenRouter account ran out of credits mid-run) | 24/72 — 8/12 workers returned nothing (tool bug, fixable); every completed cell correct (24/24) |
+| fable + deepseek workers | 71/72 (98.6%) — 47 min (slowest); 12/12 workers completed (3 retries, all output-format slips, zero collection failures); the only loss was writing the effective date as the Fed's decision date | 24/72 — 8/12 workers returned nothing (channel defect; pre-dates the round-1 channel fix); every completed cell correct (24/24) |
 | fable + sonnet workers | **72/72 (100%)** — 7.6 min, 12/12 workers; heaviest Claude spend ($11.05) | 69/72 (95.8%) — a wrong index choice passed through uncaught (3-cell cascade) |
 | sonnet solo | 70/72 (97.2%) | 69.3/72 (96.3%) — average of 3 runs (70·69·69) |
 | fable solo | 71/72 (98.6%) | 66/72 (91.7%); hit both release-timing traps |
@@ -46,9 +46,10 @@ bank, and the worker prompts required that every claim come from a page actually
 that session — answers from memory were declared invalid. Those two things alone kept grok
 workers perfect on both task shapes with nothing double-checking them, and sonnet workers
 matched them on the lookup task — but a sonnet worker's wrong index choice went straight
-into the round-2 result, and deepseek's channel failures left most topics unanswered in
-both rounds. Worker completion is the deepseek configuration's whole problem; its completed
-cells have never been wrong (36/36 across both rounds).
+into the round-2 result. For deepseek workers the variable was the execution channel
+(via the codex CLI): with the channel defective in round 2, 8/12 workers returned nothing;
+with the channel repaired for round 1, all 12 completed and scored 71/72 — when they
+finish, their accuracy is in the top tier (95/96 completed cells across both rounds).
 
 Why sonnet solo is "3 runs": two of round 2's three runs carried advisor(fable), a
 stronger-model consultation tool, and it **never fired** (the plumbing was verified with
@@ -65,7 +66,7 @@ were made — the three sonnet runs are simply recorded as their average.
   (instrument name, value, last-change date, magnitude/direction, next meeting, verbatim
   decision-statement quote + URL). Official sources only. 12 × 6 = 72 cells. The Singapore
   (MAS) website was down for maintenance throughout, but domain-limited search still let
-  every cell be scored. Every configuration that completed scored 97–100% — the task was
+  every cell be scored. Every configuration scored 97–100% — the task was
   easy enough that everyone bunched up near the ceiling, so it could not discriminate; only
   one detail slip and the citation field separated configurations.
 - **Round 2 — judgment traps.** Real policy rate of 12 currency areas: policy rate (central
@@ -94,8 +95,8 @@ were made — the three sonnet runs are simply recorded as their average.
   files were verified by scan to contain zero methodology traces (anything hinting which
   configuration produced them), and the judge session's file access was audited post-run
   from its transcript: it read exactly the shuffled copies and the key. Round 1 happened to
-  be judged by two independent sessions with different shuffles — their verdicts matched
-  cell for cell.
+  be judged by three independent sessions with different shuffles — their verdicts on the
+  same reports matched cell for cell.
 - **Identical prompts.** Paired configurations shared the same prompt file; the two
   advisor(fable) runs differ by exactly one documented line, byte-identical otherwise
   (`diff` kept).
@@ -136,8 +137,8 @@ were made — the three sonnet runs are simply recorded as their average.
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | fable + grok workers | fable-5 | 3,025 | 16,184 | 73,594 | 375,824 | — |
 | | grok-4.5 (12 worker sessions) | — | — | — | — | 735,055 |
-| fable + deepseek workers | fable-5 | 7,711 | 26,371 | 73,385 | 2,196,190 | — |
-| | deepseek-v4-flash (13 metered sessions) | 928,845¹ | 19,389² | — | — | — |
+| fable + deepseek workers | fable-5 | 3,176 | 18,750 | 68,874 | 760,200 | — |
+| | deepseek-v4-flash (15 sessions) | 18,661,070¹ | 187,377² | — | — | — |
 | fable + sonnet workers | fable-5 | 10,123 | 24,916 | 89,685 | 787,448 | — |
 | | sonnet-5 | 116,460 | 52,193 | 409,152 | 2,567,989 | — |
 | | haiku-4.5⁴ | 2,895,427 | 30,475 | 0 | 0 | — |
@@ -147,9 +148,10 @@ were made — the three sonnet runs are simply recorded as their average.
 | | haiku-4.5 | 1,361,978 | 14,115 | 0 | 0 | — |
 | grok solo | grok-4.5 (1 session) | — | — | — | — | 141,786 |
 
-¹ includes 450,176 cached input — deepseek's meter counts cache hits *inside* its input
+¹ includes 11,094,784 cached input — deepseek's meter counts cache hits *inside* its input
 total, unlike Claude's separate cache columns, so it is a footnote here rather than a value
-in those columns. ² includes 9,584 reasoning tokens. ³ the grok CLI exposes no billable
+in those columns. The unusually large input is because deepseek workers collect via shell
+fetches, reading raw page sources whole. ² includes 72,599 reasoning tokens. ³ the grok CLI exposes no billable
 in/out split, only the session's final context size (ctxTokens) — a separate meter, not
 summable with the other columns. ⁴ **why haiku appears at all**: haiku is not run by the
 eval — it is the model Claude Code's WebSearch/WebFetch tooling uses internally to digest
@@ -164,7 +166,7 @@ happened on the external meter. The sonnet-worker haiku row is the *workers'* we
 | Configuration | Claude-side (measured, API-equivalent) | External spend |
 | --- | ---: | :-- |
 | fable + grok workers | $2.69 | grok: ≈5%p of weekly SuperGrok quota (scaled by ctxTokens) |
-| fable + deepseek workers | $5.06 | deepseek ≈ $0.09 (OpenRouter rates; run truncated by the credit outage) |
+| fable + deepseek workers | $3.11 | deepseek ≈ $1.71 (OpenRouter rates, no cache discount) |
 | fable + sonnet workers | $11.05 | — |
 | sonnet solo | $5.49 | — |
 | fable solo | $8.84 | — |
@@ -272,16 +274,17 @@ Charts regenerate via `assets/gen_charts.py`.
    the separate wallet without costing accuracy — that, plus finding #2, is the case for
    this skill.
 7. **Fix worker completion at the channel layer; compare worker models on completed-work
-   accuracy.** A worker that cannot finish (deepseek's tool-serialization regression, the
-   credit outage) is a channel/tooling problem to fix at the worker layer — for deepseek
-   via codex that means a minimal `CODEX_HOME` (its default config's MCP/plugin tools
-   serialize as a `namespace` tool type OpenRouter rejects with a 400), guards against its
-   markup-breakdown failure mode, a bigger retry budget, and a funded OpenRouter balance —
-   not something to paper over with orchestrator effort. The metric that actually compares
-   worker *models* is **completed-work accuracy**: grok 144/144, deepseek 36/36, sonnet
-   141/144 with all three losses on one judgment trap's cascade. Since the score alone
-   cannot distinguish completion failure from judgment error, always report the failure
-   rate next to the score (as the TL;DR table does).
+   accuracy.** A worker that cannot finish is a channel/tooling problem to fix at the
+   worker layer, not something to paper over with orchestrator effort — and fixing the
+   deepseek channel proved it: a minimal `CODEX_HOME` (its default config's MCP/plugin
+   tools serialize as a `namespace` tool type OpenRouter rejects with a 400), a
+   collection gate, a bigger retry budget, and a final-message format rule took round-1
+   completion to 12/12. The metric that actually compares worker *models* is
+   **completed-work accuracy**: grok 144/144, deepseek 95/96 (the single loss wrote the
+   effective date as the Fed's decision date), sonnet 141/144 with all three losses on
+   one judgment trap's cascade. Since the score alone cannot distinguish completion
+   failure from judgment error, always report the failure rate next to the score (as the
+   TL;DR table does).
 8. **Re-verification is worker insurance — with grok workers you can skip it.** A variant
    where the orchestrator re-checks every worker number against the primary source (runs
    kept in the workspace) scored exactly the same as the main table with grok workers and
@@ -332,7 +335,7 @@ these numbers, keep the frame and swap the configuration:
   A few configurations moved by 1–2 cells in absolute terms; the ranking and conclusions
   are unchanged. Two accuracy cross-checks: before unification, two judge sessions once
   disagreed on the same cell (an RBA meeting-calendar misread — overturned against the
-  official page, adjudication record in the workspace), and in the unified re-judging two
+  official page, adjudication record in the workspace), and in the unified re-judging three
   independent sessions with different shuffles matched cell for cell on the same five
   reports. A single judge session has its own error rate; cross-run verdict comparison is
   a cheap error detector.
@@ -340,10 +343,10 @@ these numbers, keep the frame and swap the configuration:
   judgment-trap task: whether the verification layer catches the wrong index choice
   (69/72) is the test of sonnet workers' insurance case. ② A haiku-worker configuration
   would add one more data point to "pick workers by failure rate × external price".
-  ③ Fix the deepseek worker channel (minimal `CODEX_HOME` baked into the harness,
-  markup-breakdown guard, bigger retry budget, **and a topped-up OpenRouter balance** —
-  the round-1 run died mid-way on empty credits) and re-measure its completion rate — its
-  completed-work accuracy is already flawless (36/36) and its price is 1–2% of sonnet's.
+  ③ Re-measure round 2 with the repaired deepseek channel — the round-1 fix (minimal
+  `CODEX_HOME` baked into the harness, collection gate, bigger retry budget) took
+  completion from 8/12-unanswered to 12/12, so it is worth checking that the same recovery
+  holds on the judgment-trap task; its price is 1–2% of sonnet's.
   ④ Any rematch needs a harder task — these traps no longer separate configurations.
 - **grok 0.2.93's `research` mode fails closed** (upstream bug combining web tools with the
   read-only allowlist), so the eval workers ran `research-rw` with the user's explicit OK.
