@@ -10,11 +10,11 @@
 <text x="310" y="108" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">SuperGrok 주간 쿼터 ≈5%p, ≈$0.35 상당 (ctxTokens 비례 추정)</text>
 <text x="20" y="156.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek 워커</text>
 <text x="300" y="144" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
-<rect x="310" y="134" width="177.0" height="12" rx="3" fill="#2a78d6"/>
-<text x="494.95909090909095" y="144" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$6.83</text>
+<rect x="310" y="134" width="84.7" height="12" rx="3" fill="#2a78d6"/>
+<text x="402.7227272727273" y="144" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$3.27</text>
 <text x="300" y="164" font-size="10" fill="#4a3aa7" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">deepseek</text>
-<rect x="310" y="154" width="9.3" height="12" rx="3" fill="#4a3aa7"/>
-<text x="327.3272727272727" y="164" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0.36</text>
+<rect x="310" y="154" width="67.4" height="12" rx="3" fill="#4a3aa7"/>
+<text x="385.3636363636364" y="164" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$2.60</text>
 <text x="20" y="202.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet 워커</text>
 <text x="300" y="200" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
 <rect x="310" y="190" width="299.0" height="12" rx="3" fill="#2a78d6"/>

@@ -160,8 +160,9 @@ real-policy-rate task with planted judgment traps) compared **fable orchestratin
 worker per topic** — the orchestrator only splits and assembles, no re-verification pass —
 against solo runs and other worker models. The grok-worker setup was the only one with zero
 wrong cells across both rounds (**144/144**), at the lowest Claude-side spend of any run,
-while solo fable and solo grok failed the *same* trap cells and sonnet/deepseek workers let
-errors or gaps through. The win comes from one narrow
+while solo fable and solo grok failed the *same* trap cells; deepseek workers came within
+one cell (143/144) once their channel was fixed but run 5–6× slower, and sonnet workers
+let a wrong index choice through. The win comes from one narrow
 topic per worker plus the wrapper's web-collection gate; a re-verification pass adds nothing
 with grok workers and is only insurance for less reliable ones. Method, numbers, score/token/cost charts, and a reusable checklist for
 benchmarking other delegates: [`docs/orchestration-eval.md`](docs/orchestration-eval.md).

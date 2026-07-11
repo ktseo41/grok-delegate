@@ -96,17 +96,14 @@ NOTE_R1 = []
 NOTE_R1_KO = []
 ACC_R2 = [
     ("fable + grok workers",       0,    "72/72 · 100%"),
+    ("fable + deepseek workers",   0,    "72/72 · 100%"),
     ("sonnet solo (avg of 3)",     2.67, "69.3/72 · 96.3%"),
     ("fable + sonnet workers",     3,    "69/72 · 95.8%"),
-    ("fable solo",                 6,    "66/72 · 91.7%"),
-    ("grok solo",                  7,    "65/72 · 90.3%"),
+    ("fable solo",                 4,    "68/72 · 94.4%"),
+    ("grok solo",                  5,    "67/72 · 93.1%"),
 ]
-NOTE_R2 = ["fable + deepseek workers is off this scale: 24/72 — every completed cell correct,",
-           "8/12 workers returned nothing (tool bug, fixable).",
-           "sonnet solo runs: 70/72, 69/72, 69/72."]
-NOTE_R2_KO = ["fable + deepseek 워커는 이 척도 밖: 24/72 — 완주한 24셀은 전부 정답이지만",
-              "워커 8/12이 무응답(도구 버그, 수정 가능)이었다.",
-              "sonnet 단독 3회 실행: 70/72, 69/72, 69/72."]
+NOTE_R2 = ["sonnet solo runs: 70/72, 69/72, 69/72."]
+NOTE_R2_KO = ["sonnet 단독 3회 실행: 70/72, 69/72, 69/72."]
 
 # Token rows: (label, [(model, in, out), ...], grok_ctx_or_None) — cache columns
 # live in the doc tables. grok exposes only a final-context total (no in/out
@@ -123,8 +120,8 @@ TOKENS_R1 = [
 ]
 TOKENS_R2 = [
     ("fable + grok workers",     [("fable", 3019, 18420)], 833433),
-    ("fable + deepseek workers", [("fable", 3631, 34063),
-                                  ("deepseek", 3895032, 56806)], None),
+    ("fable + deepseek workers", [("fable", 3180, 18638),
+                                  ("deepseek", 28401025, 259998)], None),
     ("fable + sonnet workers",   [("fable", 16804, 30695), ("sonnet", 109007, 62005),
                                   ("haiku", 2363450, 34213)], None),
     ("sonnet solo (avg of 3)",   [("sonnet", 19799, 40191), ("haiku", 1454400, 26202)], None),
@@ -154,7 +151,7 @@ COST_R2 = [
     ("fable + grok workers",     2.97, ("quota",
         "≈5%p of weekly SuperGrok quota, ≈$0.35 equiv. (scaled by ctxTokens)",
         "SuperGrok 주간 쿼터 ≈5%p, ≈$0.35 상당 (ctxTokens 비례 추정)")),
-    ("fable + deepseek workers", 6.83, ("deepseek", 0.36, 0.36)),
+    ("fable + deepseek workers", 3.27, ("deepseek", 2.60, 2.60)),
     ("fable + sonnet workers",   11.54, None),
     ("sonnet solo (avg of 3)",   5.99, None),
     ("fable solo",               9.95, None),
@@ -329,7 +326,7 @@ if __name__ == "__main__":
             "of 72 fields" if lang == "en" else "72개 필드 기준",
             NOTE_R2 if lang == "en" else NOTE_R2_KO, lang=lang, vmax=8),
         "r1-tokens.svg":   lambda lang: chart_tokens(1, TOKENS_R1, 20_000_000, 200_000, lang=lang),
-        "r2-tokens.svg":   lambda lang: chart_tokens(2, TOKENS_R2, 4_200_000, 130_000, lang=lang),
+        "r2-tokens.svg":   lambda lang: chart_tokens(2, TOKENS_R2, 30_000_000, 280_000, lang=lang),
         "r1-cost.svg":     lambda lang: chart_cost(1, COST_R1, lang=lang),
         "r2-cost.svg":     lambda lang: chart_cost(2, COST_R2, lang=lang),
     }
