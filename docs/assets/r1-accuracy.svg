@@ -1,31 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 314" width="780" height="314" role="img" aria-label="Round 1 cells lost per configuration">
-<rect width="780" height="314" rx="8" fill="#fcfcfb"/>
-<text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Round 1 — cells lost (of 70 fields)</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 380" width="780" height="380" role="img" aria-label="Round 1 cells lost per configuration">
+<rect width="780" height="380" rx="8" fill="#fcfcfb"/>
+<text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Round 1 — cells lost (of 70 fields; ‡ of 71)</text>
 <text x="20" y="48" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Lighter bars: scored vs the frozen answer key, not blind; † = unverifiable cells excluded.</text>
 <text x="20" y="64" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Worker failures: grok 7/12 first-wave silent no-collection, all recovered by retry; deepseek and sonnet workers 0/12.</text>
-<text x="240" y="102" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok workers</text>
-<circle cx="253" cy="98" r="3.5" fill="#2a78d6"/>
-<text x="265" y="102" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0 lost · 70/70 · 100%</text>
-<text x="240" y="136" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek workers</text>
-<circle cx="253" cy="132" r="3.5" fill="#2a78d6"/>
-<text x="265" y="136" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0 lost · 70/70 · 100%</text>
-<text x="240" y="170" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet workers</text>
-<rect x="250" y="158" width="80.0" height="16" rx="4" fill="#2a78d6"/>
-<text x="338.0" y="170" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1 lost · 69/70 · 98.6%</text>
-<text x="240" y="204" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable solo</text>
-<rect x="250" y="192" width="80.0" height="16" rx="4" fill="#2a78d6"/>
-<text x="338.0" y="204" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1 lost · 69/70 · 98.6%</text>
-<text x="240" y="238" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo</text>
-<rect x="250" y="226" width="80.0" height="16" rx="4" fill="#9ec5f4"/>
-<text x="338.0" y="238" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1 lost · 66/67 · 98.5%†</text>
-<text x="240" y="272" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo</text>
-<rect x="250" y="260" width="160.0" height="16" rx="4" fill="#2a78d6"/>
-<text x="418.0" y="272" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2 lost · 68/70 · 97.1%</text>
-<line x1="250" y1="294" x2="650" y2="294" stroke="#c3c2b7" stroke-width="1"/>
-<text x="250.0" y="310" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
-<text x="330.0" y="310" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1</text>
-<text x="410.0" y="310" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2</text>
-<text x="490.0" y="310" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3</text>
-<text x="570.0" y="310" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4</text>
-<text x="650.0" y="310" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">5</text>
+<text x="20" y="80" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">‡ = delegation-only rerun (2026-07-11), judged non-blind by re-verifying every cell against official</text>
+<text x="20" y="96" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">pages (the frozen key had drifted); denominator 71 — one MAS cell unscorable vs two in the main round.</text>
+<text x="240" y="134" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok workers</text>
+<circle cx="253" cy="130" r="3.5" fill="#2a78d6"/>
+<text x="265" y="134" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0 lost · 70/70 · 100%</text>
+<text x="240" y="168" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok workers (delegation only)</text>
+<circle cx="253" cy="164" r="3.5" fill="#9ec5f4"/>
+<text x="265" y="168" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0 lost · 71/71 · 100%‡</text>
+<text x="240" y="202" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek workers</text>
+<circle cx="253" cy="198" r="3.5" fill="#2a78d6"/>
+<text x="265" y="202" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0 lost · 70/70 · 100%</text>
+<text x="240" y="236" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet workers</text>
+<rect x="250" y="224" width="80.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="338.0" y="236" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1 lost · 69/70 · 98.6%</text>
+<text x="240" y="270" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable solo</text>
+<rect x="250" y="258" width="80.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="338.0" y="270" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1 lost · 69/70 · 98.6%</text>
+<text x="240" y="304" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo</text>
+<rect x="250" y="292" width="80.0" height="16" rx="4" fill="#9ec5f4"/>
+<text x="338.0" y="304" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1 lost · 66/67 · 98.5%†</text>
+<text x="240" y="338" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo</text>
+<rect x="250" y="326" width="160.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="418.0" y="338" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2 lost · 68/70 · 97.1%</text>
+<line x1="250" y1="360" x2="650" y2="360" stroke="#c3c2b7" stroke-width="1"/>
+<text x="250.0" y="376" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
+<text x="330.0" y="376" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1</text>
+<text x="410.0" y="376" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2</text>
+<text x="490.0" y="376" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3</text>
+<text x="570.0" y="376" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4</text>
+<text x="650.0" y="376" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">5</text>
 </svg>

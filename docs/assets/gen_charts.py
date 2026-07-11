@@ -29,13 +29,16 @@ FONT = 'font-family="system-ui,-apple-system,Segoe UI,sans-serif"'
 # Accuracy rows: (label, lost cells, score text, frozen-key?)
 ACC_R1 = [
     ("fable + grok workers",       0,    "70/70 · 100%",   False),
+    ("fable + grok workers (delegation only)", 0, "71/71 · 100%‡", True),
     ("fable + deepseek workers",   0,    "70/70 · 100%",   False),
     ("fable + sonnet workers",     1,    "69/70 · 98.6%",  False),
     ("fable solo",                 1,    "69/70 · 98.6%",  False),
     ("grok solo",                  1,    "66/67 · 98.5%†", True),
     ("sonnet solo",                2,    "68/70 · 97.1%",  False),
 ]
-NOTE_R1 = ["Worker failures: grok 7/12 first-wave silent no-collection, all recovered by retry; deepseek and sonnet workers 0/12."]
+NOTE_R1 = ["Worker failures: grok 7/12 first-wave silent no-collection, all recovered by retry; deepseek and sonnet workers 0/12.",
+           "‡ = delegation-only rerun (2026-07-11), judged non-blind by re-verifying every cell against official",
+           "pages (the frozen key had drifted); denominator 71 — one MAS cell unscorable vs two in the main round."]
 ACC_R2 = [
     ("fable + grok workers (re-verify)",      0,    "72/72 · 100%",   False),
     ("fable + grok workers (delegation only)", 0,   "72/72 · 100%",   False),
@@ -56,6 +59,7 @@ NOTE_R2 = ["“delegation only” = the orchestrator only assembles worker repor
 # split), drawn as a dashed segment on the input panel.
 TOKENS_R1 = [
     ("fable + grok workers",     [("fable", 3122, 33143), ("haiku", 468310, 3277)], 621232),
+    ("fable + grok workers (delegation only)", [("fable", 3025, 16184)], 735055),
     ("fable + deepseek workers", [("fable", 4177, 65839), ("haiku", 1627817, 16670),
                                   ("deepseek", 8522834, 98589)], None),
     ("fable + sonnet workers",   [("fable", 12744, 40288), ("sonnet", 112811, 88806),
@@ -81,6 +85,7 @@ TOKENS_R2 = [
 # Cost rows: (label, claude_usd, external) — external = (model, lo, hi) or None.
 COST_R1 = [
     ("fable + grok workers",     6.09, ("grok", 1.44, 11.48)),
+    ("fable + grok workers (delegation only)", 2.69, ("grok", 1.60, 15.90)),
     ("fable + deepseek workers", 11.06, ("deepseek", 0.26, 0.26)),
     ("fable + sonnet workers",   19.03, None),
     ("sonnet solo",              5.49, None),
@@ -247,7 +252,7 @@ def chart_cost(round_no, cost):
 
 if __name__ == "__main__":
     charts = {
-        "r1-accuracy.svg": lambda: chart_accuracy(1, ACC_R1, "of 70 fields", NOTE_R1),
+        "r1-accuracy.svg": lambda: chart_accuracy(1, ACC_R1, "of 70 fields; ‡ of 71", NOTE_R1),
         "r2-accuracy.svg": lambda: chart_accuracy(2, ACC_R2, "of 72 fields", NOTE_R2),
         "r1-tokens.svg":   lambda: chart_tokens(1, TOKENS_R1, 10_500_000, 180_000),
         "r2-tokens.svg":   lambda: chart_tokens(2, TOKENS_R2, 4_200_000, 130_000),
