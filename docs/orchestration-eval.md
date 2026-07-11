@@ -26,39 +26,29 @@ that adds one scored the same with grok workers and only multiplied the Claude b
 
 | Configuration | Round 1 (lookup task) | Round 2 (judgment-trap task) |
 | --- | --- | --- |
-| **fable + grok workers** | **72/72 (100%)** — 7.4 min, 12/12 workers on the first wave, zero retries; cheapest Claude-side run of the whole eval ($2.69) | **72/72 (100%)** — 9.5 min, cheapest Claude-side run of round 2 ($2.97) |
-| fable + deepseek workers | 71/72 (98.6%) — 47 min (slowest); 12/12 workers completed (3 retries, all output-format slips, zero collection failures); the only loss was writing the effective date as the Fed's decision date | 24/72 — 8/12 workers returned nothing (channel defect; pre-dates the round-1 channel fix); every completed cell correct (24/24) |
-| fable + sonnet workers | **72/72 (100%)** — 7.6 min, 12/12 workers; heaviest Claude spend ($11.05) | 69/72 (95.8%) — a wrong index choice passed through uncaught (3-cell cascade) |
+| **fable + grok workers** | **72/72 (100%)** — 12/12 workers on the first wave, zero retries | **72/72 (100%)** |
+| fable + deepseek workers | 71/72 (98.6%) — 12/12 workers completed; the only loss was writing the effective date as the Fed's decision date | 24/72 — 8/12 workers returned nothing (channel defect; pre-dates the round-1 channel fix); every completed cell correct (24/24) |
+| fable + sonnet workers | **72/72 (100%)** — 12/12 workers | 69/72 (95.8%) — a wrong index choice passed through uncaught (3-cell cascade) |
 | sonnet solo | 70/72 (97.2%) | 69.3/72 (96.3%) — average of 3 runs (70·69·69) |
 | fable solo | 71/72 (98.6%) | 66/72 (91.7%); hit both release-timing traps |
 | grok solo | **72/72 (100%)** | 65/72 (90.3%) — hit the exact same traps as fable solo |
 
-Every score above comes from one scoring procedure. Each round was judged blind — the
-reports were scored without knowing which came from which configuration.
+Scoring was one unified procedure per round — a single judge session that did not know
+which report came from which configuration (blind), against one shared answer key;
+unanswered cells score zero and the denominator is 72 for every row (details in
+"Controls that made the numbers trustworthy" below).
 
-<sub>*A variant workflow where the orchestrator (fable) re-verifies and corrects every worker
-result was also run, but the goal here is testing grok delegation, not workflows, so it is
-excluded. In short: with grok workers it scored the same perfect marks and only cost 2–3×
-more Claude-side ($6.09–7.66) — raw runs in the experiment workspace.*</sub>
+The perfect scores came from narrow scope: one worker per topic, and every claim required
+to come from a page actually fetched in that session. Under those conditions the worker
+configurations split three ways — grok workers perfect on both task shapes, sonnet workers
+perfect on lookup but letting a wrong index choice through on the judgment task, and
+deepseek workers completing and scoring top-tier once their execution channel was repaired
+(95/96 completed cells across both rounds).
 
-The perfect scores came from narrowing the scope. Each worker handled exactly one central
-bank, and the worker prompts required that every claim come from a page actually fetched in
-that session — answers from memory were declared invalid. Those two things alone kept grok
-workers perfect on both task shapes with nothing double-checking them, and sonnet workers
-matched them on the lookup task — but a sonnet worker's wrong index choice went straight
-into the round-2 result. For deepseek workers the variable was the execution channel
-(via the codex CLI): with the channel defective in round 2, 8/12 workers returned nothing;
-with the channel repaired for round 1, all 12 completed and scored 71/72 — when they
-finish, their accuracy is in the top tier (95/96 completed cells across both rounds).
-
-Why sonnet solo is "3 runs": two of round 2's three runs carried advisor(fable), a
-stronger-model consultation tool, and it **never fired** (the plumbing was verified with
-forced probe calls — non-firing was the model's choice, and a one-line "feel free to
-consult the advisor" hint changed nothing). Since the treatment never arrived, all three
-runs are repeats of sonnet solo, and their score spread (70/72, 69/72, 69/72) is our
-estimate of sonnet's run-to-run variance; tables and charts show the average (69.3/72).
-Since this eval is not about whether the advisor feature works, no further advisor runs
-were made — the three sonnet runs are simply recorded as their average.
+<sub>*A variant where the orchestrator re-verifies and corrects every worker result was
+also run, but the goal here is testing grok delegation, not workflows, so it is excluded —
+same perfect grok-worker scores at 2–3× the Claude-side cost. Raw runs in the experiment
+workspace.*</sub>
 
 ## The tasks
 
@@ -88,50 +78,13 @@ were made — the three sonnet runs are simply recorded as their average.
 > A "trap" here is a deliberately-planted easy-to-get-wrong spot — the point is not what the
 > model knows but whether it actually slips where slipping is easy.
 
-## Controls that made the numbers trustworthy
-
-- **Unified judging.** Each round's reports were shuffled together and scored by a single
-  fable judge session that never saw the mapping, against one shared answer key. Result
-  files were verified by scan to contain zero methodology traces (anything hinting which
-  configuration produced them), and the judge session's file access was audited post-run
-  from its transcript: it read exactly the shuffled copies and the key. Round 1 happened to
-  be judged by three independent sessions with different shuffles — their verdicts on the
-  same reports matched cell for cell.
-- **Identical prompts.** Paired configurations shared the same prompt file; the two
-  advisor(fable) runs differ by exactly one documented line, byte-identical otherwise
-  (`diff` kept).
-- **Narrow execution window + answer-drift control.** All runs sat inside 2026-07-10–11,
-  and release calendars plus the judging records confirm no answer-changing release or rate
-  decision landed inside that window. A both-accepted rule for releases landing on an
-  execution day was fixed in advance (no report ended up needing it). Judging finished the
-  same day for all configurations.
-- **Predictions written down first.** Expectations — which configuration would win, whether
-  the advisor(fable) would fire on its own — were written to a file before execution and
-  compared against the results afterwards. This guards against fitting the interpretation to
-  the outcome. Worker-failure handling (one retry, then orchestrator collects directly) was
-  also pre-declared in the harness prompts.
-- **Raw per-model token reporting.** Tokens are reported per model (fable / sonnet / haiku /
-  grok / deepseek) as raw values; models with different prices are never summed into one
-  number. (haiku-4.5 is not a tested configuration — it is the model Claude Code's WebSearch
-  uses automatically to summarize fetched pages, so it shows up in every Claude-side run.)
-  Claude-side figures come from `run.json` model-usage data; grok's own spend from the
-  wrapper's `[grok-usage]` trailer (ctxTokens, wall seconds, tool calls per worker). The
-  wrapper is this repo's `scripts/grok-run.sh`, the launch script every grok run here goes
-  through: the grok CLI reports no usage on its own, so the wrapper appends this trailer
-  after each session, and it also enforces the run-mode guardrails (tool allowlists, the
-  web-collection gate described below).
-- **Tool discipline.** All configurations: no skills, no MCP; subagents only where they
-  *are* the configuration's worker channel (the sonnet-worker configuration spawns its
-  workers via the Agent tool; grok and deepseek workers run through their external CLIs),
-  never as an extra helper on top; web = WebSearch/WebFetch only (or grok's
-  `web_search`/`web_fetch`); no curl; bot-blocked sites
-  (403) handled by domain-limited search, never circumvention.
-
 ## Tokens and potential cost (raw per model)
 
 ### Round 1
 
 ![Round 1 — raw tokens per model](assets/r1-tokens.svg)
+
+![Round 1 — potential cost per configuration](assets/r1-cost.svg)
 
 | Configuration | Model | in | out | cache write | cache read | ctxTokens³ |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
@@ -148,33 +101,25 @@ were made — the three sonnet runs are simply recorded as their average.
 | | haiku-4.5 | 1,361,978 | 14,115 | 0 | 0 | — |
 | grok solo | grok-4.5 (1 session) | — | — | — | — | 141,786 |
 
-¹ includes 11,094,784 cached input — deepseek's meter counts cache hits *inside* its input
-total, unlike Claude's separate cache columns, so it is a footnote here rather than a value
-in those columns. The unusually large input is because deepseek workers collect via shell
-fetches, reading raw page sources whole. ² includes 72,599 reasoning tokens. ³ the grok CLI exposes no billable
-in/out split, only the session's final context size (ctxTokens) — a separate meter, not
-summable with the other columns. ⁴ **why haiku appears at all**: haiku is not run by the
-eval — it is the model Claude Code's WebSearch/WebFetch tooling uses internally to digest
-fetched pages, so its row measures how much web traffic the *Claude-side session itself*
-generated. In the grok- and deepseek-worker configurations the orchestrator had web tools
-disabled and did no web traffic of its own, so haiku is exactly zero — the collection all
-happened on the external meter. The sonnet-worker haiku row is the *workers'* web traffic
-(they run inside the same Claude session).
-
-![Round 1 — potential cost per configuration](assets/r1-cost.svg)
+<sub>¹ includes 11,094,784 cached input — deepseek's meter counts cache hits *inside* its input total, unlike Claude's separate cache columns, so it is a footnote rather than a column value. The unusually large input is because deepseek workers collect via shell fetches, reading raw page sources whole.<br>
+² includes 72,599 reasoning tokens.<br>
+³ the grok CLI exposes no billable in/out split, only the session's final context size (ctxTokens) — a separate meter, not summable with the other columns.<br>
+⁴ haiku is not run by the eval — it is the model Claude Code's WebSearch/WebFetch tooling uses internally to digest fetched pages, so its row measures the *Claude-side session's* web traffic. The grok- and deepseek-worker orchestrators ran with web tools disabled, so haiku is zero there (rows omitted); the sonnet-worker haiku row is the *workers'* web traffic (they run inside the same Claude session).</sub>
 
 | Configuration | Claude-side (measured, API-equivalent) | External spend |
 | --- | ---: | :-- |
-| fable + grok workers | $2.69 | grok: ≈5%p of weekly SuperGrok quota (scaled by ctxTokens) |
+| fable + grok workers | $2.69 | grok: ≈5%p of weekly SuperGrok quota ≈ $0.35 equiv. ($30/mo plan; scaled by ctxTokens) |
 | fable + deepseek workers | $3.11 | deepseek ≈ $1.71 (OpenRouter rates, no cache discount) |
 | fable + sonnet workers | $11.05 | — |
 | sonnet solo | $5.49 | — |
 | fable solo | $8.84 | — |
-| grok solo | $0 | grok: ≈1%p of weekly SuperGrok quota (scaled by ctxTokens) |
+| grok solo | $0 | grok: ≈1%p of weekly SuperGrok quota ≈ $0.07 equiv. (scaled by ctxTokens) |
 
 ### Round 2
 
 ![Round 2 — raw tokens per model](assets/r2-tokens.svg)
+
+![Round 2 — potential cost per configuration](assets/r2-cost.svg)
 
 | Configuration | Model | in | out | cache write | cache read | ctxTokens³ |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
@@ -191,20 +136,18 @@ happened on the external meter. The sonnet-worker haiku row is the *workers'* we
 | | haiku-4.5 | 1,134,678 | 13,843 | 0 | 0 | — |
 | grok solo | grok-4.5 (1 session) | — | — | — | — | 161,675 |
 
-¹ includes 2,095,104 cached input — deepseek's meter counts cache hits *inside* its input
-total, unlike Claude's separate cache columns, so it is a footnote here rather than a value
-in those columns. ² includes reasoning tokens. ³ ⁴ same footnotes as the round-1 table.
-
-![Round 2 — potential cost per configuration](assets/r2-cost.svg)
+<sub>¹ includes 2,095,104 cached input — deepseek's meter counts cache hits *inside* its input total, so it is a footnote rather than a column value.<br>
+² includes reasoning tokens.<br>
+³ ⁴ same footnotes as the round-1 table.</sub>
 
 | Configuration | Claude-side (measured, API-equivalent) | External spend |
 | --- | ---: | :-- |
-| **fable + grok workers** | **$2.97** | grok: ≈5%p of weekly SuperGrok quota (scaled by ctxTokens; 21 sessions incl. 9 gate-blocked cheap retries) |
+| **fable + grok workers** | **$2.97** | grok: ≈5%p of weekly SuperGrok quota ≈ $0.35 equiv. ($30/mo plan; scaled by ctxTokens; 21 sessions incl. 9 gate-blocked cheap retries) |
 | fable + deepseek workers | $6.83 | deepseek ≈ $0.36 (OpenRouter rates, no cache discount) |
 | fable + sonnet workers | $11.54 | — |
 | sonnet solo (avg of 3 runs) | $5.99 | — |
 | fable solo | $9.95 | — |
-| grok solo | $0 | grok: ≈1%p of weekly SuperGrok quota (measured) |
+| grok solo | $0 | grok: ≈1%p of weekly SuperGrok quota ≈ $0.07 equiv. (measured) |
 
 Cost shape in one line: the grok-worker configuration undercuts everything (even sonnet
 solo) because the orchestrator does no web work at all; the deepseek configuration's $6.83
@@ -232,8 +175,55 @@ the most expensive because its workers bill the Claude meter.
   `signals.json`, the value the wrapper's trailer prints). For reference, the grok CLI
   records no billable in/out split anywhere local, and the console Usage Explorer covers
   API-key billing only — ctxTokens is the only first-party meter available client-side.
+  Dollar equivalents are a reference conversion: SuperGrok is $30/month → about $6.9/week,
+  so 1%p ≈ $0.07.
 
 Charts regenerate via `assets/gen_charts.py`.
+
+## Controls that made the numbers trustworthy
+
+- **Unified judging.** Each round's reports were shuffled together and scored by a single
+  fable judge session that never saw the mapping, against one shared answer key. Result
+  files were verified by scan to contain zero methodology traces (anything hinting which
+  configuration produced them), and the judge session's file access was audited post-run
+  from its transcript: it read exactly the shuffled copies and the key. Round 1 happened to
+  be judged by three independent sessions with different shuffles — their verdicts on the
+  same reports matched cell for cell.
+- **Identical prompts.** Paired configurations shared the same prompt file; the two
+  advisor(fable) runs differ by exactly one documented line, byte-identical otherwise
+  (`diff` kept).
+- **sonnet solo = the average of 3 runs (69.3/72).** Two of the three carried
+  advisor(fable), a stronger-model consultation tool, and it **never fired** — the plumbing
+  was verified with forced probe calls, so non-firing was the model's choice, and a one-line
+  "feel free to consult" hint changed nothing. Since the treatment never arrived, all three
+  runs are repeats of sonnet solo, and their spread (70/72, 69/72, 69/72) estimates sonnet's
+  run-to-run variance. Advisor behavior is not this eval's question, so no further runs.
+- **Narrow execution window + answer-drift control.** All runs sat inside 2026-07-10–11,
+  and release calendars plus the judging records confirm no answer-changing release or rate
+  decision landed inside that window. A both-accepted rule for releases landing on an
+  execution day was fixed in advance (no report ended up needing it). Judging finished the
+  same day for all configurations.
+- **Predictions written down first.** Expectations — which configuration would win, whether
+  the advisor(fable) would fire on its own — were written to a file before execution and
+  compared against the results afterwards. This guards against fitting the interpretation to
+  the outcome. Worker-failure handling (one retry, then orchestrator collects directly) was
+  also pre-declared in the harness prompts.
+- **Raw per-model token reporting.** Tokens are reported per model (fable / sonnet / haiku /
+  grok / deepseek) as raw values; models with different prices are never summed into one
+  number. (haiku-4.5 is not a tested configuration — it is the model Claude Code's WebSearch
+  uses automatically to summarize fetched pages, so it shows up in every Claude-side run.)
+  Claude-side figures come from `run.json` model-usage data; grok's own spend from the
+  wrapper's `[grok-usage]` trailer (ctxTokens, wall seconds, tool calls per worker). The
+  wrapper is this repo's `scripts/grok-run.sh`, the launch script every grok run here goes
+  through: the grok CLI reports no usage on its own, so the wrapper appends this trailer
+  after each session, and it also enforces the run-mode guardrails (tool allowlists, the
+  web-collection gate described below).
+- **Tool discipline.** All configurations: no skills, no MCP; subagents only where they
+  *are* the configuration's worker channel (the sonnet-worker configuration spawns its
+  workers via the Agent tool; grok and deepseek workers run through their external CLIs),
+  never as an extra helper on top; web = WebSearch/WebFetch only (or grok's
+  `web_search`/`web_fetch`); no curl; bot-blocked sites
+  (403) handled by domain-limited search, never circumvention.
 
 ## What the evals taught (and what changed in this repo because of them)
 

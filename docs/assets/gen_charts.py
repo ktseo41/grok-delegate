@@ -53,7 +53,7 @@ STRINGS = {
         "cost_aria":      lambda r: f"Round {r} potential cost per configuration",
         "cost_title":     lambda r: f"Round {r} — potential cost (USD, API-equivalent)",
         "cost_caption":   "Claude: measured (run.json, API list prices) · deepseek: its own wallet (OpenRouter) · "
-                           "grok: SuperGrok subscription, reported as weekly-quota percentage points.",
+                           "grok: SuperGrok subscription ($30/mo), reported as weekly-quota %p with a dollar-equivalent reference.",
         "claude_label":   "Claude",
         "acc_subtitle":   "Fewer cells lost is better.",
     },
@@ -72,7 +72,7 @@ STRINGS = {
         "cost_aria":      lambda r: f"라운드 {r} 조합별 잠재 비용",
         "cost_title":     lambda r: f"라운드 {r} — 잠재 비용(달러, API 환산)",
         "cost_caption":   "Claude: 측정값(run.json, API 정가 기준) · deepseek: 자체 지갑(OpenRouter) · "
-                           "grok: SuperGrok 구독 — 주간 쿼터 %p로 표기.",
+                           "grok: SuperGrok 구독(월 $30) — 주간 쿼터 %p + 달러 상당액 참고 표기.",
         "claude_label":   "Claude",
     },
 }
@@ -140,27 +140,27 @@ TOKENS_R2 = [
 #             are scaled from that by their ctxTokens).
 COST_R1 = [
     ("fable + grok workers",     2.69, ("quota",
-        "≈5%p of weekly SuperGrok quota (scaled by ctxTokens)",
-        "SuperGrok 주간 쿼터 ≈5%p (ctxTokens 비례 추정)")),
+        "≈5%p of weekly SuperGrok quota, ≈$0.35 equiv. (scaled by ctxTokens)",
+        "SuperGrok 주간 쿼터 ≈5%p, ≈$0.35 상당 (ctxTokens 비례 추정)")),
     ("fable + deepseek workers", 3.11, ("deepseek", 1.71, 1.71)),
     ("fable + sonnet workers",   11.05, None),
     ("sonnet solo",              5.49, None),
     ("fable solo",               8.84, None),
     ("grok solo",                0.0, ("quota",
-        "≈1%p of weekly SuperGrok quota (scaled by ctxTokens)",
-        "SuperGrok 주간 쿼터 ≈1%p (ctxTokens 비례 추정)")),
+        "≈1%p of weekly SuperGrok quota, ≈$0.07 equiv. (scaled by ctxTokens)",
+        "SuperGrok 주간 쿼터 ≈1%p, ≈$0.07 상당 (ctxTokens 비례 추정)")),
 ]
 COST_R2 = [
     ("fable + grok workers",     2.97, ("quota",
-        "≈5%p of weekly SuperGrok quota (scaled by ctxTokens)",
-        "SuperGrok 주간 쿼터 ≈5%p (ctxTokens 비례 추정)")),
+        "≈5%p of weekly SuperGrok quota, ≈$0.35 equiv. (scaled by ctxTokens)",
+        "SuperGrok 주간 쿼터 ≈5%p, ≈$0.35 상당 (ctxTokens 비례 추정)")),
     ("fable + deepseek workers", 6.83, ("deepseek", 0.36, 0.36)),
     ("fable + sonnet workers",   11.54, None),
     ("sonnet solo (avg of 3)",   5.99, None),
     ("fable solo",               9.95, None),
     ("grok solo",                0.0, ("quota",
-        "≈1%p of weekly SuperGrok quota (measured)",
-        "SuperGrok 주간 쿼터 ≈1%p (실측)")),
+        "≈1%p of weekly SuperGrok quota, ≈$0.07 equiv. (measured)",
+        "SuperGrok 주간 쿼터 ≈1%p, ≈$0.07 상당 (실측)")),
 ]
 
 def fmt(n):

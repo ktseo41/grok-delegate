@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 396" width="940" height="396" role="img" aria-label="라운드 1 조합별 잠재 비용">
 <rect width="940" height="396" rx="8" fill="#fcfcfb"/>
 <text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">라운드 1 — 잠재 비용(달러, API 환산)</text>
-<text x="20" y="46" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude: 측정값(run.json, API 정가 기준) · deepseek: 자체 지갑(OpenRouter) · grok: SuperGrok 구독 — 주간 쿼터 %p로 표기.</text>
+<text x="20" y="46" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude: 측정값(run.json, API 정가 기준) · deepseek: 자체 지갑(OpenRouter) · grok: SuperGrok 구독(월 $30) — 주간 쿼터 %p + 달러 상당액 참고 표기.</text>
 <text x="20" y="100.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok 워커</text>
 <text x="300" y="88" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
 <rect x="310" y="78" width="69.7" height="12" rx="3" fill="#2a78d6"/>
 <text x="387.69545454545454" y="88" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$2.69</text>
 <text x="300" y="108" font-size="10" fill="#008300" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
-<text x="310" y="108" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">SuperGrok 주간 쿼터 ≈5%p (ctxTokens 비례 추정)</text>
+<text x="310" y="108" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">SuperGrok 주간 쿼터 ≈5%p, ≈$0.35 상당 (ctxTokens 비례 추정)</text>
 <text x="20" y="156.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek 워커</text>
 <text x="300" y="144" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
 <rect x="310" y="134" width="80.6" height="12" rx="3" fill="#2a78d6"/>
@@ -32,7 +32,7 @@
 <circle cx="313" cy="304" r="3" fill="#2a78d6"/>
 <text x="322" y="308" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
 <text x="300" y="328" font-size="10" fill="#008300" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
-<text x="310" y="328" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">SuperGrok 주간 쿼터 ≈1%p (ctxTokens 비례 추정)</text>
+<text x="310" y="328" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">SuperGrok 주간 쿼터 ≈1%p, ≈$0.07 상당 (ctxTokens 비례 추정)</text>
 <line x1="310" y1="352" x2="880" y2="352" stroke="#c3c2b7"/>
 <line x1="310.0" y1="352" x2="310.0" y2="356" stroke="#c3c2b7"/>
 <text x="310.0" y="368" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
