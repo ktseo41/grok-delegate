@@ -155,14 +155,15 @@ saves). Never silently substitute one for another.
 
 ## Does delegating actually help?
 
-Measured, twice. Two controlled eval rounds (12-central-bank lookup, then a 12-currency
-real-policy-rate task with planted judgment traps) compared **orchestrator + worker fan-out**
-against solo sonnet, solo fable, solo grok, and advisor-assisted arms — blind-judged, with
-pre-registered hypotheses and raw per-model token accounting. The only arms with zero wrong
-cells across both rounds were the fan-outs (**grok workers 142/142, deepseek workers 141/141**),
-while solo fable and solo grok failed the *same* trap cells — evidence that the win comes from
-worker-collection + orchestrator re-verification, not from any single model, and that it is
-robust to worker choice. Method, numbers, score/token/cost charts, and a reusable checklist for
+Measured, twice, blind-judged. Two controlled eval rounds (12-central-bank lookup, then a
+12-currency real-policy-rate task with planted judgment traps) compared **fable orchestrating
+one grok worker per topic** against solo runs and other worker models. The grok-worker setup
+was the only one with zero wrong cells across both rounds (**142/142**), while solo fable and
+solo grok failed the *same* trap cells. A follow-up isolated the ingredient: with grok
+workers, the orchestrator can **skip its re-verification pass entirely** — still a perfect
+score, at the lowest Claude-side spend of any run — because the win comes from one narrow
+topic per worker plus the wrapper's web-collection gate. Re-verification is only needed for
+less reliable workers. Method, numbers, score/token/cost charts, and a reusable checklist for
 benchmarking other delegates: [`docs/orchestration-eval.md`](docs/orchestration-eval.md).
 
 ## License

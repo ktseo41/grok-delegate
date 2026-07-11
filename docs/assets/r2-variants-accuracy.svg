@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 278" width="780" height="278" role="img" aria-label="Round 2 structure variants cells lost per configuration">
+<rect width="780" height="278" rx="8" fill="#fcfcfb"/>
+<text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Round 2 structure variants — cells lost (of 72 fields)</text>
+<text x="20" y="48" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Lighter bars: scored vs the frozen answer key, not blind; † = unverifiable cells excluded.</text>
+<text x="20" y="64" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Same task as round 2, one run each. “delegation only” = the orchestrator only assembles worker reports.</text>
+<text x="20" y="80" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">delegation only — deepseek workers is off this scale: 8/12 topics returned nothing (worker tool bug,</text>
+<text x="20" y="96" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fixable) → 24/72 overall; every cell its workers did complete was correct.</text>
+<text x="240" y="134" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">delegation only — grok workers</text>
+<circle cx="253" cy="130" r="3.5" fill="#2a78d6"/>
+<text x="265" y="134" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0 lost · 72/72 · 100%</text>
+<text x="240" y="168" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo + fable re-verify</text>
+<rect x="250" y="156" width="80.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="338.0" y="168" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1 lost · 70/71 · 98.6%</text>
+<text x="240" y="202" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable solo + self re-verify</text>
+<rect x="250" y="190" width="240.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="498.0" y="202" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3 lost · 69/72 · 95.8%</text>
+<text x="240" y="236" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">delegation only — sonnet workers</text>
+<rect x="250" y="224" width="320.0" height="16" rx="4" fill="#9ec5f4"/>
+<text x="578.0" y="236" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4 lost · 66/70 · 94.3%†</text>
+<line x1="250" y1="258" x2="650" y2="258" stroke="#c3c2b7" stroke-width="1"/>
+<text x="250.0" y="274" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
+<text x="330.0" y="274" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1</text>
+<text x="410.0" y="274" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2</text>
+<text x="490.0" y="274" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3</text>
+<text x="570.0" y="274" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4</text>
+<text x="650.0" y="274" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">5</text>
+</svg>

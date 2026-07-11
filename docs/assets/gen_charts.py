@@ -45,6 +45,16 @@ ACC_R2 = [
 ]
 NOTE_R2 = ["Final worker failures: grok 3/12, deepseek 5/12 — those topics were collected by the orchestrator itself.",
            "sonnet solo runs: 72/72, 70/72, 69/72."]
+# Structure variants (same round-2 task; the re-verification pass removed or moved).
+ACC_R2V = [
+    ("delegation only — grok workers",   0, "72/72 · 100%",   False),
+    ("grok solo + fable re-verify",           1, "70/71 · 98.6%",  False),
+    ("fable solo + self re-verify",           3, "69/72 · 95.8%",  False),
+    ("delegation only — sonnet workers", 4, "66/70 · 94.3%†", True),
+]
+NOTE_R2V = ["Same task as round 2, one run each. “delegation only” = the orchestrator only assembles worker reports.",
+            "delegation only — deepseek workers is off this scale: 8/12 topics returned nothing (worker tool bug,",
+            "fixable) → 24/72 overall; every cell its workers did complete was correct."]
 
 # Token rows: (label, [(model, in, out), ...], grok_ctx_or_None) — cache columns
 # live in the doc tables. grok exposes only a final-context total (no in/out
@@ -236,6 +246,7 @@ if __name__ == "__main__":
     charts = {
         "r1-accuracy.svg": lambda: chart_accuracy(1, ACC_R1, "of 70 fields", NOTE_R1),
         "r2-accuracy.svg": lambda: chart_accuracy(2, ACC_R2, "of 72 fields", NOTE_R2),
+        "r2-variants-accuracy.svg": lambda: chart_accuracy("2 structure variants", ACC_R2V, "of 72 fields", NOTE_R2V),
         "r1-tokens.svg":   lambda: chart_tokens(1, TOKENS_R1, 10_500_000, 180_000),
         "r2-tokens.svg":   lambda: chart_tokens(2, TOKENS_R2, 3_000_000, 130_000),
         "r1-cost.svg":     lambda: chart_cost(1, COST_R1),
