@@ -40,9 +40,10 @@ unanswered cells score zero and the denominator is 72 for every row (details in
 
 The perfect scores came from narrow scope: one worker per topic, and every claim required
 to come from a page actually fetched in that session. Under those conditions grok workers
-were perfect on both task shapes, and deepseek workers — once their execution channel was
-repaired — effectively matched them at 143/144 across both rounds (perfect on the judgment
-task), just 5–6× slower. Only sonnet workers let a wrong index choice through on the
+were perfect on both task shapes, and deepseek workers — once their execution channel
+(not the model itself but the path that delivers work to it, here the codex CLI +
+OpenRouter, with its config, gates, and retry rules) was repaired — effectively matched
+them at 143/144 across both rounds (perfect on the judgment task), just 5–6× slower. Only sonnet workers let a wrong index choice through on the
 judgment task (69/72).
 
 <sub>*A variant where the orchestrator re-verifies and corrects every worker result was
