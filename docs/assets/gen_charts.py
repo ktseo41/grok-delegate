@@ -26,56 +26,42 @@ BAR_BLUE = "#2a78d6"; BAR_BLUE_LIGHT = "#9ec5f4"
 FONT = 'font-family="system-ui,-apple-system,Segoe UI,sans-serif"'
 
 # ------------------------------------------------------------------- data ---
-# Accuracy rows: (label, lost cells, score text, frozen-key?)
+# Accuracy rows: (label, lost cells, score text, non-blind?)
 ACC_R1 = [
-    ("fable + grok workers",       0,    "70/70 · 100%",   False),
-    ("fable + grok workers (delegation only)", 0, "71/71 · 100%‡", True),
-    ("fable + deepseek workers",   0,    "70/70 · 100%",   False),
-    ("fable + sonnet workers",     1,    "69/70 · 98.6%",  False),
+    ("fable + grok workers",       0,    "71/71 · 100%‡", True),
     ("fable solo",                 1,    "69/70 · 98.6%",  False),
     ("grok solo",                  1,    "66/67 · 98.5%†", True),
     ("sonnet solo",                2,    "68/70 · 97.1%",  False),
 ]
-NOTE_R1 = ["Worker failures: grok 7/12 first-wave silent no-collection, all recovered by retry; deepseek and sonnet workers 0/12.",
-           "‡ = delegation-only rerun (2026-07-11), judged non-blind by re-verifying every cell against official",
-           "pages (the frozen key had drifted); denominator 71 — one MAS cell unscorable vs two in the main round."]
+NOTE_R1 = ["Lighter bars: not blind-judged. † = scored vs the frozen answer key; unverifiable cells excluded.",
+           "‡ = judged by re-verifying every cell against official pages on scoring day (the frozen key had",
+           "drifted); denominator 71 — one MAS cell unscorable vs two in the blind-judged runs."]
 ACC_R2 = [
-    ("fable + grok workers (re-verify)",      0,    "72/72 · 100%",   False),
-    ("fable + grok workers (delegation only)", 0,   "72/72 · 100%",   False),
-    ("fable + deepseek workers (re-verify)",  0,    "71/71 · 100%†",  True),
-    ("sonnet solo (avg of 3)",                1.67, "70.3/72 · 97.7%", False),
-    ("fable solo",                            4,    "68/72 · 94.4%",  False),
-    ("grok solo",                             4,    "67/71 · 94.4%†", True),
-    ("sonnet workers (delegation only)",      4,    "66/70 · 94.3%†", True),
+    ("fable + grok workers",       0,    "72/72 · 100%",   False),
+    ("sonnet solo (avg of 3)",     1.67, "70.3/72 · 97.7%", False),
+    ("fable solo",                 4,    "68/72 · 94.4%",  False),
+    ("grok solo",                  4,    "67/71 · 94.4%†", True),
+    ("fable + sonnet workers",     4,    "66/70 · 94.3%†", True),
 ]
-NOTE_R2 = ["“delegation only” = the orchestrator only assembles worker reports, no re-verification pass.",
-           "deepseek workers (delegation only) is off this scale: 8/12 workers returned nothing (tool bug,",
-           "fixable) → 24/72 overall — but every cell its workers did complete was correct.",
-           "Re-verify worker failures: grok 3/12, deepseek 5/12 — those topics collected by the orchestrator.",
+NOTE_R2 = ["Lighter bars: not blind-judged. † = scored vs the frozen answer key; unverifiable cells excluded.",
+           "fable + deepseek workers is off this scale: 8/12 workers returned nothing (tool bug, fixable)",
+           "→ 24/72 overall — but every cell its workers did complete was correct.",
            "sonnet solo runs: 72/72, 70/72, 69/72."]
 
 # Token rows: (label, [(model, in, out), ...], grok_ctx_or_None) — cache columns
 # live in the doc tables. grok exposes only a final-context total (no in/out
 # split), drawn as a dashed segment on the input panel.
 TOKENS_R1 = [
-    ("fable + grok workers",     [("fable", 3122, 33143), ("haiku", 468310, 3277)], 621232),
-    ("fable + grok workers (delegation only)", [("fable", 3025, 16184)], 735055),
-    ("fable + deepseek workers", [("fable", 4177, 65839), ("haiku", 1627817, 16670),
-                                  ("deepseek", 8522834, 98589)], None),
-    ("fable + sonnet workers",   [("fable", 12744, 40288), ("sonnet", 112811, 88806),
-                                  ("haiku", 3761819, 38063)], None),
+    ("fable + grok workers",     [("fable", 3025, 16184)], 735055),
     ("sonnet solo",              [("sonnet", 18816, 31487), ("haiku", 1599289, 22395)], None),
     ("fable solo",               [("fable", 8330, 49839), ("haiku", 1361978, 14115)], None),
     ("grok solo",                [], 141786),
 ]
 TOKENS_R2 = [
-    ("fable + grok workers (re-verify)", [("fable", 5490, 41540), ("haiku", 532540, 6558)], 615004),
-    ("fable + grok workers (delegation only)", [("fable", 3019, 18420)], 833433),
-    ("fable + deepseek workers (re-verify)", [("fable", 4436, 61922), ("haiku", 776230, 12144),
-                                  ("deepseek", 2175635, 38361)], None),
-    ("deepseek workers (delegation only)", [("fable", 3631, 34063),
+    ("fable + grok workers",     [("fable", 3019, 18420)], 833433),
+    ("fable + deepseek workers", [("fable", 3631, 34063),
                                   ("deepseek", 3895032, 56806)], None),
-    ("sonnet workers (delegation only)", [("fable", 16804, 30695), ("sonnet", 109007, 62005),
+    ("fable + sonnet workers",   [("fable", 16804, 30695), ("sonnet", 109007, 62005),
                                   ("haiku", 2363450, 34213)], None),
     ("sonnet solo (avg of 3)",   [("sonnet", 19799, 40191), ("haiku", 1454400, 26202)], None),
     ("fable solo",               [("fable", 4065, 50150), ("haiku", 1134678, 13843)], None),
@@ -84,20 +70,15 @@ TOKENS_R2 = [
 
 # Cost rows: (label, claude_usd, external) — external = (model, lo, hi) or None.
 COST_R1 = [
-    ("fable + grok workers",     6.09, ("grok", 1.44, 11.48)),
-    ("fable + grok workers (delegation only)", 2.69, ("grok", 1.60, 15.90)),
-    ("fable + deepseek workers", 11.06, ("deepseek", 0.26, 0.26)),
-    ("fable + sonnet workers",   19.03, None),
+    ("fable + grok workers",     2.69, ("grok", 1.60, 15.90)),
     ("sonnet solo",              5.49, None),
     ("fable solo",               8.84, None),
     ("grok solo",                0.0, ("grok", 0.31, 5.08)),
 ]
 COST_R2 = [
-    ("fable + grok workers (re-verify)", 7.66, ("grok", 1.44, 12.03)),
-    ("fable + grok workers (delegation only)", 2.97, ("grok", 1.86, 16.68)),
-    ("fable + deepseek workers (re-verify)", 9.81, ("deepseek", 0.20, 0.20)),
-    ("deepseek workers (delegation only)", 6.83, ("deepseek", 0.36, 0.36)),
-    ("sonnet workers (delegation only)", 11.54, None),
+    ("fable + grok workers",     2.97, ("grok", 1.86, 16.68)),
+    ("fable + deepseek workers", 6.83, ("deepseek", 0.36, 0.36)),
+    ("fable + sonnet workers",   11.54, None),
     ("sonnet solo (avg of 3)",   5.99, None),
     ("fable solo",               9.95, None),
     ("grok solo",                0.0, ("grok", 0.35, 5.79)),
@@ -119,14 +100,11 @@ def text(x, y, s, size=12, fill=INK, anchor="start", weight="normal"):
 
 # ----------------------------------------------------- chart 1: accuracy ----
 def chart_accuracy(round_no, rows, denom_note, extra_note=()):
-    head = 60 + 16 * len(extra_note)
-    W, H = 780, head + 34 * len(rows) + 34
+    head = 44
+    W = 780
+    H = head + 34 * len(rows) + 34 + (10 + 15 * len(extra_note) if extra_note else 0)
     s = svg_open(W, H, f"Round {round_no} cells lost per configuration")
     s += text(20, 30, f"Round {round_no} — cells lost ({denom_note})", 15, INK, weight="600")
-    s += text(20, 48, "Lighter bars: scored vs the frozen answer key, not blind; "
-                      "† = unverifiable cells excluded.", 11, INK2)
-    for i, line in enumerate(extra_note):
-        s += text(20, 64 + 16 * i, line, 11, INK2)
     x0, xmax, vmax = 250, W - 130, 5
     y = head + 14
     for label, lost, scoretxt, frozen in rows:
@@ -144,6 +122,9 @@ def chart_accuracy(round_no, rows, denom_note, extra_note=()):
     for v in range(0, vmax + 1):
         x = x0 + (xmax - x0) * v / vmax
         s += text(x, y + 16, str(v), 10, MUTED, anchor="middle")
+    ny = y + 34
+    for i, line in enumerate(extra_note):
+        s += text(20, ny + 15 * i, line, 10.5, MUTED)
     return s + "</svg>\n"
 
 # ------------------------------------------------------- chart 2: tokens ----
@@ -254,7 +235,7 @@ if __name__ == "__main__":
     charts = {
         "r1-accuracy.svg": lambda: chart_accuracy(1, ACC_R1, "of 70 fields; ‡ of 71", NOTE_R1),
         "r2-accuracy.svg": lambda: chart_accuracy(2, ACC_R2, "of 72 fields", NOTE_R2),
-        "r1-tokens.svg":   lambda: chart_tokens(1, TOKENS_R1, 10_500_000, 180_000),
+        "r1-tokens.svg":   lambda: chart_tokens(1, TOKENS_R1, 1_800_000, 70_000),
         "r2-tokens.svg":   lambda: chart_tokens(2, TOKENS_R2, 4_200_000, 130_000),
         "r1-cost.svg":     lambda: chart_cost(1, COST_R1),
         "r2-cost.svg":     lambda: chart_cost(2, COST_R2),
