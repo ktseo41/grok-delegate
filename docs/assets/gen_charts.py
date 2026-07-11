@@ -61,7 +61,7 @@ STRINGS = {
         "acc_aria":       lambda r: f"Round {r} cells lost per configuration",
         "tokens_aria":    lambda r: f"Round {r} raw tokens per model",
         "tokens_title":   lambda r: f"Round {r} — raw tokens per model (input / output)",
-        "tokens_caption1": "Dashed green (grok): its own meter's final-context total — no in/out split.",
+        "tokens_caption1": "Input bars are fresh (non-cached) tokens; deepseek and grok cache reads live in the table's cache-read column.",
         "tokens_caption2": "haiku: the model Claude Code uses internally to digest WebSearch/WebFetch pages — "
                            "it measures the Claude-side session's web traffic.",
         "input_panel":    "Input tokens",
@@ -69,8 +69,8 @@ STRINGS = {
         "grok_ctx":       "grok (ctx)",
         "cost_aria":      lambda r: f"Round {r} potential cost per configuration",
         "cost_title":     lambda r: f"Round {r} — potential cost (USD, API-equivalent)",
-        "cost_caption1":  "Claude: measured (run.json, API list prices) · deepseek: its own wallet (OpenRouter).",
-        "cost_caption2":  "grok: SuperGrok subscription ($30/mo), reported as weekly-quota %p with a dollar-equivalent reference.",
+        "cost_caption1":  "API-equivalent (list-price replacement cost): Claude from run.json · deepseek actual OpenRouter spend · grok from its token log at grok-4.5 rates.",
+        "cost_caption2":  "Actual outlay differs — both ran on subscriptions (grok SuperGrok $30/mo, Claude Max x20 $200/mo), where marginal $/run ≈ 0; these are the API-rate equivalents.",
         "claude_label":   "Claude",
         "acc_subtitle":   "Fewer cells lost is better.",
     },
@@ -80,7 +80,7 @@ STRINGS = {
         "acc_subtitle":   "손실 셀이 적을수록 좋은 결과다.",
         "tokens_aria":    lambda r: f"라운드 {r} 모델별 원시 토큰",
         "tokens_title":   lambda r: f"라운드 {r} — 모델별 원시 토큰(입력/출력)",
-        "tokens_caption1": "초록 점선(grok): 자체 계량기의 최종 컨텍스트 총량 — in/out 분리가 없음.",
+        "tokens_caption1": "입력 막대는 신규(비캐시) 토큰이다; deepseek·grok의 캐시 적중은 표의 cache read 열에 있다.",
         "tokens_caption2": "haiku: Claude Code가 WebSearch/WebFetch로 가져온 페이지를 소화할 때 내부적으로 쓰는 모델 — "
                            "Claude 쪽 세션의 웹 조회량 계측.",
         "input_panel":    "입력 토큰",
@@ -88,8 +88,8 @@ STRINGS = {
         "grok_ctx":       "grok (ctx)",
         "cost_aria":      lambda r: f"라운드 {r} 조합별 잠재 비용",
         "cost_title":     lambda r: f"라운드 {r} — 잠재 비용(달러, API 환산)",
-        "cost_caption1":  "Claude: 측정값(run.json, API 정가 기준) · deepseek: 자체 지갑(OpenRouter).",
-        "cost_caption2":  "grok: SuperGrok 구독(월 $30) — 주간 쿼터 %p + 달러 상당액 참고 표기.",
+        "cost_caption1":  "API 정가 환산(대체비용): Claude는 run.json · deepseek는 OpenRouter 실비 · grok은 자체 토큰 로그를 grok-4.5 단가로 환산.",
+        "cost_caption2":  "실제 지출은 다름 — 둘 다 구독(grok SuperGrok 월 $30, Claude Max x20 월 $200)이라 실행당 한계비용 ≈ $0; 이 막대는 API 정가 환산값.",
         "claude_label":   "Claude",
     },
 }
@@ -122,55 +122,53 @@ ACC_R2 = [
 NOTE_R2 = ["* sonnet solo = average of 3 runs: 70/72, 69/72, 69/72."]
 NOTE_R2_KO = ["* sonnet 단독 = 3회 실행 평균: 70/72, 69/72, 69/72."]
 
-# Token rows: (label, [(model, in, out), ...], grok_ctx_or_None) — cache columns
-# live in the doc tables. grok exposes only a final-context total (no in/out
-# split), drawn as a dashed segment on the input panel.
-# deepseek "in" is fresh input only (cache reads live in the cache-read column,
-# matching Claude's columns): 18,661,070 total − 11,094,784 cached = 7,566,286.
+# Token rows: (label, [(model, in, out), ...]) — "in" is fresh (non-cached) input
+# to match the doc tables; cache columns live there. grok's in/out come from its
+# per-turn token log (unified.jsonl): fresh in = prompt − cached, out = completion.
+# deepseek "in" is fresh input too (e.g. R1 18,661,070 total − 11,094,784 cached).
 TOKENS_R1 = [
-    ("fable + grok workers",     [("fable", 3025, 16184)], 735055),
+    ("fable + grok workers",     [("fable", 3025, 16184), ("grok", 834126, 35889)]),
     ("fable + deepseek workers", [("fable", 3176, 18750),
-                                  ("deepseek", 7566286, 187377)], None),
+                                  ("deepseek", 7566286, 187377)]),
     ("fable + sonnet workers",   [("fable", 10123, 24916), ("sonnet", 116460, 52193),
-                                  ("haiku", 2895427, 30475)], None),
-    ("sonnet solo",              [("sonnet", 18816, 31487), ("haiku", 1599289, 22395)], None),
-    ("fable solo",               [("fable", 8330, 49839), ("haiku", 1361978, 14115)], None),
-    ("grok solo",                [], 141786),
+                                  ("haiku", 2895427, 30475)]),
+    ("sonnet solo",              [("sonnet", 18816, 31487), ("haiku", 1599289, 22395)]),
+    ("fable solo",               [("fable", 8330, 49839), ("haiku", 1361978, 14115)]),
+    ("grok solo",                [("grok", 200350, 11402)]),
 ]
 TOKENS_R2 = [
-    ("fable + grok workers",     [("fable", 3019, 18420)], 833433),
+    ("fable + grok workers",     [("fable", 3019, 18420), ("grok", 1281831, 60100)]),
     ("fable + deepseek workers", [("fable", 3180, 18638),
-                                  ("deepseek", 13675649, 259998)], None),  # 28,401,025 − 14,725,376 cached
+                                  ("deepseek", 13675649, 259998)]),  # 28,401,025 − 14,725,376 cached
     ("fable + sonnet workers",   [("fable", 16804, 30695), ("sonnet", 109007, 62005),
-                                  ("haiku", 2363450, 34213)], None),
-    ("sonnet solo (avg of 3)",   [("sonnet", 19799, 40191), ("haiku", 1454400, 26202)], None),
-    ("fable solo",               [("fable", 4065, 50150), ("haiku", 1134678, 13843)], None),
-    ("grok solo",                [], 161675),
+                                  ("haiku", 2363450, 34213)]),
+    ("sonnet solo (avg of 3)",   [("sonnet", 19799, 40191), ("haiku", 1454400, 26202)]),
+    ("fable solo",               [("fable", 4065, 50150), ("haiku", 1134678, 13843)]),
+    ("grok solo",                [("grok", 248095, 11056)]),
 ]
 
-# Cost rows: (label, claude_usd, external). The external segment stacks onto the
-# Claude bar (same row) like the token chart's stacked segments.
-# external = ("deepseek", usd) — violet $ bar, or
-#            ("grok", usd_equiv, note_en, note_ko) — green bar drawn at grok's
-#            dollar-equivalent, annotated with its weekly-quota %p.
-#            (anchor: the round-2 grok solo run moved the weekly SuperGrok quota
-#             ~1 percentage point at ctxTokens 161,675 = ≈$0.07; other grok rows
-#             are scaled from that by their ctxTokens.)
+# Cost rows: (label, claude_usd, external). All figures are API-equivalent
+# (list-price replacement cost). The external segment stacks onto the Claude bar
+# (same row) like the token chart's stacked segments.
+# external = ("deepseek", usd) — actual OpenRouter spend, or
+#            ("grok", usd) — computed from grok's per-turn token log
+#            (~/.grok/logs/unified.jsonl) at grok-4.5 rates ($2 / $0.50 cached /
+#            $6 per 1M), summed over the matched eval sessions.
 COST_R1 = [
-    ("fable + grok workers",     2.69, ("grok", 0.35, "≈5%p, scaled", "≈5%p, 추정")),
+    ("fable + grok workers",     2.69, ("grok", 2.74)),
     ("fable + deepseek workers", 3.11, ("deepseek", 1.71)),
     ("fable + sonnet workers",   11.05, None),
     ("sonnet solo",              5.49, None),
     ("fable solo",               8.84, None),
-    ("grok solo",                0.0, ("grok", 0.07, "≈1%p, scaled", "≈1%p, 추정")),
+    ("grok solo",                0.0, ("grok", 0.79)),
 ]
 COST_R2 = [
-    ("fable + grok workers",     2.97, ("grok", 0.35, "≈5%p, scaled", "≈5%p, 추정")),
+    ("fable + grok workers",     2.97, ("grok", 4.36)),
     ("fable + deepseek workers", 3.27, ("deepseek", 2.60)),
     ("fable + sonnet workers",   11.54, None),
     ("sonnet solo (avg of 3)",   5.99, None),
     ("fable solo",               9.95, None),
-    ("grok solo",                0.0, ("grok", 0.07, "≈1%p, measured", "≈1%p, 실측")),
+    ("grok solo",                0.0, ("grok", 1.10)),
 ]
 
 def fmt(n):
@@ -236,13 +234,14 @@ def chart_tokens(round_no, tokens, in_vmax, out_vmax, lang="en"):
     s += text(20, TITLE_Y, st["tokens_title"](round_no), TITLE_SIZE, INK, weight="600")
     s += text(20, CAP_Y1, st["tokens_caption1"], CAP_SIZE, MUTED)
     s += text(20, CAP_Y2, st["tokens_caption2"], CAP_SIZE, MUTED)
-    order = {"fable": 0, "sonnet": 1, "haiku": 2, "deepseek": 3}
+    order = {"fable": 0, "sonnet": 1, "haiku": 2, "deepseek": 3, "grok": 4}
+    legend = ("fable", "sonnet", "haiku", "deepseek", "grok")
     panels = [(st["input_panel"], 0, in_vmax, BAR_X0, 360), (st["output_panel"], 1, out_vmax, 715, 200)]
     axis_y = panel_top + 14 + panel_h
     for ptitle, idx, vmax, x0, pw in panels:
         s += text(x0, panel_top + 2, ptitle, 12, INK, weight="600")
         y = panel_top + 14
-        for label, models, gctx in tokens:
+        for label, models in tokens:
             ms = sorted(models, key=lambda t: order[t[0]])
             by = y + (row_h - BAR_H) / 2  # center the bar on the label's baseline
             if idx == 0:
@@ -258,14 +257,6 @@ def chart_tokens(round_no, tokens, in_vmax, out_vmax, lang="en"):
                           f'fill="{MODEL_COLOR[m]}" stroke="{SURFACE}" stroke-width="2"/>\n')
                 x += bw
             parts = [fmt((tin, tout)[idx]) for m, tin, tout in ms]
-            if idx == 0 and gctx:
-                bw = pw * gctx / vmax
-                s += (f'<rect x="{x:.1f}" y="{by:.1f}" width="{bw:.1f}" height="{BAR_H}" rx="3" '
-                      f'fill="{MODEL_COLOR["grok"]}" fill-opacity="0.25" '
-                      f'stroke="{MODEL_COLOR["grok"]}" stroke-dasharray="3,2"/>\n')
-                x += bw
-                total += gctx
-                parts.append(f"ctx {fmt(gctx)}")
             lbl = " + ".join(parts) or "—"
             s += text(x0 + pw * min(total, vmax) / vmax + 8, y + row_h - 9, lbl, 10, INK2)
             y += row_h + gap
@@ -274,13 +265,10 @@ def chart_tokens(round_no, tokens, in_vmax, out_vmax, lang="en"):
         s += text(x0 + pw, y + AXIS_DY, fmt(vmax), AXIS_SIZE, MUTED, anchor="end")
     # legend (bottom)
     lx = 220; ly = axis_y + 40
-    for m in ("fable", "sonnet", "haiku", "deepseek"):
+    for m in legend:
         s += f'<rect x="{lx}" y="{ly - 9}" width="10" height="10" rx="2" fill="{MODEL_COLOR[m]}"/>\n'
         s += text(lx + 14, ly, m, 11, INK2)
         lx += 14 + 8 * len(m) + 26
-    s += (f'<rect x="{lx}" y="{ly - 9}" width="10" height="10" rx="2" fill="{MODEL_COLOR["grok"]}" '
-          f'fill-opacity="0.25" stroke="{MODEL_COLOR["grok"]}" stroke-dasharray="3,2"/>\n')
-    s += text(lx + 14, ly, st["grok_ctx"], 11, INK2)
     return s + "</svg>\n"
 
 # --------------------------------------------------------- chart 3: cost ----
@@ -288,8 +276,8 @@ def chart_cost(round_no, cost, lang="en"):
     st = STRINGS[lang]
     # Same system as the tokens chart: shared canvas / label column / bar-start /
     # row + bar heights, one row per config, cost sources drawn as stacked
-    # segments (Claude $, then deepseek $ or grok $-equivalent), colored to match
-    # a bottom legend. grok's segment is its dollar-equivalent, tagged with %p.
+    # segments (Claude $, then deepseek or grok $), colored to match a bottom
+    # legend. All figures are API-equivalent.
     x0, xmax, W = BAR_X0, BAR_XMAX, CHART_W
     row_h, gap = ROW_H, 10
     vmax = 22.0
@@ -313,21 +301,13 @@ def chart_cost(round_no, cost, lang="en"):
                   f'fill="{BAR_BLUE}" stroke="{SURFACE}" stroke-width="2"/>\n')
             x += bw
             parts.append(f"${usd:.2f}")
-        if ext:  # external segment stacked on top of Claude
-            if ext[0] == "grok":
-                _, dollar, note_en, note_ko = ext
-                bw = (xmax - x0) * dollar / vmax
-                s += (f'<rect x="{x:.1f}" y="{by:.1f}" width="{max(bw, 3):.1f}" height="{BAR_H}" rx="3" '
-                      f'fill="{MODEL_COLOR["grok"]}" stroke="{SURFACE}" stroke-width="2"/>\n')
-                x += bw
-                parts.append(f"${dollar:.2f} ({note_ko if lang == 'ko' else note_en})")
-            else:
-                _, val = ext
-                bw = (xmax - x0) * val / vmax
-                s += (f'<rect x="{x:.1f}" y="{by:.1f}" width="{max(bw, 3):.1f}" height="{BAR_H}" rx="3" '
-                      f'fill="{MODEL_COLOR["deepseek"]}" stroke="{SURFACE}" stroke-width="2"/>\n')
-                x += bw
-                parts.append(f"${val:.2f}")
+        if ext:  # external segment (deepseek or grok $) stacked on top of Claude
+            model, val = ext
+            bw = (xmax - x0) * val / vmax
+            s += (f'<rect x="{x:.1f}" y="{by:.1f}" width="{max(bw, 3):.1f}" height="{BAR_H}" rx="3" '
+                  f'fill="{MODEL_COLOR[model]}" stroke="{SURFACE}" stroke-width="2"/>\n')
+            x += bw
+            parts.append(f"${val:.2f}")
         s += text(x + 8, base, " + ".join(parts) or "$0", AXIS_SIZE, INK2)
         y += row_h + gap
 

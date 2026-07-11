@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 412" width="1050" height="412" role="img" aria-label="라운드 1 조합별 잠재 비용">
 <rect width="1050" height="412" rx="8" fill="#fcfcfb"/>
 <text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">라운드 1 — 잠재 비용(달러, API 환산)</text>
-<text x="20" y="48" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude: 측정값(run.json, API 정가 기준) · deepseek: 자체 지갑(OpenRouter).</text>
-<text x="20" y="63" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok: SuperGrok 구독(월 $30) — 주간 쿼터 %p + 달러 상당액 참고 표기.</text>
+<text x="20" y="48" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">API 정가 환산(대체비용): Claude는 run.json · deepseek는 OpenRouter 실비 · grok은 자체 토큰 로그를 grok-4.5 단가로 환산.</text>
+<text x="20" y="63" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">실제 지출은 다름 — 둘 다 구독(grok SuperGrok 월 $30, Claude Max x20 월 $200)이라 실행당 한계비용 ≈ $0; 이 막대는 API 정가 환산값.</text>
 <text x="210" y="131" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok 워커</text>
 <rect x="220.0" y="119.0" width="94.2" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<rect x="314.1" y="119.0" width="12.2" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
-<text x="334.4" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$2.69 + $0.35 (≈5%p, 추정)</text>
+<rect x="314.1" y="119.0" width="95.9" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="418.04999999999995" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$2.69 + $2.74</text>
 <text x="210" y="167" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek 워커</text>
 <rect x="220.0" y="155.0" width="108.8" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
 <rect x="328.9" y="155.0" width="59.9" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
@@ -21,8 +21,8 @@
 <rect x="220.0" y="263.0" width="309.4" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
 <text x="537.4000000000001" y="275" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$8.84</text>
 <text x="210" y="311" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok 단독</text>
-<rect x="220.0" y="299.0" width="3.0" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
-<text x="230.45" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0.07 (≈1%p, 추정)</text>
+<rect x="220.0" y="299.0" width="27.7" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="255.65" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0.79</text>
 <line x1="220" y1="330" x2="990" y2="330" stroke="#c3c2b7"/>
 <text x="220.0" y="345" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
 <text x="395.0" y="345" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$5</text>

@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 412" width="1050" height="412" role="img" aria-label="Round 2 potential cost per configuration">
 <rect width="1050" height="412" rx="8" fill="#fcfcfb"/>
 <text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Round 2 — potential cost (USD, API-equivalent)</text>
-<text x="20" y="48" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude: measured (run.json, API list prices) · deepseek: its own wallet (OpenRouter).</text>
-<text x="20" y="63" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok: SuperGrok subscription ($30/mo), reported as weekly-quota %p with a dollar-equivalent reference.</text>
+<text x="20" y="48" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">API-equivalent (list-price replacement cost): Claude from run.json · deepseek actual OpenRouter spend · grok from its token log at grok-4.5 rates.</text>
+<text x="20" y="63" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Actual outlay differs — both ran on subscriptions (grok SuperGrok $30/mo, Claude Max x20 $200/mo), where marginal $/run ≈ 0; these are the API-rate equivalents.</text>
 <text x="210" y="131" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok workers</text>
 <rect x="220.0" y="119.0" width="104.0" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<rect x="323.9" y="119.0" width="12.2" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
-<text x="344.2" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$2.97 + $0.35 (≈5%p, scaled)</text>
+<rect x="323.9" y="119.0" width="152.6" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="484.55" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$2.97 + $4.36</text>
 <text x="210" y="167" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek workers</text>
 <rect x="220.0" y="155.0" width="114.5" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
 <rect x="334.4" y="155.0" width="91.0" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
@@ -21,8 +21,8 @@
 <rect x="220.0" y="263.0" width="348.2" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
 <text x="576.25" y="275" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$9.95</text>
 <text x="210" y="311" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo</text>
-<rect x="220.0" y="299.0" width="3.0" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
-<text x="230.45" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0.07 (≈1%p, measured)</text>
+<rect x="220.0" y="299.0" width="38.5" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="266.5" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$1.10</text>
 <line x1="220" y1="330" x2="990" y2="330" stroke="#c3c2b7"/>
 <text x="220.0" y="345" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
 <text x="395.0" y="345" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$5</text>

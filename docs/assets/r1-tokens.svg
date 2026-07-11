@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 412" width="1050" height="412" role="img" aria-label="Round 1 raw tokens per model">
 <rect width="1050" height="412" rx="8" fill="#fcfcfb"/>
 <text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Round 1 — raw tokens per model (input / output)</text>
-<text x="20" y="48" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Dashed green (grok): its own meter's final-context total — no in/out split.</text>
+<text x="20" y="48" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Input bars are fresh (non-cached) tokens; deepseek and grok cache reads live in the table's cache-read column.</text>
 <text x="20" y="63" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">haiku: the model Claude Code uses internally to digest WebSearch/WebFetch pages — it measures the Claude-side session's web traffic.</text>
 <text x="220" y="102" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Input tokens</text>
 <text x="210" y="131" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok workers</text>
-<rect x="220.1" y="119.0" width="33.1" height="16" rx="3" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
-<text x="261.2136" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3k + ctx 735k</text>
+<rect x="220.1" y="119.0" width="37.5" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="265.671795" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3k + 834k</text>
 <text x="210" y="167" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek workers</text>
 <rect x="220.1" y="155.0" width="340.5" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
 <text x="568.62579" y="167" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3k + 7.57M</text>
@@ -22,14 +22,15 @@
 <rect x="220.4" y="263.0" width="61.3" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
 <text x="289.66386" y="275" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">8k + 1.36M</text>
 <text x="210" y="311" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo</text>
-<rect x="220.0" y="299.0" width="6.4" height="16" rx="3" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
-<text x="234.38037" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">ctx 142k</text>
+<rect x="220.0" y="299.0" width="9.0" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="237.01575" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">200k</text>
 <line x1="220" y1="330" x2="580" y2="330" stroke="#c3c2b7"/>
 <text x="220" y="345" font-size="10" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
 <text x="580" y="345" font-size="10" fill="#898781" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">8.00M</text>
 <text x="715" y="102" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Output tokens</text>
 <rect x="715.0" y="119.0" width="16.2" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<text x="739.184" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">16k</text>
+<rect x="731.2" y="119.0" width="35.9" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="775.073" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">16k + 36k</text>
 <rect x="715.0" y="155.0" width="18.8" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
 <rect x="733.8" y="155.0" width="187.4" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
 <text x="923.0" y="167" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">19k + 187k</text>
@@ -43,7 +44,8 @@
 <rect x="715.0" y="263.0" width="49.8" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
 <rect x="764.8" y="263.0" width="14.1" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
 <text x="786.954" y="275" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">50k + 14k</text>
-<text x="723.0" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">—</text>
+<rect x="715.0" y="299.0" width="11.4" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="734.402" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">11k</text>
 <line x1="715" y1="330" x2="915" y2="330" stroke="#c3c2b7"/>
 <text x="715" y="345" font-size="10" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
 <text x="915" y="345" font-size="10" fill="#898781" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">200k</text>
@@ -55,6 +57,6 @@
 <text x="402" y="370" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">haiku</text>
 <rect x="468" y="361" width="10" height="10" rx="2" fill="#4a3aa7"/>
 <text x="482" y="370" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">deepseek</text>
-<rect x="572" y="361" width="10" height="10" rx="2" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
-<text x="586" y="370" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok (ctx)</text>
+<rect x="572" y="361" width="10" height="10" rx="2" fill="#008300"/>
+<text x="586" y="370" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
 </svg>
