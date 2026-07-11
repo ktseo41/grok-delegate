@@ -15,7 +15,7 @@ without the raw data.
 **Verdict: yes.** fable + one grok worker per topic beat every alternative tested — a
 perfect score on both task shapes (72/72 lookup, 72/72 judgment traps), at the lowest
 Claude-side spend of each round ($2.69 / $2.97 API-equivalent, no web usage on the Claude
-meter at all) and the fastest wall-clock. In this configuration the orchestrator only
+meter at all). In this configuration the orchestrator only
 splits the task and assembles what workers report — no re-verification pass; a variant
 that adds one scored the same with grok workers and only multiplied the Claude bill
 (raw runs in the workspace, summary in lesson #8).
@@ -33,32 +33,19 @@ that adds one scored the same with grok workers and only multiplied the Claude b
 | fable solo | 71/72 (98.6%) | 68/72 (94.4%); hit both release-timing traps |
 | grok solo | **72/72 (100%)** | 67/72 (93.1%) — hit the exact same traps as fable solo |
 
-Scoring was one unified procedure per round — a single judge session that did not know
-which report came from which configuration (blind), against one shared answer key;
-unanswered cells score zero and the denominator is 72 for every row (details in
-"Controls that made the numbers trustworthy" below).
-
-The perfect scores came from narrow scope: one worker per topic, and every claim required
-to come from a page actually fetched in that session. Under those conditions grok workers
-were perfect on both task shapes, and deepseek workers — once their execution channel
-(not the model itself but the path that delivers work to it, here the codex CLI +
-OpenRouter, with its config, gates, and retry rules) was repaired — effectively matched
-them at 143/144 across both rounds (perfect on the judgment task), just 5–6× slower. Only sonnet workers let a wrong index choice through on the
-judgment task (69/72).
-
 <sub>*A variant where the orchestrator re-verifies and corrects every worker result was
 also run, but the goal here is testing grok delegation, not workflows, so it is excluded —
 same perfect grok-worker scores at 2–3× the Claude-side cost. Raw runs in the experiment
 workspace.*</sub>
 
-## Why deepseek is in the mix
+### Why deepseek is in the mix
 
-I built this skill, and I had already been delegating research to deepseek in day-to-day
-use. The method is simple: calling the codex CLI from Claude Code is already a common
-pattern, so swapping just that call's model to deepseek keeps the familiar path and only
-trades in deepseek's far lower rate — which mattered more given I don't keep a ChatGPT
-subscription. Since this was already how I delegated, I put it in the comparison to see how
-the way I actually work stacks up against grok delegation.
+I had already been delegating research to deepseek in day-to-day use — calling the codex
+CLI from Claude Code is already a widely-used pattern, so swapping just the model to
+deepseek keeps the familiar path and only trades in deepseek's far lower rate, which
+mattered more given I don't keep a ChatGPT subscription. Since this was already how I
+delegated, I put it in the comparison to see how the way I actually work stacks up against
+grok delegation.
 
 ## The tasks
 
@@ -98,26 +85,26 @@ the way I actually work stacks up against grok delegation.
 
 **Raw tokens per model**
 
-| Configuration | Model | sessions⁵ | in | out | cache write | cache read |
+| Configuration | Model | sessions¹ | in | out | cache write | cache read |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | fable + grok workers | fable-5 | 1 | 3,025 | 16,184 | 73,594 | 375,824 |
-| | grok-4.5³ | 12 | 834,126 | 35,889 | — | 1,715,968 |
+| | grok-4.5² | 12 | 834,126 | 35,889 | — | 1,715,968 |
 | fable + deepseek workers | fable-5 | 1 | 3,176 | 18,750 | 68,874 | 760,200 |
-| | deepseek-v4-flash | 15 | 7,566,286¹ | 187,377² | — | 11,094,784¹ |
+| | deepseek-v4-flash | 15 | 7,566,286³ | 187,377⁴ | — | 11,094,784³ |
 | fable + sonnet workers | fable-5 | 1 | 10,123 | 24,916 | 89,685 | 787,448 |
 | | sonnet-5 | 12 | 116,460 | 52,193 | 409,152 | 2,567,989 |
-| | haiku-4.5⁴ | — | 2,895,427 | 30,475 | 0 | 0 |
+| | haiku-4.5⁵ | — | 2,895,427 | 30,475 | 0 | 0 |
 | sonnet solo | sonnet-5 | 1 | 18,816 | 31,487 | 153,605 | 5,962,593 |
 | | haiku-4.5 | — | 1,599,289 | 22,395 | 0 | 0 |
 | fable solo | fable-5 | 1 | 8,330 | 49,839 | 133,803 | 1,939,729 |
 | | haiku-4.5 | — | 1,361,978 | 14,115 | 0 | 0 |
 | grok solo | grok-4.5 | 1 | 200,350 | 11,402 | — | 636,416 |
 
-<sub>¹ deepseek's meter reports cache hits only as cache read (folded *inside* its original input total of 18,661,070) and reports no cache write (creation) — to match Claude's columns, the 11,094,784 cache hits are moved to the cache-read column and `in` keeps only the 7,566,286 fresh input. The input is large because deepseek workers collect via shell fetches, reading raw page sources whole.<br>
-² of the 187,377 output, 72,599 are reasoning tokens — deepseek and grok break reasoning out (grok's is footnote ³); only Claude (run.json) does not meter reasoning separately, so its reasoning is folded into output (this does not mean Claude reasoned less — its meter just doesn't surface it).<br>
-³ grok's in (fresh) / out / cache read are summed from its own per-turn log (unified.jsonl) — grok, like deepseek, reports no cache write (hence —), and out includes reasoning tokens (e.g. 11,731 for the R1 workers). Session-matching was cross-checked against each session's final context size (ctxTokens, the wrapper's signals.json).<br>
-⁴ haiku is not run by the eval — it is the model Claude Code's WebSearch/WebFetch tooling uses internally to digest fetched pages, so its row measures the *Claude-side session's* web traffic (an internal model running inside the active Claude session, not a spawned session, so its sessions cell is —). The grok- and deepseek-worker orchestrators ran with web tools disabled, so haiku is zero there (rows omitted); the sonnet-worker haiku row is the *workers'* web traffic (they run inside the same Claude session).<br>
-⁵ sessions = actual invocations (retries included). deepseek 15 = 12 first-wave + 3 retries.</sub>
+<sub>¹ sessions = actual invocations (retries included). deepseek 15 = 12 first-wave + 3 retries.<br>
+² grok's in (fresh) / out / cache read are summed from its own per-turn log (unified.jsonl) — grok, like deepseek, reports no cache write (hence —), and out includes reasoning tokens (e.g. 11,731 for the R1 workers). Session-matching was cross-checked against each session's final context size (ctxTokens, the wrapper's signals.json).<br>
+³ deepseek's meter reports cache hits only as cache read (folded *inside* its original input total of 18,661,070) and reports no cache write (creation) — to match Claude's columns, the 11,094,784 cache hits are moved to the cache-read column and `in` keeps only the 7,566,286 fresh input. The input is large because deepseek workers collect via shell fetches, reading raw page sources whole.<br>
+⁴ of the 187,377 output, 72,599 are reasoning tokens — deepseek and grok break reasoning out (grok's is footnote ²); only Claude (run.json) does not meter reasoning separately, so its reasoning is folded into output (this does not mean Claude reasoned less — its meter just doesn't surface it).<br>
+⁵ haiku is not run by the eval — it is the model Claude Code's WebSearch/WebFetch tooling uses internally to digest fetched pages, so its row measures the *Claude-side session's* web traffic (an internal model running inside the active Claude session, not a spawned session, so its sessions cell is —). The grok- and deepseek-worker orchestrators ran with web tools disabled, so haiku is zero there (rows omitted); the sonnet-worker haiku row is the *workers'* web traffic (they run inside the same Claude session).</sub>
 
 ---
 
@@ -142,24 +129,26 @@ All figures are **API-equivalent** (replacement cost). Claude from run.json, dee
 
 **Raw tokens per model**
 
-| Configuration | Model | sessions⁵ | in | out | cache write | cache read |
+| Configuration | Model | sessions¹ | in | out | cache write | cache read |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | fable + grok workers | fable-5 | 1 | 3,019 | 18,420 | 75,322 | 511,531 |
-| | grok-4.5³ | 21 | 1,281,831 | 60,100 | — | 2,871,296 |
+| | grok-4.5² | 21 | 1,281,831 | 60,100 | — | 2,871,296 |
 | fable + deepseek workers | fable-5 | 1 | 3,180 | 18,638 | 60,639 | 1,092,470 |
-| | deepseek-v4-flash | 15 | 13,675,649¹ | 259,998² | — | 14,725,376¹ |
+| | deepseek-v4-flash | 15 | 13,675,649³ | 259,998⁴ | — | 14,725,376³ |
 | fable + sonnet workers | fable-5 | 1 | 16,804 | 30,695 | 98,534 | 707,014 |
 | | sonnet-5 | 12 | 109,007 | 62,005 | 422,890 | 3,642,666 |
-| | haiku-4.5⁴ | — | 2,363,450 | 34,213 | 0 | 0 |
+| | haiku-4.5⁵ | — | 2,363,450 | 34,213 | 0 | 0 |
 | sonnet solo (avg of 3 runs) | sonnet-5 | 1 | 19,799 | 40,191 | 176,709 | 7,067,494 |
 | | haiku-4.5 | — | 1,454,400 | 26,202 | 0 | 0 |
 | fable solo | fable-5 | 1 | 4,065 | 50,150 | 200,396 | 1,927,217 |
 | | haiku-4.5 | — | 1,134,678 | 13,843 | 0 | 0 |
 | grok solo | grok-4.5 | 1 | 248,095 | 11,056 | — | 1,071,232 |
 
-<sub>¹ of the original 28,401,025 input total, 14,725,376 cache hits are split out to the cache-read column (deepseek folds cache hits into input and reports no cache write), leaving 13,675,649 fresh input in `in` — same handling as round-1 footnote ¹.<br>
-² of the 259,998 output, some are reasoning tokens — same as round-1 footnote ² (deepseek and grok break reasoning out).<br>
-³ ⁴ ⁵ same footnotes as the round-1 table (sessions: grok 21 = 12 first-wave + 9 retries, deepseek 15 = 12 first-wave + 3 retries).</sub>
+<sub>¹ same as the round-1 table. deepseek 15 = 12 first-wave + 3 retries.<br>
+² same as the round-1 table. grok sessions = grok-4.5's session count (21 = 12 first-wave + 9 retries).<br>
+³ of the original 28,401,025 input total, 14,725,376 cache hits are split out to the cache-read column (deepseek folds cache hits into input and reports no cache write), leaving 13,675,649 fresh input in `in` — same handling as round-1 footnote ³.<br>
+⁴ of the 259,998 output, some are reasoning tokens — same as round-1 footnote ⁴ (deepseek and grok break reasoning out).<br>
+⁵ same as the round-1 table.</sub>
 
 ---
 
@@ -182,10 +171,18 @@ moves the heavy web collection onto a cheaper external meter, coming in below fa
 **But actual outlay differs.** grok here ran on a SuperGrok subscription ($30/mo) and Claude
 on Max x20 ($200/mo); under a subscription the marginal dollar cost per run is ≈$0 (you burn
 quota, not cash). grok's subscription is far cheaper than its API-equivalent — round-1
-workers cost ≈$0.35 of quota vs $2.74 at API rates, ~8× — so the API bars actually
+workers cost ≈$0.35 of quota vs $2.74 at API rates, about 8× — so the API bars actually
 *understate* grok delegation's real-world advantage. The skill's premise ("push heavy
 collection to grok to spare the Claude quota") holds on the API basis and is stronger on the
 subscription basis.
+
+**Per-worker latency (aside).** Measured time per worker: grok workers ran a median 30–45s
+(the trailer's wallSec), deepseek workers several times that with a wide spread (round-1
+median 82s, up to about 8 min, from the codex rollout timestamps) — the same cause as their
+large input above, since they shell-fetch and read whole page sources, stretching the
+session. Per-configuration wall-clock is not used as a comparison metric here: the runs were
+interactive (a human approving tool calls) and worker parallelization differed by
+configuration.
 
 ### Where each number comes from — and the grok caveat
 
