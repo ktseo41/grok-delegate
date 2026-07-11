@@ -29,13 +29,15 @@ FONT = 'font-family="system-ui,-apple-system,Segoe UI,sans-serif"'
 # Accuracy rows: (label, lost cells, score text, non-blind?)
 ACC_R1 = [
     ("fable + grok workers",       0,    "71/71 · 100%‡", True),
+    ("fable + sonnet workers",     0,    "71/71 · 100%‡", True),
     ("fable solo",                 1,    "69/70 · 98.6%",  False),
     ("grok solo",                  1,    "66/67 · 98.5%†", True),
     ("sonnet solo",                2,    "68/70 · 97.1%",  False),
 ]
 NOTE_R1 = ["Lighter bars: not blind-judged. † = scored vs the frozen answer key; unverifiable cells excluded.",
-           "‡ = judged by re-verifying every cell against official pages on scoring day (the frozen key had",
-           "drifted); denominator 71 — one MAS cell unscorable vs two in the blind-judged runs."]
+           "‡ = judged by re-verifying every cell against official pages on scoring day (the frozen key had drifted).",
+           "fable + deepseek workers is off this scale: a codex tool regression plus an OpenRouter credit outage",
+           "killed 10/12 workers → 12/72‡ — but every cell its workers did complete was correct."]
 ACC_R2 = [
     ("fable + grok workers",       0,    "72/72 · 100%",   False),
     ("sonnet solo (avg of 3)",     1.67, "70.3/72 · 97.7%", False),
@@ -53,6 +55,10 @@ NOTE_R2 = ["Lighter bars: not blind-judged. † = scored vs the frozen answer ke
 # split), drawn as a dashed segment on the input panel.
 TOKENS_R1 = [
     ("fable + grok workers",     [("fable", 3025, 16184)], 735055),
+    ("fable + deepseek workers", [("fable", 7711, 26371),
+                                  ("deepseek", 928845, 19389)], None),
+    ("fable + sonnet workers",   [("fable", 10123, 24916), ("sonnet", 116460, 52193),
+                                  ("haiku", 2895427, 30475)], None),
     ("sonnet solo",              [("sonnet", 18816, 31487), ("haiku", 1599289, 22395)], None),
     ("fable solo",               [("fable", 8330, 49839), ("haiku", 1361978, 14115)], None),
     ("grok solo",                [], 141786),
@@ -71,6 +77,8 @@ TOKENS_R2 = [
 # Cost rows: (label, claude_usd, external) — external = (model, lo, hi) or None.
 COST_R1 = [
     ("fable + grok workers",     2.69, ("grok", 1.60, 15.90)),
+    ("fable + deepseek workers", 5.06, ("deepseek", 0.09, 0.09)),
+    ("fable + sonnet workers",   11.05, None),
     ("sonnet solo",              5.49, None),
     ("fable solo",               8.84, None),
     ("grok solo",                0.0, ("grok", 0.31, 5.08)),
@@ -235,7 +243,7 @@ if __name__ == "__main__":
     charts = {
         "r1-accuracy.svg": lambda: chart_accuracy(1, ACC_R1, "of 70 fields; ‡ of 71", NOTE_R1),
         "r2-accuracy.svg": lambda: chart_accuracy(2, ACC_R2, "of 72 fields", NOTE_R2),
-        "r1-tokens.svg":   lambda: chart_tokens(1, TOKENS_R1, 1_800_000, 70_000),
+        "r1-tokens.svg":   lambda: chart_tokens(1, TOKENS_R1, 3_200_000, 120_000),
         "r2-tokens.svg":   lambda: chart_tokens(2, TOKENS_R2, 4_200_000, 130_000),
         "r1-cost.svg":     lambda: chart_cost(1, COST_R1),
         "r2-cost.svg":     lambda: chart_cost(2, COST_R2),
