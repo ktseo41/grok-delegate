@@ -221,32 +221,25 @@ Charts regenerate via `assets/gen_charts.py`.
 - **Identical prompts.** Paired configurations shared the same prompt file; the two
   advisor(fable) runs differ by exactly one documented line, byte-identical otherwise
   (`diff` kept).
-- **sonnet solo = the average of 3 runs (69.3/72).** Two of the three carried
-  advisor(fable), a stronger-model consultation tool, and it **never fired** — the plumbing
-  was verified with forced probe calls, so non-firing was the model's choice, and a one-line
-  "feel free to consult" hint changed nothing. Since the treatment never arrived, all three
-  runs are repeats of sonnet solo, and their spread (70/72, 69/72, 69/72) estimates sonnet's
-  run-to-run variance. Advisor behavior is not this eval's question, so no further runs.
+- **sonnet solo = the average of 3 runs (69.3/72).** Two of the three carried advisor(fable),
+  which never fired (see lesson #4), so all three are repeats of sonnet solo. Their spread
+  (70/72, 69/72, 69/72) estimates sonnet's run-to-run variance. Advisor behavior is not this
+  eval's question, so no further runs.
 - **Narrow execution window + answer-drift control.** All runs sat inside 2026-07-10–11,
   and release calendars plus the judging records confirm no answer-changing release or rate
-  decision landed inside that window. A both-accepted rule for releases landing on an
-  execution day was fixed in advance (no report ended up needing it). Judging finished the
-  same day for all configurations.
+  decision landed inside that window. A both-accepted rule for a release landing on an
+  execution day was fixed in advance (never needed), and judging finished the same day for
+  all configurations.
 - **Predictions written down first.** Expectations — which configuration would win, whether
   the advisor(fable) would fire on its own — were written to a file before execution and
-  compared against the results afterwards. This guards against fitting the interpretation to
-  the outcome. Worker-failure handling (one retry, then orchestrator collects directly) was
-  also pre-declared in the harness prompts.
+  compared afterwards, to guard against fitting the interpretation to the outcome.
+  Worker-failure handling (one retry, then orchestrator collects directly) was also
+  pre-declared in the harness prompts.
 - **Raw per-model token reporting.** Tokens are reported per model (fable / sonnet / haiku /
   grok / deepseek) as raw values; models with different prices are never summed into one
-  number. (haiku-4.5 is not a tested configuration — it is the model Claude Code's WebSearch
-  uses automatically to summarize fetched pages, so it shows up in every Claude-side run.)
-  Claude-side figures come from `run.json` model-usage data; grok's own spend from the
-  wrapper's `[grok-usage]` trailer (ctxTokens, wall seconds, tool calls per worker). The
-  wrapper is this repo's `scripts/grok-run.sh`, the launch script every grok run here goes
-  through: the grok CLI reports no usage on its own, so the wrapper appends this trailer
-  after each session, and it also enforces the run-mode guardrails (tool allowlists, the
-  web-collection gate described below).
+  number. Sources: Claude-side from `run.json` model-usage data, grok-side from the wrapper
+  (`scripts/grok-run.sh` — every grok run goes through it; it appends the usage trailer and
+  enforces the run-mode guardrails) via its `[grok-usage]` trailer.
 - **Tool discipline.** All configurations: no skills, no MCP; subagents only where they
   *are* the configuration's worker channel (the sonnet-worker configuration spawns its
   workers via the Agent tool; grok and deepseek workers run through their external CLIs),
@@ -315,32 +308,20 @@ Charts regenerate via `assets/gen_charts.py`.
 
 ## Reusing the frame for the next model / channel
 
-To compare a new delegate (a different CLI, a different model family, a new mode) against
-these numbers, keep the frame and swap the configuration:
+To compare a new delegate (a different CLI, a different model family, a new mode), keep the
+frame and swap the configuration. Most of it is just applying the principles above — blind
+judging, raw per-model token reporting (no summing), gating workers on collection evidence
+plus reporting fallback counts, running cheapest-first inside a narrow window and logging CLI
+and model versions (these runs: claude CLI 2.1.206, grok 0.2.93, grok-4.5, claude-sonnet-5 /
+claude-fable-5). Two rules to add on top:
 
-1. **Pick the task shape by what you want to discriminate.** Plain lookup tasks cannot
-   discriminate — every model bunches up near a perfect score (round 1). If you want spread,
-   plant judgment traps (official-vs-commonly-quoted definitions, release timing, source
-   attribution, cascades). Re-check the trap answers on execution day — they shift with
-   release calendars.
-2. **Always run three reference configurations**: the candidate structure (orchestrator +
+1. **Always run three reference configurations**: the candidate structure (orchestrator +
    delegate workers), the orchestrator model solo, and the delegate model solo. The finding
    is *structure beats both solos*; candidate-vs-one-solo confounds model and procedure.
-3. **Blind-shuffle results before judging; ban methodology traces in result files; audit the
-   judge's file access afterwards.** The judge verifies against primary sources, verbatim,
-   and may not resolve a cell from background knowledge.
-4. **Report tokens per model, raw, from each channel's first-party metering** — never sum
-   across models. For an external delegate, capture its own meter (this repo's wrapper prints
-   the `[grok-usage]` trailer for exactly this reason).
-5. **Gate worker outputs on collection evidence (tool-call counts / tool lists), not exit
-   codes.** Pre-declare the retry budget and the fallback after it (whether the orchestrator
-   may collect directly) in the harness, and **always report how often the fallback fired
-   next to the score** — the score alone cannot distinguish a configuration whose workers did
-   the work from one whose orchestrator filled the gaps.
-6. **Fix the run order cheapest-first, complete all configurations plus judging inside the
-   narrowest window you can, verify with release calendars that nothing answer-changing
-   landed inside it, and log CLI and model versions** (these runs: claude CLI 2.1.206,
-   grok 0.2.93, grok-4.5, claude-sonnet-5 / claude-fable-5).
+2. **Pick the task shape by what you want to discriminate.** Plain lookup tasks bunch up near
+   a perfect score and can't separate configurations (round 1). For spread, plant judgment
+   traps — and re-check the trap answers on execution day, since they shift with release
+   calendars.
 
 ## Open caveats and follow-ups
 
@@ -348,19 +329,15 @@ these numbers, keep the frame and swap the configuration:
   (70·69·69), so 1–2-cell gaps between configurations are inside noise. What survives n=1
   is the *streak* (grok workers at 144/144 across both task shapes) and the *matched
   failure fingerprints* of the solo runs.
-- **Scores are from a unified re-judging on 2026-07-11.** During the original experiment
-  the scoring method varied per run (those records stay in the workspace); every report was
-  then re-scored with one shared key and one procedure, removing the method differences.
-  A few configurations moved by 1–2 cells in absolute terms; the ranking and conclusions
-  are unchanged. Two accuracy cross-checks: before unification, two judge sessions once
-  disagreed on the same cell (an RBA meeting-calendar misread — overturned against the
-  official page, adjudication record in the workspace); in the unified re-judging, round 1's
-  three independent sessions with different shuffles matched cell for cell, while round 2's
-  two sessions split on four quote cells — a rule-interpretation gap ("a quote passes if it
-  exists verbatim at its URL", the pre-registered rule, vs "it must also come from the
-  required release") — adjudicated by the pre-registered rule, which also matches the
-  original experiment's verdicts. A single judge session has its own error rate; cross-run
-  verdict comparison is a cheap error detector.
+- **Scores are from a unified re-judging on 2026-07-11.** The original experiment scored each
+  run differently (those records stay in the workspace); every report was then re-scored with
+  one shared key and one procedure, removing the differences. A few configurations moved by
+  1–2 cells; the ranking and conclusions are unchanged. Evidence the scoring holds up: the few
+  cells where different judge sessions split were all resolved against the primary source (the
+  RBA meeting-calendar misread overturned against the official page; round 2's four split
+  quote cells adjudicated by the pre-registered "passes if verbatim at its URL" rule, which
+  also matches the original experiment's verdicts). A single judge session has its own error
+  rate, so cross-run verdict comparison is a cheap error detector.
 - **Follow-up candidates.** ① fable + sonnet workers plus a re-verification pass on a
   judgment-trap task: whether the verification layer catches the wrong index choice
   (69/72) is the test of sonnet workers' insurance case. ② A haiku-worker configuration
