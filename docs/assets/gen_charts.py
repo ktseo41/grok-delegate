@@ -37,24 +37,21 @@ ACC_R1 = [
 ]
 NOTE_R1 = ["Worker failures: grok 7/12 first-wave silent no-collection, all recovered by retry; deepseek and sonnet workers 0/12."]
 ACC_R2 = [
-    ("fable + grok workers",       0,    "72/72 · 100%",   False),
-    ("fable + deepseek workers",   0,    "71/71 · 100%†",  True),
-    ("sonnet solo (avg of 3)",     1.67, "70.3/72 · 97.7%", False),
-    ("fable solo",                 4,    "68/72 · 94.4%",  False),
-    ("grok solo",                  4,    "67/71 · 94.4%†", True),
+    ("fable + grok workers (re-verify)",      0,    "72/72 · 100%",   False),
+    ("fable + grok workers (delegation only)", 0,   "72/72 · 100%",   False),
+    ("fable + deepseek workers (re-verify)",  0,    "71/71 · 100%†",  True),
+    ("grok solo + fable re-verify",           1,    "70/71 · 98.6%",  False),
+    ("sonnet solo (avg of 3)",                1.67, "70.3/72 · 97.7%", False),
+    ("fable solo + self re-verify",           3,    "69/72 · 95.8%",  False),
+    ("fable solo",                            4,    "68/72 · 94.4%",  False),
+    ("grok solo",                             4,    "67/71 · 94.4%†", True),
+    ("sonnet workers (delegation only)",      4,    "66/70 · 94.3%†", True),
 ]
-NOTE_R2 = ["Final worker failures: grok 3/12, deepseek 5/12 — those topics were collected by the orchestrator itself.",
+NOTE_R2 = ["“delegation only” = the orchestrator only assembles worker reports, no re-verification pass.",
+           "deepseek workers (delegation only) is off this scale: 8/12 workers returned nothing (tool bug,",
+           "fixable) → 24/72 overall — but every cell its workers did complete was correct.",
+           "Re-verify worker failures: grok 3/12, deepseek 5/12 — those topics collected by the orchestrator.",
            "sonnet solo runs: 72/72, 70/72, 69/72."]
-# Structure variants (same round-2 task; the re-verification pass removed or moved).
-ACC_R2V = [
-    ("delegation only — grok workers",   0, "72/72 · 100%",   False),
-    ("grok solo + fable re-verify",           1, "70/71 · 98.6%",  False),
-    ("fable solo + self re-verify",           3, "69/72 · 95.8%",  False),
-    ("delegation only — sonnet workers", 4, "66/70 · 94.3%†", True),
-]
-NOTE_R2V = ["Same task as round 2, one run each. “delegation only” = the orchestrator only assembles worker reports.",
-            "delegation only — deepseek workers is off this scale: 8/12 topics returned nothing (worker tool bug,",
-            "fixable) → 24/72 overall; every cell its workers did complete was correct."]
 
 # Token rows: (label, [(model, in, out), ...], grok_ctx_or_None) — cache columns
 # live in the doc tables. grok exposes only a final-context total (no in/out
@@ -70,9 +67,16 @@ TOKENS_R1 = [
     ("grok solo",                [], 141786),
 ]
 TOKENS_R2 = [
-    ("fable + grok workers",     [("fable", 5490, 41540), ("haiku", 532540, 6558)], 615004),
-    ("fable + deepseek workers", [("fable", 4436, 61922), ("haiku", 776230, 12144),
+    ("fable + grok workers (re-verify)", [("fable", 5490, 41540), ("haiku", 532540, 6558)], 615004),
+    ("fable + grok workers (delegation only)", [("fable", 3019, 18420)], 833433),
+    ("fable + deepseek workers (re-verify)", [("fable", 4436, 61922), ("haiku", 776230, 12144),
                                   ("deepseek", 2175635, 38361)], None),
+    ("deepseek workers (delegation only)", [("fable", 3631, 34063),
+                                  ("deepseek", 3895032, 56806)], None),
+    ("sonnet workers (delegation only)", [("fable", 16804, 30695), ("sonnet", 109007, 62005),
+                                  ("haiku", 2363450, 34213)], None),
+    ("grok solo + fable re-verify", [("fable", 3971, 22792), ("haiku", 566136, 5676)], 247035),
+    ("fable solo + self re-verify", [("fable", 13623, 33629), ("haiku", 951044, 14086)], None),
     ("sonnet solo (avg of 3)",   [("sonnet", 19799, 40191), ("haiku", 1454400, 26202)], None),
     ("fable solo",               [("fable", 4065, 50150), ("haiku", 1134678, 13843)], None),
     ("grok solo",                [], 161675),
@@ -88,8 +92,13 @@ COST_R1 = [
     ("grok solo",                0.0, ("grok", 0.31, 5.08)),
 ]
 COST_R2 = [
-    ("fable + grok workers",     7.66, ("grok", 1.44, 12.03)),
-    ("fable + deepseek workers", 9.81, ("deepseek", 0.20, 0.20)),
+    ("fable + grok workers (re-verify)", 7.66, ("grok", 1.44, 12.03)),
+    ("fable + grok workers (delegation only)", 2.97, ("grok", 1.86, 16.68)),
+    ("fable + deepseek workers (re-verify)", 9.81, ("deepseek", 0.20, 0.20)),
+    ("deepseek workers (delegation only)", 6.83, ("deepseek", 0.36, 0.36)),
+    ("sonnet workers (delegation only)", 11.54, None),
+    ("grok solo + fable re-verify", 5.22, ("grok", 0.52, 9.11)),
+    ("fable solo + self re-verify", 8.13, None),
     ("sonnet solo (avg of 3)",   5.99, None),
     ("fable solo",               9.95, None),
     ("grok solo",                0.0, ("grok", 0.35, 5.79)),
@@ -140,7 +149,7 @@ def chart_accuracy(round_no, rows, denom_note, extra_note=()):
 
 # ------------------------------------------------------- chart 2: tokens ----
 def chart_tokens(round_no, tokens, in_vmax, out_vmax):
-    W = 1000
+    W = 1050
     row_h, gap = 26, 10
     panel_top = 78
     n = len(tokens)
@@ -160,7 +169,7 @@ def chart_tokens(round_no, tokens, in_vmax, out_vmax):
           f'fill-opacity="0.25" stroke="{MODEL_COLOR["grok"]}" stroke-dasharray="3,2"/>\n')
     s += text(lx + 14, ly, "grok (ctx)", 11, INK2)
     order = {"fable": 0, "sonnet": 1, "haiku": 2, "deepseek": 3}
-    panels = [("Input tokens", 0, in_vmax, 195, 330), ("Output tokens", 1, out_vmax, 690, 200)]
+    panels = [("Input tokens", 0, in_vmax, 250, 330), ("Output tokens", 1, out_vmax, 745, 200)]
     for ptitle, idx, vmax, x0, pw in panels:
         s += text(x0, panel_top + 2, ptitle, 12, INK, weight="600")
         y = panel_top + 14
@@ -198,7 +207,7 @@ def chart_tokens(round_no, tokens, in_vmax, out_vmax):
 # --------------------------------------------------------- chart 3: cost ----
 def chart_cost(round_no, cost):
     row_h, cfg_gap = 20, 16
-    x0, W = 290, 920
+    x0, W = 310, 940
     header = 76
     n_rows = sum(2 if ext else 1 for _, _, ext in cost)
     H = header + n_rows * row_h + len(cost) * cfg_gap + 44
@@ -246,9 +255,8 @@ if __name__ == "__main__":
     charts = {
         "r1-accuracy.svg": lambda: chart_accuracy(1, ACC_R1, "of 70 fields", NOTE_R1),
         "r2-accuracy.svg": lambda: chart_accuracy(2, ACC_R2, "of 72 fields", NOTE_R2),
-        "r2-variants-accuracy.svg": lambda: chart_accuracy("2 structure variants", ACC_R2V, "of 72 fields", NOTE_R2V),
         "r1-tokens.svg":   lambda: chart_tokens(1, TOKENS_R1, 10_500_000, 180_000),
-        "r2-tokens.svg":   lambda: chart_tokens(2, TOKENS_R2, 3_000_000, 130_000),
+        "r2-tokens.svg":   lambda: chart_tokens(2, TOKENS_R2, 4_200_000, 130_000),
         "r1-cost.svg":     lambda: chart_cost(1, COST_R1),
         "r2-cost.svg":     lambda: chart_cost(2, COST_R2),
     }

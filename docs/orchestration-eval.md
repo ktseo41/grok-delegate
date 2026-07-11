@@ -20,7 +20,7 @@ perfect with the orchestrator's re-verification pass removed entirely**, at the 
 Claude-side spend of any run ($2.97 API-equivalent, no web usage on the Claude meter at all)
 and the fastest wall-clock. Recommended default: fable orchestrator + one grok worker per
 topic, re-verification optional. Keep re-verification only when your workers are less
-reliable than grok's (see the variants table below).
+reliable than grok's (compare the "delegation only" rows in the table below).
 
 ![Round 1 — cells lost per configuration](assets/r1-accuracy.svg)
 
@@ -28,17 +28,32 @@ reliable than grok's (see the variants table below).
 
 | Configuration | Round 1 (lookup task) | Round 2 (judgment-trap task) |
 | --- | --- | --- |
-| **fable + grok workers** | **70/70 (100%)** — 7/12 first-wave silent no-collection, all recovered by retry (0 final worker failures) | **72/72 (100%)** — fastest (12 min); 3/12 final worker failures, collected by the orchestrator itself |
-| **fable + deepseek workers** | **70/70 (100%)** — 0 worker failures; slowest (22 min) | **71/71 (100%)**† — 5/12 final worker failures, collected by the orchestrator itself |
-| fable + sonnet workers | 69/70 (98.6%) — 0 worker failures; fastest (6 min), heaviest Claude spend | not run with re-verification (without it: variants table below) |
+| **fable + grok workers — with re-verification** | **70/70 (100%)** — 7/12 first-wave silent no-collection, all recovered by retry (0 final worker failures) | **72/72 (100%)** — 12 min; 3/12 final worker failures, collected by the orchestrator itself |
+| **fable + grok workers — delegation only** (no re-verification) | — | **72/72 (100%)** — 9.5 min, cheapest Claude-side run of the whole eval |
+| fable + deepseek workers — with re-verification | **70/70 (100%)** — 0 worker failures; slowest (22 min) | **71/71 (100%)**† — 5/12 final worker failures, collected by the orchestrator itself |
+| deepseek workers — delegation only | — | 24/72† — 8/12 workers returned nothing (tool bug, fixable); every completed cell correct |
+| fable + sonnet workers — with re-verification | 69/70 (98.6%) — 0 worker failures; fastest (6 min), heaviest Claude spend | not run |
+| sonnet workers — delegation only | — | 66/70 (94.3%)† — a wrong index choice passed through uncaught |
+| grok solo collects → fable re-verifies | — | 70/71 (98.6%) |
+| fable solo + self-re-verify workflow | — | 69/72 (95.8%) |
 | sonnet solo | 68/70 (97.1%)\* | 70.3/72 (97.7%) — average of 3 runs\* |
-| fable solo | 69/70 (98.6%) | **68/72 (94.4%) — last**; hit both release-timing traps |
-| grok solo | 66/67 (98.5%)† — facts all correct, citations weak | 67/71 (94.4%)† — **hit the exact same traps as fable solo** |
+| fable solo | 69/70 (98.6%) | 68/72 (94.4%); hit both release-timing traps |
+| grok solo | 66/67 (98.5%)† — facts all correct, citations weak | 67/71 (94.4%)† — hit the exact same traps as fable solo |
 
 † run after the main experiment, scored against the frozen answer key (unverifiable cells
 excluded from the denominator).
 \* the round-1 sonnet run and round-2 runs 2–3 carried an advisor(fable) tool that fired 0
 times — effectively solo runs, so all tables and charts group them under sonnet solo.
+
+The "delegation only" rows are the decomposition of the win: same setup, with the
+orchestrator's re-verification pass removed — it only assembles what workers report. With
+grok workers the score doesn't move (72/72) and Claude-side cost drops to the lowest of any
+run, so the load-bearing parts are **one narrow topic per worker** plus the wrapper's
+**web-collection gate** (which forces workers to fetch real pages). Re-verification is
+insurance for weaker workers: without it, a sonnet worker's wrong index choice went straight
+into the result, and deepseek's tool failures left 8 of 12 topics unanswered. Verification
+*without* narrow workers doesn't reach the top either — grok-solo-collect + fable-re-verify
+(70/71) and fable's self-re-verify (69/72) both fall short of the worker setups.
 
 Two things about the advisor(fable) experiment. First, the advisor plumbing itself was
 verified with forced probe calls before the runs — zero firings means the model chose not to
@@ -49,37 +64,14 @@ sonnet solo, and score gaps between them are run-to-run spread. By the same logi
 round-2 sonnet runs (72/72, 70/72, 69/72) landing at 95.8–100% is our estimate of sonnet's
 run-to-run variance; tables and charts show their average (70.3/72).
 
-### Which ingredient does the work?
-
-The main runs could not tell whether the perfect scores came from *delegating* or from the
-orchestrator's *re-verification pass* — the two always ran together. A follow-up on the same
-round-2 task separated them:
-
-![Round 2 structure variants — cells lost per configuration](assets/r2-variants-accuracy.svg)
-
-| Variant (one run each) | Score | Verdict |
-| --- | --- | --- |
-| **delegation only — grok workers** (re-verification removed) | **72/72** | **Recommended default.** Same perfect score, lowest Claude spend of any run ($2.97), 9.5 min |
-| grok solo collects → fable re-verifies | 70/71 | Verification alone doesn't reach it |
-| fable solo + self-re-verify workflow | 69/72 | Self-verification adds little (+1 over plain fable solo) |
-| delegation only — sonnet workers | 66/70 | A wrong index choice sailed through uncaught — not worth it as workers |
-| delegation only — deepseek workers | 24/72 | 8/12 workers returned nothing (tool bug, fixable worker-side); **every completed cell correct** |
-
-So the load-bearing parts are **one narrow topic per worker, forced to fetch real pages**
-(the wrapper's web-collection gate) — not the re-verification pass. Two model families
-failed the same trap cells when run solo over all 12 topics; the same class of model used as
-one-topic workers didn't. Re-verification is insurance for less reliable workers: without it,
-deepseek's tool failures leave topics unanswered and a sonnet worker's judgment slip goes
-straight into the result.
-
-Two readings to keep in mind. The main-table worker scores include a pre-declared fallback
-("if a worker fails after its retry, the orchestrator collects that topic itself"), which
-fired for 3/12 grok and 5/12 deepseek topics in round 2 — those scores measure the whole
-procedure; worker quality shows up in the failure rates and the cost section. And grok's
-worker failures are *silent no-collection*: clean exits with plausible reports written from
-model memory, zero web calls — invisible except in the wrapper's tool-call trailer. A retry
-that demands real fetches recovered them, and the wrapper now fails such runs automatically
-(the web-collection gate — see the lessons section).
+Two readings to keep in mind. The with-re-verification worker scores include a pre-declared
+fallback ("if a worker fails after its retry, the orchestrator collects that topic itself"),
+which fired for 3/12 grok and 5/12 deepseek topics in round 2 — those scores measure the
+whole procedure; worker quality shows up in the failure rates and the cost section. And
+grok's worker failures are *silent no-collection*: clean exits with plausible reports written
+from model memory, zero web calls — invisible except in the wrapper's tool-call trailer. A
+retry that demands real fetches recovered them, and the wrapper now fails such runs
+automatically (the web-collection gate — see the lessons section).
 
 ## The tasks
 
@@ -193,47 +185,59 @@ collection a run did.
 
 | Configuration | Model | in | out | cache write | cache read |
 | --- | --- | ---: | ---: | ---: | ---: |
-| fable + grok workers | fable-5 | 5,490 | 41,540 | 139,750 | 2,051,132 |
+| fable + grok workers (re-verify) | fable-5 | 5,490 | 41,540 | 139,750 | 2,051,132 |
 | | haiku-4.5 | 532,540 | 6,558 | 0 | 0 |
 | | grok-4.5 (16 worker sessions) — ctxTokens 615,004³ | — | — | — | — |
-| fable + deepseek workers | fable-5 | 4,436 | 61,922 | 170,222 | 2,196,121 |
+| fable + grok workers (delegation only) | fable-5 | 3,019 | 18,420 | 75,322 | 511,531 |
+| | haiku-4.5 — **none**⁴ | 0 | 0 | 0 | 0 |
+| | grok-4.5 (21 worker sessions) — ctxTokens 833,433³ | — | — | — | — |
+| fable + deepseek workers (re-verify) | fable-5 | 4,436 | 61,922 | 170,222 | 2,196,121 |
 | | haiku-4.5 | 776,230 | 12,144 | 0 | 0 |
 | | deepseek-v4-flash (19 runs) | 2,175,635¹ | 38,361² | — | — |
+| deepseek workers (delegation only) | fable-5 | 3,631 | 34,063 | 91,662 | 3,253,122 |
+| | deepseek-v4-flash (23 metered runs) | 3,895,032¹ | 56,806² | — | — |
+| sonnet workers (delegation only) | fable-5 | 16,804 | 30,695 | 98,534 | 707,014 |
+| | sonnet-5 | 109,007 | 62,005 | 422,890 | 3,642,666 |
+| | haiku-4.5 | 2,363,450 | 34,213 | 0 | 0 |
+| grok solo + fable re-verify | fable-5 | 3,971 | 22,792 | 101,641 | 1,283,069 |
+| | haiku-4.5 | 566,136 | 5,676 | 0 | 0 |
+| | grok-4.5 (1 session) — ctxTokens 247,035³ | — | — | — | — |
+| fable solo + self re-verify | fable-5 | 13,623 | 33,629 | 157,132 | 1,841,875 |
+| | haiku-4.5 | 951,044 | 14,086 | 0 | 0 |
 | sonnet solo (avg of 3 runs) | sonnet-5 | 19,799 | 40,191 | 176,709 | 7,067,494 |
 | | haiku-4.5 | 1,454,400 | 26,202 | 0 | 0 |
 | fable solo | fable-5 | 4,065 | 50,150 | 200,396 | 1,927,217 |
 | | haiku-4.5 | 1,134,678 | 13,843 | 0 | 0 |
 | grok solo | grok-4.5 (1 session) — ctxTokens 161,675³ | — | — | — | — |
 
-¹ includes 913,792 cached input. ² includes 18,178 reasoning tokens. ³ same footnote as
-the round-1 table.
+¹ includes cached input (913,792 / 2,095,104 respectively). ² includes reasoning tokens.
+³ same footnote as the round-1 table. ⁴ **Why haiku shows up in worker configurations at
+all**: haiku is not run by the eval — it is the model Claude Code's WebSearch/WebFetch
+tooling uses internally to digest fetched pages, so its row measures how much web traffic
+the *Claude-side session itself* generated. In the with-re-verification worker rows that
+traffic is the orchestrator's re-verification pass; in the delegation-only grok row the
+orchestrator had web tools disabled and did no web traffic of its own, so haiku is exactly
+zero — the collection all happened on grok's meter.
 
 ![Round 2 — potential cost per configuration](assets/r2-cost.svg)
 
 | Configuration | Claude-side (measured, API-equivalent) | External wallet (estimate) |
 | --- | ---: | :-- |
-| fable + grok workers | $7.66 | grok $1.44–12.03 (API-equivalent bounds; actually run on a SuperGrok subscription) |
-| fable + deepseek workers | $9.81 | deepseek ≈ $0.20 (OpenRouter rates, no cache discount) |
+| fable + grok workers (re-verify) | $7.66 | grok $1.44–12.03 (API-equivalent bounds; actually run on a SuperGrok subscription) |
+| **fable + grok workers (delegation only)** | **$2.97** | grok $1.86–16.68 (21 sessions, incl. 9 gate-blocked cheap retries) |
+| fable + deepseek workers (re-verify) | $9.81 | deepseek ≈ $0.20 (OpenRouter rates, no cache discount) |
+| deepseek workers (delegation only) | $6.83 | deepseek ≈ $0.36 (same method) |
+| sonnet workers (delegation only) | $11.54 | — |
+| grok solo + fable re-verify | $5.22 | grok $0.52–9.11 (1 session) |
+| fable solo + self re-verify | $8.13 | — |
 | sonnet solo (avg of 3 runs) | $5.99 | — |
 | fable solo | $9.95 | — |
 | grok solo | $0 | grok $0.35–5.79 (same method; single session) |
 
-### Round 2 structure variants (cost)
-
-| Variant | Claude-side (measured) | External wallet |
-| --- | ---: | :-- |
-| **delegation only — grok workers** | **$2.97** | grok ctxTokens 833k (21 sessions, incl. 9 gate-blocked cheap retries) |
-| grok solo collects → fable re-verifies | $5.22 | grok ctxTokens 247k (1 session) |
-| fable solo + self-re-verify | $8.13 | — |
-| delegation only — deepseek workers | $6.83 | deepseek ≈ $0.20 (3.9M in, 2.1M of it cached / 57k out) |
-| delegation only — sonnet workers | $11.54 | — |
-
-The recommended variant's Claude-side detail: fable in 3,019 / out 18,420 / cache write
-75,322 / cache read 511,531 — and **no haiku row at all**: the orchestrator ran with web
-tools disabled, so every fetched page was on the external meter. That is why it undercuts
-even sonnet solo. The deepseek variant's $6.83 is orchestrator turns spent wrangling worker
-failures; the sonnet variant is the most expensive because the workers themselves bill the
-Claude meter.
+Cost shape in one line: delegation-only grok undercuts everything (even sonnet solo) because
+the orchestrator does no web work at all; the deepseek variant's $6.83 is orchestrator turns
+spent wrangling worker failures; the sonnet-worker variant is the most expensive because its
+workers bill the Claude meter.
 
 ### Where each number comes from — and the grok caveat
 
@@ -371,8 +375,8 @@ these numbers, keep the frame and swap the configuration:
   error through in round 1 — and without re-verification its workers let a trap through
   again, so the verification layer is doing real work in that configuration. ② A
   haiku-worker configuration would add one more data point to "pick workers by failure rate
-  × external price". ③ ~~Decompose the structure~~ — done; see the variants table in the
-  TL;DR and lesson #8. ④ Fix the deepseek worker channel (`--disable multi_agent`,
+  × external price". ③ ~~Decompose the structure~~ — done; see the "delegation only" rows
+  in the TL;DR table and lesson #8. ④ Fix the deepseek worker channel (`--disable multi_agent`,
   markup-breakdown guard, bigger retry budget) and re-measure its completion rate — its
   completed-work accuracy is already flawless and its price is 1–2% of sonnet's. ⑤ Any
   rematch needs a harder task — these traps no longer separate configurations.
