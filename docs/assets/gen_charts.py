@@ -44,15 +44,16 @@ STRINGS = {
         "acc_aria":       lambda r: f"Round {r} cells lost per configuration",
         "tokens_aria":    lambda r: f"Round {r} raw tokens per model",
         "tokens_title":   lambda r: f"Round {r} — raw tokens per model (input / output)",
-        "tokens_caption": "Bars stacked by model; cache tokens in the doc table. Dashed green: grok's final-context "
-                           "total — its own meter, no in/out split.",
+        "tokens_caption1": "Dashed green (grok): its own meter's final-context total — no in/out split.",
+        "tokens_caption2": "haiku: the model Claude Code uses internally to digest WebSearch/WebFetch pages — "
+                           "it measures the Claude-side session's web traffic.",
         "input_panel":    "Input tokens",
         "output_panel":   "Output tokens",
         "grok_ctx":       "grok (ctx)",
         "cost_aria":      lambda r: f"Round {r} potential cost per configuration",
         "cost_title":     lambda r: f"Round {r} — potential cost (USD, API-equivalent)",
-        "cost_caption":   "Claude: measured (run.json, API list prices) · grok/deepseek: the delegate's own wallet, "
-                           "estimated low–high bounds.",
+        "cost_caption":   "Claude: measured (run.json, API list prices) · deepseek: its own wallet (OpenRouter) · "
+                           "grok: SuperGrok subscription, reported as weekly-quota percentage points.",
         "claude_label":   "Claude",
         "acc_subtitle":   "Fewer cells lost is better.",
     },
@@ -62,15 +63,16 @@ STRINGS = {
         "acc_subtitle":   "손실 셀이 적을수록 좋은 결과다.",
         "tokens_aria":    lambda r: f"라운드 {r} 모델별 원시 토큰",
         "tokens_title":   lambda r: f"라운드 {r} — 모델별 원시 토큰(입력/출력)",
-        "tokens_caption": "막대는 모델별로 누적. 캐시 토큰은 본문 표 참고. 초록 점선: grok의 최종 컨텍스트 "
-                           "총량 — grok 자체 계량기 값이라 in/out 분리가 없음.",
+        "tokens_caption1": "초록 점선(grok): 자체 계량기의 최종 컨텍스트 총량 — in/out 분리가 없음.",
+        "tokens_caption2": "haiku: Claude Code가 WebSearch/WebFetch로 가져온 페이지를 소화할 때 내부적으로 쓰는 모델 — "
+                           "Claude 쪽 세션의 웹 조회량 계측.",
         "input_panel":    "입력 토큰",
         "output_panel":   "출력 토큰",
         "grok_ctx":       "grok (ctx)",
         "cost_aria":      lambda r: f"라운드 {r} 조합별 잠재 비용",
         "cost_title":     lambda r: f"라운드 {r} — 잠재 비용(달러, API 환산)",
-        "cost_caption":   "Claude: 측정값(run.json, API 정가 기준) · grok/deepseek: 위임 대상 자체 지갑, "
-                           "추정 범위(하한–상한).",
+        "cost_caption":   "Claude: 측정값(run.json, API 정가 기준) · deepseek: 자체 지갑(OpenRouter) · "
+                           "grok: SuperGrok 구독 — 주간 쿼터 %p로 표기.",
         "claude_label":   "Claude",
     },
 }
@@ -131,22 +133,35 @@ TOKENS_R2 = [
     ("grok solo",                [], 161675),
 ]
 
-# Cost rows: (label, claude_usd, external) — external = (model, lo, hi) or None.
+# Cost rows: (label, claude_usd, external).
+# external = ("deepseek", lo, hi) for a dollar bar, or
+#            ("quota", en_text, ko_text) for grok's subscription-quota text row
+#            (anchor: the round-2 grok solo run measured ~1 percentage point of
+#             the weekly SuperGrok quota at ctxTokens 161,675; other grok rows
+#             are scaled from that by their ctxTokens).
 COST_R1 = [
-    ("fable + grok workers",     2.69, ("grok", 1.60, 15.90)),
+    ("fable + grok workers",     2.69, ("quota",
+        "≈5%p of weekly SuperGrok quota (scaled by ctxTokens)",
+        "SuperGrok 주간 쿼터 ≈5%p (ctxTokens 비례 추정)")),
     ("fable + deepseek workers", 5.06, ("deepseek", 0.09, 0.09)),
     ("fable + sonnet workers",   11.05, None),
     ("sonnet solo",              5.49, None),
     ("fable solo",               8.84, None),
-    ("grok solo",                0.0, ("grok", 0.31, 5.08)),
+    ("grok solo",                0.0, ("quota",
+        "≈1%p of weekly SuperGrok quota (scaled by ctxTokens)",
+        "SuperGrok 주간 쿼터 ≈1%p (ctxTokens 비례 추정)")),
 ]
 COST_R2 = [
-    ("fable + grok workers",     2.97, ("grok", 1.86, 16.68)),
+    ("fable + grok workers",     2.97, ("quota",
+        "≈5%p of weekly SuperGrok quota (scaled by ctxTokens)",
+        "SuperGrok 주간 쿼터 ≈5%p (ctxTokens 비례 추정)")),
     ("fable + deepseek workers", 6.83, ("deepseek", 0.36, 0.36)),
     ("fable + sonnet workers",   11.54, None),
     ("sonnet solo (avg of 3)",   5.99, None),
     ("fable solo",               9.95, None),
-    ("grok solo",                0.0, ("grok", 0.35, 5.79)),
+    ("grok solo",                0.0, ("quota",
+        "≈1%p of weekly SuperGrok quota (measured)",
+        "SuperGrok 주간 쿼터 ≈1%p (실측)")),
 ]
 
 def fmt(n):
@@ -199,24 +214,17 @@ def chart_tokens(round_no, tokens, in_vmax, out_vmax, lang="en"):
     st = STRINGS[lang]
     W = 1050
     row_h, gap = 26, 10
-    panel_top = 78
+    panel_top = 100
     n = len(tokens)
     panel_h = n * (row_h + gap)
-    H = panel_top + panel_h + 88
+    H = panel_top + panel_h + 96
     s = svg_open(W, H, st["tokens_aria"](round_no))
     s += text(20, 30, st["tokens_title"](round_no), 15, INK, weight="600")
-    s += text(20, 48, st["tokens_caption"], 11, INK2)
-    # legend
-    lx = 20; ly = panel_top - 12
-    for m in ("fable", "sonnet", "haiku", "deepseek"):
-        s += f'<rect x="{lx}" y="{ly - 9}" width="10" height="10" rx="2" fill="{MODEL_COLOR[m]}"/>\n'
-        s += text(lx + 14, ly, m, 11, INK2)
-        lx += 14 + 8 * len(m) + 26
-    s += (f'<rect x="{lx}" y="{ly - 9}" width="10" height="10" rx="2" fill="{MODEL_COLOR["grok"]}" '
-          f'fill-opacity="0.25" stroke="{MODEL_COLOR["grok"]}" stroke-dasharray="3,2"/>\n')
-    s += text(lx + 14, ly, st["grok_ctx"], 11, INK2)
+    s += text(20, 48, st["tokens_caption1"], 10.5, MUTED)
+    s += text(20, 63, st["tokens_caption2"], 10.5, MUTED)
     order = {"fable": 0, "sonnet": 1, "haiku": 2, "deepseek": 3}
-    panels = [(st["input_panel"], 0, in_vmax, 250, 330), (st["output_panel"], 1, out_vmax, 745, 200)]
+    panels = [(st["input_panel"], 0, in_vmax, 220, 360), (st["output_panel"], 1, out_vmax, 715, 200)]
+    axis_y = panel_top + 14 + panel_h
     for ptitle, idx, vmax, x0, pw in panels:
         s += text(x0, panel_top + 2, ptitle, 12, INK, weight="600")
         y = panel_top + 14
@@ -249,6 +257,15 @@ def chart_tokens(round_no, tokens, in_vmax, out_vmax, lang="en"):
         s += f'<line x1="{x0}" y1="{y}" x2="{x0 + pw}" y2="{y}" stroke="{BASE}"/>\n'
         s += text(x0, y + 14, "0", 10, MUTED)
         s += text(x0 + pw, y + 14, fmt(vmax), 10, MUTED, anchor="end")
+    # legend (bottom)
+    lx = 220; ly = axis_y + 40
+    for m in ("fable", "sonnet", "haiku", "deepseek"):
+        s += f'<rect x="{lx}" y="{ly - 9}" width="10" height="10" rx="2" fill="{MODEL_COLOR[m]}"/>\n'
+        s += text(lx + 14, ly, m, 11, INK2)
+        lx += 14 + 8 * len(m) + 26
+    s += (f'<rect x="{lx}" y="{ly - 9}" width="10" height="10" rx="2" fill="{MODEL_COLOR["grok"]}" '
+          f'fill-opacity="0.25" stroke="{MODEL_COLOR["grok"]}" stroke-dasharray="3,2"/>\n')
+    s += text(lx + 14, ly, st["grok_ctx"], 11, INK2)
     return s + "</svg>\n"
 
 # --------------------------------------------------------- chart 3: cost ----
@@ -277,19 +294,24 @@ def chart_cost(round_no, cost, lang="en"):
             s += text(x0 + 12, y + 12, "$0", 10, INK2)
         y += row_h
         if ext:
-            model, lo, hi = ext
-            s += text(x0 - 10, y + 12, model, 10, MODEL_COLOR[model], anchor="end")
-            bw_lo = (xmax - x0) * lo / vmax
-            bw_hi = (xmax - x0) * hi / vmax
-            s += (f'<rect x="{x0}" y="{y + 2}" width="{max(bw_lo, 2):.1f}" height="12" rx="3" '
-                  f'fill="{MODEL_COLOR[model]}"/>\n')
-            if hi > lo:
-                s += (f'<rect x="{x0 + bw_lo:.1f}" y="{y + 2}" width="{bw_hi - bw_lo:.1f}" height="12" '
-                      f'rx="3" fill="{MODEL_COLOR[model]}" opacity="0.3"/>\n')
-                est_prefix = "약 " if lang == "ko" else "est. "
-                s += text(x0 + bw_hi + 8, y + 12, f"{est_prefix}${lo:.2f}–${hi:.2f}", 10, INK2)
+            if ext[0] == "quota":
+                _, en_text, ko_text = ext
+                s += text(x0 - 10, y + 12, "grok", 10, MODEL_COLOR["grok"], anchor="end")
+                s += text(x0, y + 12, ko_text if lang == "ko" else en_text, 10, INK2)
             else:
-                s += text(x0 + max(bw_lo, 2) + 8, y + 12, f"${lo:.2f}", 10, INK2)
+                model, lo, hi = ext
+                s += text(x0 - 10, y + 12, model, 10, MODEL_COLOR[model], anchor="end")
+                bw_lo = (xmax - x0) * lo / vmax
+                bw_hi = (xmax - x0) * hi / vmax
+                s += (f'<rect x="{x0}" y="{y + 2}" width="{max(bw_lo, 2):.1f}" height="12" rx="3" '
+                      f'fill="{MODEL_COLOR[model]}"/>\n')
+                if hi > lo:
+                    s += (f'<rect x="{x0 + bw_lo:.1f}" y="{y + 2}" width="{bw_hi - bw_lo:.1f}" height="12" '
+                          f'rx="3" fill="{MODEL_COLOR[model]}" opacity="0.3"/>\n')
+                    est_prefix = "약 " if lang == "ko" else "est. "
+                    s += text(x0 + bw_hi + 8, y + 12, f"{est_prefix}${lo:.2f}–${hi:.2f}", 10, INK2)
+                else:
+                    s += text(x0 + max(bw_lo, 2) + 8, y + 12, f"${lo:.2f}", 10, INK2)
             y += row_h
         y += cfg_gap
     s += f'<line x1="{x0}" y1="{y}" x2="{xmax}" y2="{y}" stroke="{BASE}"/>\n'

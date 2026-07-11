@@ -1,15 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 396" width="940" height="396" role="img" aria-label="Round 2 potential cost per configuration">
 <rect width="940" height="396" rx="8" fill="#fcfcfb"/>
 <text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Round 2 — potential cost (USD, API-equivalent)</text>
-<text x="20" y="46" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude: measured (run.json, API list prices) · grok/deepseek: the delegate's own wallet, estimated low–high bounds.</text>
+<text x="20" y="46" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude: measured (run.json, API list prices) · deepseek: its own wallet (OpenRouter) · grok: SuperGrok subscription, reported as weekly-quota percentage points.</text>
 <text x="20" y="100.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok workers</text>
 <text x="300" y="88" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
 <rect x="310" y="78" width="77.0" height="12" rx="3" fill="#2a78d6"/>
 <text x="394.95" y="88" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$2.97</text>
 <text x="300" y="108" font-size="10" fill="#008300" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
-<rect x="310" y="98" width="48.2" height="12" rx="3" fill="#008300"/>
-<rect x="358.2" y="98" width="384.0" height="12" rx="3" fill="#008300" opacity="0.3"/>
-<text x="750.1636363636364" y="108" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">est. $1.86–$16.68</text>
+<text x="310" y="108" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">≈5%p of weekly SuperGrok quota (scaled by ctxTokens)</text>
 <text x="20" y="156.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek workers</text>
 <text x="300" y="144" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
 <rect x="310" y="134" width="177.0" height="12" rx="3" fill="#2a78d6"/>
@@ -34,9 +32,7 @@
 <circle cx="313" cy="304" r="3" fill="#2a78d6"/>
 <text x="322" y="308" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
 <text x="300" y="328" font-size="10" fill="#008300" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
-<rect x="310" y="318" width="9.1" height="12" rx="3" fill="#008300"/>
-<rect x="319.1" y="318" width="140.9" height="12" rx="3" fill="#008300" opacity="0.3"/>
-<text x="468.01363636363635" y="328" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">est. $0.35–$5.79</text>
+<text x="310" y="328" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">≈1%p of weekly SuperGrok quota (measured)</text>
 <line x1="310" y1="352" x2="880" y2="352" stroke="#c3c2b7"/>
 <line x1="310.0" y1="352" x2="310.0" y2="356" stroke="#c3c2b7"/>
 <text x="310.0" y="368" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
