@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 600" width="940" height="600" role="img" aria-label="Round 2 potential cost per configuration">
-<rect width="940" height="600" rx="8" fill="#fcfcfb"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 508" width="940" height="508" role="img" aria-label="Round 2 potential cost per configuration">
+<rect width="940" height="508" rx="8" fill="#fcfcfb"/>
 <text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Round 2 — potential cost (USD, API-equivalent)</text>
 <text x="20" y="46" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude: measured (run.json, API list prices) · grok/deepseek: the delegate's own wallet, estimated low–high bounds.</text>
 <text x="20" y="100.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok workers (re-verify)</text>
@@ -36,43 +36,31 @@
 <text x="300" y="312" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
 <rect x="310" y="302" width="299.0" height="12" rx="3" fill="#2a78d6"/>
 <text x="616.9909090909091" y="312" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$11.54</text>
-<text x="20" y="360.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo + fable re-verify</text>
+<text x="20" y="350.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo (avg of 3)</text>
 <text x="300" y="348" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
-<rect x="310" y="338" width="135.2" height="12" rx="3" fill="#2a78d6"/>
-<text x="453.24545454545455" y="348" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$5.22</text>
-<text x="300" y="368" font-size="10" fill="#008300" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
-<rect x="310" y="358" width="13.5" height="12" rx="3" fill="#008300"/>
-<rect x="323.5" y="358" width="222.6" height="12" rx="3" fill="#008300" opacity="0.3"/>
-<text x="554.0318181818182" y="368" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">est. $0.52–$9.11</text>
-<text x="20" y="406.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable solo + self re-verify</text>
-<text x="300" y="404" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
-<rect x="310" y="394" width="210.6" height="12" rx="3" fill="#2a78d6"/>
-<text x="528.6409090909091" y="404" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$8.13</text>
-<text x="20" y="442.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo (avg of 3)</text>
-<text x="300" y="440" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
-<rect x="310" y="430" width="155.2" height="12" rx="3" fill="#2a78d6"/>
-<text x="473.1954545454546" y="440" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$5.99</text>
-<text x="20" y="478.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable solo</text>
-<text x="300" y="476" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
-<rect x="310" y="466" width="257.8" height="12" rx="3" fill="#2a78d6"/>
-<text x="575.7954545454545" y="476" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$9.95</text>
-<text x="20" y="524.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo</text>
-<text x="300" y="512" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
-<circle cx="313" cy="508" r="3" fill="#2a78d6"/>
-<text x="322" y="512" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
-<text x="300" y="532" font-size="10" fill="#008300" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
-<rect x="310" y="522" width="9.1" height="12" rx="3" fill="#008300"/>
-<rect x="319.1" y="522" width="140.9" height="12" rx="3" fill="#008300" opacity="0.3"/>
-<text x="468.01363636363635" y="532" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">est. $0.35–$5.79</text>
-<line x1="310" y1="556" x2="880" y2="556" stroke="#c3c2b7"/>
-<line x1="310.0" y1="556" x2="310.0" y2="560" stroke="#c3c2b7"/>
-<text x="310.0" y="572" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
-<line x1="439.5" y1="556" x2="439.5" y2="560" stroke="#c3c2b7"/>
-<text x="439.5454545454545" y="572" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$5</text>
-<line x1="569.1" y1="556" x2="569.1" y2="560" stroke="#c3c2b7"/>
-<text x="569.090909090909" y="572" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$10</text>
-<line x1="698.6" y1="556" x2="698.6" y2="560" stroke="#c3c2b7"/>
-<text x="698.6363636363636" y="572" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$15</text>
-<line x1="828.2" y1="556" x2="828.2" y2="560" stroke="#c3c2b7"/>
-<text x="828.1818181818181" y="572" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$20</text>
+<rect x="310" y="338" width="155.2" height="12" rx="3" fill="#2a78d6"/>
+<text x="473.1954545454546" y="348" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$5.99</text>
+<text x="20" y="386.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable solo</text>
+<text x="300" y="384" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
+<rect x="310" y="374" width="257.8" height="12" rx="3" fill="#2a78d6"/>
+<text x="575.7954545454545" y="384" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$9.95</text>
+<text x="20" y="432.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo</text>
+<text x="300" y="420" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
+<circle cx="313" cy="416" r="3" fill="#2a78d6"/>
+<text x="322" y="420" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
+<text x="300" y="440" font-size="10" fill="#008300" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
+<rect x="310" y="430" width="9.1" height="12" rx="3" fill="#008300"/>
+<rect x="319.1" y="430" width="140.9" height="12" rx="3" fill="#008300" opacity="0.3"/>
+<text x="468.01363636363635" y="440" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">est. $0.35–$5.79</text>
+<line x1="310" y1="464" x2="880" y2="464" stroke="#c3c2b7"/>
+<line x1="310.0" y1="464" x2="310.0" y2="468" stroke="#c3c2b7"/>
+<text x="310.0" y="480" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
+<line x1="439.5" y1="464" x2="439.5" y2="468" stroke="#c3c2b7"/>
+<text x="439.5454545454545" y="480" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$5</text>
+<line x1="569.1" y1="464" x2="569.1" y2="468" stroke="#c3c2b7"/>
+<text x="569.090909090909" y="480" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$10</text>
+<line x1="698.6" y1="464" x2="698.6" y2="468" stroke="#c3c2b7"/>
+<text x="698.6363636363636" y="480" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$15</text>
+<line x1="828.2" y1="464" x2="828.2" y2="468" stroke="#c3c2b7"/>
+<text x="828.1818181818181" y="480" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$20</text>
 </svg>

@@ -34,8 +34,6 @@ reliable than grok's (compare the "delegation only" rows in the table below).
 | deepseek workers — delegation only | — | 24/72† — 8/12 workers returned nothing (tool bug, fixable); every completed cell correct |
 | fable + sonnet workers — with re-verification | 69/70 (98.6%) — 0 worker failures; fastest (6 min), heaviest Claude spend | not run |
 | sonnet workers — delegation only | — | 66/70 (94.3%)† — a wrong index choice passed through uncaught |
-| grok solo collects → fable re-verifies | — | 70/71 (98.6%) |
-| fable solo + self-re-verify workflow | — | 69/72 (95.8%) |
 | sonnet solo | 68/70 (97.1%)\* | 70.3/72 (97.7%) — average of 3 runs\* |
 | fable solo | 69/70 (98.6%) | 68/72 (94.4%); hit both release-timing traps |
 | grok solo | 66/67 (98.5%)† — facts all correct, citations weak | 67/71 (94.4%)† — hit the exact same traps as fable solo |
@@ -51,9 +49,13 @@ grok workers the score doesn't move (72/72) and Claude-side cost drops to the lo
 run, so the load-bearing parts are **one narrow topic per worker** plus the wrapper's
 **web-collection gate** (which forces workers to fetch real pages). Re-verification is
 insurance for weaker workers: without it, a sonnet worker's wrong index choice went straight
-into the result, and deepseek's tool failures left 8 of 12 topics unanswered. Verification
-*without* narrow workers doesn't reach the top either — grok-solo-collect + fable-re-verify
-(70/71) and fable's self-re-verify (69/72) both fall short of the worker setups.
+into the result, and deepseek's tool failures left 8 of 12 topics unanswered.
+
+(Aside, outside this eval's purpose: two extra probes checked the collect-then-re-verify
+*workflow* on its own, without narrow workers. fable re-verifying a solo grok collection
+scored 70/71 and fable re-verifying its own solo draft 69/72, vs 68/72 for plain fable solo
+— so the workflow does help a solo run a little, but neither is a configuration this eval is
+choosing between, so they stay out of the tables and charts. Raw runs are in the workspace.)
 
 Two things about the advisor(fable) experiment. First, the advisor plumbing itself was
 verified with forced probe calls before the runs — zero firings means the model chose not to
@@ -199,11 +201,6 @@ collection a run did.
 | sonnet workers (delegation only) | fable-5 | 16,804 | 30,695 | 98,534 | 707,014 |
 | | sonnet-5 | 109,007 | 62,005 | 422,890 | 3,642,666 |
 | | haiku-4.5 | 2,363,450 | 34,213 | 0 | 0 |
-| grok solo + fable re-verify | fable-5 | 3,971 | 22,792 | 101,641 | 1,283,069 |
-| | haiku-4.5 | 566,136 | 5,676 | 0 | 0 |
-| | grok-4.5 (1 session) — ctxTokens 247,035³ | — | — | — | — |
-| fable solo + self re-verify | fable-5 | 13,623 | 33,629 | 157,132 | 1,841,875 |
-| | haiku-4.5 | 951,044 | 14,086 | 0 | 0 |
 | sonnet solo (avg of 3 runs) | sonnet-5 | 19,799 | 40,191 | 176,709 | 7,067,494 |
 | | haiku-4.5 | 1,454,400 | 26,202 | 0 | 0 |
 | fable solo | fable-5 | 4,065 | 50,150 | 200,396 | 1,927,217 |
@@ -228,8 +225,6 @@ zero — the collection all happened on grok's meter.
 | fable + deepseek workers (re-verify) | $9.81 | deepseek ≈ $0.20 (OpenRouter rates, no cache discount) |
 | deepseek workers (delegation only) | $6.83 | deepseek ≈ $0.36 (same method) |
 | sonnet workers (delegation only) | $11.54 | — |
-| grok solo + fable re-verify | $5.22 | grok $0.52–9.11 (1 session) |
-| fable solo + self re-verify | $8.13 | — |
 | sonnet solo (avg of 3 runs) | $5.99 | — |
 | fable solo | $9.95 | — |
 | grok solo | $0 | grok $0.35–5.79 (same method; single session) |
@@ -368,8 +363,8 @@ these numbers, keep the frame and swap the configuration:
   scored against the frozen key, not blind** — comparable in method to each other,
   directionally comparable to the blind-judged main runs. Round 1's deepseek-worker
   configuration was a full blind participant.
-- **The structure variants are one run each**, and only the first three were blind-judged
-  (the sonnet- and deepseek-worker variants were scored against the frozen key).
+- **The delegation-only rows are one run each**; the grok one was blind-judged, the sonnet-
+  and deepseek-worker ones were scored against the frozen key.
 - **Follow-up candidates.** ① Re-run fable + sonnet workers (with re-verification) on a
   judgment-trap task: it was the only worker configuration whose verification pass let an
   error through in round 1 — and without re-verification its workers let a trap through
@@ -379,7 +374,9 @@ these numbers, keep the frame and swap the configuration:
   in the TL;DR table and lesson #8. ④ Fix the deepseek worker channel (`--disable multi_agent`,
   markup-breakdown guard, bigger retry budget) and re-measure its completion rate — its
   completed-work accuracy is already flawless and its price is 1–2% of sonnet's. ⑤ Any
-  rematch needs a harder task — these traps no longer separate configurations.
+  rematch needs a harder task — these traps no longer separate configurations. ⑥ Re-run the
+  round-1 lookup task with grok workers and **no re-verification** — the delegation-only
+  result so far exists only on the round-2 task shape (planned next).
 - **grok 0.2.93's `research` mode fails closed** (upstream bug combining web tools with the
   read-only allowlist), so the eval workers ran `research-rw` with the user's explicit OK.
   When xAI ships the fix, the same frame can compare `research` (read-only) workers directly.
