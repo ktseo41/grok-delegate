@@ -1,30 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 318" width="780" height="318" role="img" aria-label="Round 2 cells lost per configuration">
-<rect width="780" height="318" rx="8" fill="#fcfcfb"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 303" width="780" height="303" role="img" aria-label="Round 2 cells lost per configuration">
+<rect width="780" height="303" rx="8" fill="#fcfcfb"/>
 <text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Round 2 — cells lost (of 72 fields)</text>
 <text x="240" y="70" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok workers</text>
 <circle cx="253" cy="66" r="3.5" fill="#2a78d6"/>
 <text x="265" y="70" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0 lost · 72/72 · 100%</text>
 <text x="240" y="104" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo (avg of 3)</text>
-<rect x="250" y="92" width="133.6" height="16" rx="4" fill="#2a78d6"/>
-<text x="391.6" y="104" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1.67 lost · 70.3/72 · 97.7%</text>
-<text x="240" y="138" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable solo</text>
-<rect x="250" y="126" width="320.0" height="16" rx="4" fill="#2a78d6"/>
-<text x="578.0" y="138" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4 lost · 68/72 · 94.4%</text>
-<text x="240" y="172" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo</text>
-<rect x="250" y="160" width="320.0" height="16" rx="4" fill="#9ec5f4"/>
-<text x="578.0" y="172" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4 lost · 67/71 · 94.4%†</text>
-<text x="240" y="206" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet workers</text>
-<rect x="250" y="194" width="320.0" height="16" rx="4" fill="#9ec5f4"/>
-<text x="578.0" y="206" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4 lost · 66/70 · 94.3%†</text>
+<rect x="250" y="92" width="133.5" height="16" rx="4" fill="#2a78d6"/>
+<text x="391.5" y="104" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2.67 lost · 69.3/72 · 96.3%</text>
+<text x="240" y="138" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet workers</text>
+<rect x="250" y="126" width="150.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="408.0" y="138" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3 lost · 69/72 · 95.8%</text>
+<text x="240" y="172" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable solo</text>
+<rect x="250" y="160" width="300.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="558.0" y="172" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">6 lost · 66/72 · 91.7%</text>
+<text x="240" y="206" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok solo</text>
+<rect x="250" y="194" width="350.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="608.0" y="206" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">7 lost · 65/72 · 90.3%</text>
 <line x1="250" y1="228" x2="650" y2="228" stroke="#c3c2b7" stroke-width="1"/>
 <text x="250.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
-<text x="330.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1</text>
-<text x="410.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2</text>
-<text x="490.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3</text>
-<text x="570.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4</text>
-<text x="650.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">5</text>
-<text x="20" y="262" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Lighter bars: not blind-judged. † = scored vs the frozen answer key; unverifiable cells excluded.</text>
-<text x="20" y="277" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek workers is off this scale: 8/12 workers returned nothing (tool bug, fixable)</text>
-<text x="20" y="292" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">→ 24/72 overall — but every cell its workers did complete was correct.</text>
-<text x="20" y="307" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo runs: 72/72, 70/72, 69/72.</text>
+<text x="300.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">1</text>
+<text x="350.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2</text>
+<text x="400.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3</text>
+<text x="450.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4</text>
+<text x="500.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">5</text>
+<text x="550.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">6</text>
+<text x="600.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">7</text>
+<text x="650.0" y="244" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">8</text>
+<text x="20" y="262" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek workers is off this scale: 24/72 — every completed cell correct,</text>
+<text x="20" y="277" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">8/12 workers returned nothing (tool bug, fixable).</text>
+<text x="20" y="292" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo runs: 70/72, 69/72, 69/72.</text>
 </svg>

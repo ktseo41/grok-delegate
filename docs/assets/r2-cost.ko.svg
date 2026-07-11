@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 396" width="940" height="396" role="img" aria-label="라운드 2 조합별 잠재 비용">
+<rect width="940" height="396" rx="8" fill="#fcfcfb"/>
+<text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">라운드 2 — 잠재 비용(달러, API 환산)</text>
+<text x="20" y="46" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude: 측정값(run.json, API 정가 기준) · grok/deepseek: 위임 대상 자체 지갑, 추정 범위(하한–상한).</text>
+<text x="20" y="100.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok 워커</text>
+<text x="300" y="88" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
+<rect x="310" y="78" width="77.0" height="12" rx="3" fill="#2a78d6"/>
+<text x="394.95" y="88" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$2.97</text>
+<text x="300" y="108" font-size="10" fill="#008300" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
+<rect x="310" y="98" width="48.2" height="12" rx="3" fill="#008300"/>
+<rect x="358.2" y="98" width="384.0" height="12" rx="3" fill="#008300" opacity="0.3"/>
+<text x="750.1636363636364" y="108" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">약 $1.86–$16.68</text>
+<text x="20" y="156.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek 워커</text>
+<text x="300" y="144" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
+<rect x="310" y="134" width="177.0" height="12" rx="3" fill="#2a78d6"/>
+<text x="494.95909090909095" y="144" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$6.83</text>
+<text x="300" y="164" font-size="10" fill="#4a3aa7" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">deepseek</text>
+<rect x="310" y="154" width="9.3" height="12" rx="3" fill="#4a3aa7"/>
+<text x="327.3272727272727" y="164" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0.36</text>
+<text x="20" y="202.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet 워커</text>
+<text x="300" y="200" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
+<rect x="310" y="190" width="299.0" height="12" rx="3" fill="#2a78d6"/>
+<text x="616.9909090909091" y="200" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$11.54</text>
+<text x="20" y="238.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet 단독 (3회 평균)</text>
+<text x="300" y="236" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
+<rect x="310" y="226" width="155.2" height="12" rx="3" fill="#2a78d6"/>
+<text x="473.1954545454546" y="236" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$5.99</text>
+<text x="20" y="274.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable 단독</text>
+<text x="300" y="272" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
+<rect x="310" y="262" width="257.8" height="12" rx="3" fill="#2a78d6"/>
+<text x="575.7954545454545" y="272" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$9.95</text>
+<text x="20" y="320.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok 단독</text>
+<text x="300" y="308" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
+<circle cx="313" cy="304" r="3" fill="#2a78d6"/>
+<text x="322" y="308" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
+<text x="300" y="328" font-size="10" fill="#008300" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
+<rect x="310" y="318" width="9.1" height="12" rx="3" fill="#008300"/>
+<rect x="319.1" y="318" width="140.9" height="12" rx="3" fill="#008300" opacity="0.3"/>
+<text x="468.01363636363635" y="328" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">약 $0.35–$5.79</text>
+<line x1="310" y1="352" x2="880" y2="352" stroke="#c3c2b7"/>
+<line x1="310.0" y1="352" x2="310.0" y2="356" stroke="#c3c2b7"/>
+<text x="310.0" y="368" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
+<line x1="439.5" y1="352" x2="439.5" y2="356" stroke="#c3c2b7"/>
+<text x="439.5454545454545" y="368" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$5</text>
+<line x1="569.1" y1="352" x2="569.1" y2="356" stroke="#c3c2b7"/>
+<text x="569.090909090909" y="368" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$10</text>
+<line x1="698.6" y1="352" x2="698.6" y2="356" stroke="#c3c2b7"/>
+<text x="698.6363636363636" y="368" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$15</text>
+<line x1="828.2" y1="352" x2="828.2" y2="356" stroke="#c3c2b7"/>
+<text x="828.1818181818181" y="368" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$20</text>
+</svg>
