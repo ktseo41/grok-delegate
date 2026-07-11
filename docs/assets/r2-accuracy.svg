@@ -8,7 +8,7 @@
 <text x="240" y="118" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek workers</text>
 <circle cx="253" cy="114" r="3.5" fill="#2a78d6"/>
 <text x="265" y="118" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0 lost · 72/72 · 100%</text>
-<text x="240" y="152" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo (avg of 3)</text>
+<text x="240" y="152" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo<tspan dy="-4" font-size="8" fill="#898781">*</tspan></text>
 <rect x="250" y="140" width="133.5" height="16" rx="4" fill="#2a78d6"/>
 <text x="391.5" y="152" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2.67 lost · 69.3/72 · 96.3%</text>
 <text x="240" y="186" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet workers</text>
@@ -30,5 +30,5 @@
 <text x="550.0" y="292" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">6</text>
 <text x="600.0" y="292" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">7</text>
 <text x="650.0" y="292" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">8</text>
-<text x="20" y="310" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet solo runs: 70/72, 69/72, 69/72.</text>
+<text x="20" y="310" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">* sonnet solo = average of 3 runs: 70/72, 69/72, 69/72.</text>
 </svg>

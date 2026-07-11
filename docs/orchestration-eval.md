@@ -51,6 +51,15 @@ also run, but the goal here is testing grok delegation, not workflows, so it is 
 same perfect grok-worker scores at 2–3× the Claude-side cost. Raw runs in the experiment
 workspace.*</sub>
 
+## Why deepseek is in the mix
+
+I built this skill, and I had already been delegating research to deepseek in day-to-day
+use. The method is simple: calling the codex CLI from Claude Code is already a common
+pattern, so swapping just that call's model to deepseek keeps the familiar path and only
+trades in deepseek's far lower rate — which mattered more given I don't keep a ChatGPT
+subscription. Since this was already how I delegated, I put it in the comparison to see how
+the way I actually work stacks up against grok delegation.
+
 ## The tasks
 
 - **Round 1 — lookup.** Current monetary-policy settings of 12 central banks, 6 fields each
@@ -87,25 +96,32 @@ workspace.*</sub>
 
 ![Round 1 — potential cost per configuration](assets/r1-cost.svg)
 
-| Configuration | Model | in | out | cache write | cache read | ctxTokens³ |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| fable + grok workers | fable-5 | 3,025 | 16,184 | 73,594 | 375,824 | — |
-| | grok-4.5 (12 worker sessions) | — | — | — | — | 735,055 |
-| fable + deepseek workers | fable-5 | 3,176 | 18,750 | 68,874 | 760,200 | — |
-| | deepseek-v4-flash (15 sessions) | 18,661,070¹ | 187,377² | — | — | — |
-| fable + sonnet workers | fable-5 | 10,123 | 24,916 | 89,685 | 787,448 | — |
-| | sonnet-5 | 116,460 | 52,193 | 409,152 | 2,567,989 | — |
-| | haiku-4.5⁴ | 2,895,427 | 30,475 | 0 | 0 | — |
-| sonnet solo | sonnet-5 | 18,816 | 31,487 | 153,605 | 5,962,593 | — |
-| | haiku-4.5 | 1,599,289 | 22,395 | 0 | 0 | — |
-| fable solo | fable-5 | 8,330 | 49,839 | 133,803 | 1,939,729 | — |
-| | haiku-4.5 | 1,361,978 | 14,115 | 0 | 0 | — |
-| grok solo | grok-4.5 (1 session) | — | — | — | — | 141,786 |
+**Raw tokens per model**
 
-<sub>¹ includes 11,094,784 cached input — deepseek's meter counts cache hits *inside* its input total, unlike Claude's separate cache columns, so it is a footnote rather than a column value. The unusually large input is because deepseek workers collect via shell fetches, reading raw page sources whole.<br>
-² includes 72,599 reasoning tokens.<br>
+| Configuration | Model | sessions⁵ | in | out | cache write | cache read | ctxTokens³ |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| fable + grok workers | fable-5 | 1 | 3,025 | 16,184 | 73,594 | 375,824 | — |
+| | grok-4.5 | 12 | — | — | — | — | 735,055 |
+| fable + deepseek workers | fable-5 | 1 | 3,176 | 18,750 | 68,874 | 760,200 | — |
+| | deepseek-v4-flash | 15 | 7,566,286¹ | 187,377² | — | 11,094,784¹ | — |
+| fable + sonnet workers | fable-5 | 1 | 10,123 | 24,916 | 89,685 | 787,448 | — |
+| | sonnet-5 | 12 | 116,460 | 52,193 | 409,152 | 2,567,989 | — |
+| | haiku-4.5⁴ | — | 2,895,427 | 30,475 | 0 | 0 | — |
+| sonnet solo | sonnet-5 | 1 | 18,816 | 31,487 | 153,605 | 5,962,593 | — |
+| | haiku-4.5 | — | 1,599,289 | 22,395 | 0 | 0 | — |
+| fable solo | fable-5 | 1 | 8,330 | 49,839 | 133,803 | 1,939,729 | — |
+| | haiku-4.5 | — | 1,361,978 | 14,115 | 0 | 0 | — |
+| grok solo | grok-4.5 | 1 | — | — | — | — | 141,786 |
+
+<sub>¹ deepseek's meter reports cache hits only as cache read (folded *inside* its original input total of 18,661,070) and reports no cache write (creation) — to match Claude's columns, the 11,094,784 cache hits are moved to the cache-read column and `in` keeps only the 7,566,286 fresh input. The input is large because deepseek workers collect via shell fetches, reading raw page sources whole.<br>
+² of the 187,377 output, 72,599 are reasoning tokens — only deepseek's meter breaks reasoning out. Claude (run.json) and grok do not meter reasoning separately, so theirs is folded into output / ctxTokens (this does not mean the other models reasoned less — their meters just don't surface it).<br>
 ³ the grok CLI exposes no billable in/out split, only the session's final context size (ctxTokens) — a separate meter, not summable with the other columns.<br>
-⁴ haiku is not run by the eval — it is the model Claude Code's WebSearch/WebFetch tooling uses internally to digest fetched pages, so its row measures the *Claude-side session's* web traffic. The grok- and deepseek-worker orchestrators ran with web tools disabled, so haiku is zero there (rows omitted); the sonnet-worker haiku row is the *workers'* web traffic (they run inside the same Claude session).</sub>
+⁴ haiku is not run by the eval — it is the model Claude Code's WebSearch/WebFetch tooling uses internally to digest fetched pages, so its row measures the *Claude-side session's* web traffic (an internal model running inside the active Claude session, not a spawned session, so its sessions cell is —). The grok- and deepseek-worker orchestrators ran with web tools disabled, so haiku is zero there (rows omitted); the sonnet-worker haiku row is the *workers'* web traffic (they run inside the same Claude session).<br>
+⁵ sessions = actual invocations (retries included). deepseek 15 = 12 first-wave + 3 retries.</sub>
+
+---
+
+**Potential cost per configuration**
 
 | Configuration | Claude-side (measured, API-equivalent) | External spend |
 | --- | ---: | :-- |
@@ -122,24 +138,30 @@ workspace.*</sub>
 
 ![Round 2 — potential cost per configuration](assets/r2-cost.svg)
 
-| Configuration | Model | in | out | cache write | cache read | ctxTokens³ |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| fable + grok workers | fable-5 | 3,019 | 18,420 | 75,322 | 511,531 | — |
-| | grok-4.5 (21 worker sessions) | — | — | — | — | 833,433 |
-| fable + deepseek workers | fable-5 | 3,180 | 18,638 | 60,639 | 1,092,470 | — |
-| | deepseek-v4-flash (15 sessions) | 28,401,025¹ | 259,998² | — | — | — |
-| fable + sonnet workers | fable-5 | 16,804 | 30,695 | 98,534 | 707,014 | — |
-| | sonnet-5 | 109,007 | 62,005 | 422,890 | 3,642,666 | — |
-| | haiku-4.5⁴ | 2,363,450 | 34,213 | 0 | 0 | — |
-| sonnet solo (avg of 3 runs) | sonnet-5 | 19,799 | 40,191 | 176,709 | 7,067,494 | — |
-| | haiku-4.5 | 1,454,400 | 26,202 | 0 | 0 | — |
-| fable solo | fable-5 | 4,065 | 50,150 | 200,396 | 1,927,217 | — |
-| | haiku-4.5 | 1,134,678 | 13,843 | 0 | 0 | — |
-| grok solo | grok-4.5 (1 session) | — | — | — | — | 161,675 |
+**Raw tokens per model**
 
-<sub>¹ includes 14,725,376 cached input — deepseek's meter counts cache hits *inside* its input total, so it is a footnote rather than a column value.<br>
-² includes reasoning tokens.<br>
-³ ⁴ same footnotes as the round-1 table.</sub>
+| Configuration | Model | sessions⁵ | in | out | cache write | cache read | ctxTokens³ |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| fable + grok workers | fable-5 | 1 | 3,019 | 18,420 | 75,322 | 511,531 | — |
+| | grok-4.5 | 21 | — | — | — | — | 833,433 |
+| fable + deepseek workers | fable-5 | 1 | 3,180 | 18,638 | 60,639 | 1,092,470 | — |
+| | deepseek-v4-flash | 15 | 13,675,649¹ | 259,998² | — | 14,725,376¹ | — |
+| fable + sonnet workers | fable-5 | 1 | 16,804 | 30,695 | 98,534 | 707,014 | — |
+| | sonnet-5 | 12 | 109,007 | 62,005 | 422,890 | 3,642,666 | — |
+| | haiku-4.5⁴ | — | 2,363,450 | 34,213 | 0 | 0 | — |
+| sonnet solo (avg of 3 runs) | sonnet-5 | 1 | 19,799 | 40,191 | 176,709 | 7,067,494 | — |
+| | haiku-4.5 | — | 1,454,400 | 26,202 | 0 | 0 | — |
+| fable solo | fable-5 | 1 | 4,065 | 50,150 | 200,396 | 1,927,217 | — |
+| | haiku-4.5 | — | 1,134,678 | 13,843 | 0 | 0 | — |
+| grok solo | grok-4.5 | 1 | — | — | — | — | 161,675 |
+
+<sub>¹ of the original 28,401,025 input total, 14,725,376 cache hits are split out to the cache-read column (deepseek folds cache hits into input and reports no cache write), leaving 13,675,649 fresh input in `in` — same handling as round-1 footnote ¹.<br>
+² of the 259,998 output, some are reasoning tokens — same as round-1 footnote ² (only deepseek's meter breaks reasoning out).<br>
+³ ⁴ ⁵ same footnotes as the round-1 table (sessions: grok 21 = 12 first-wave + 9 retries, deepseek 15 = 12 first-wave + 3 retries).</sub>
+
+---
+
+**Potential cost per configuration**
 
 | Configuration | Claude-side (measured, API-equivalent) | External spend |
 | --- | ---: | :-- |

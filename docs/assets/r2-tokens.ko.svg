@@ -4,48 +4,48 @@
 <text x="20" y="48" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">초록 점선(grok): 자체 계량기의 최종 컨텍스트 총량 — in/out 분리가 없음.</text>
 <text x="20" y="63" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">haiku: Claude Code가 WebSearch/WebFetch로 가져온 페이지를 소화할 때 내부적으로 쓰는 모델 — Claude 쪽 세션의 웹 조회량 계측.</text>
 <text x="220" y="102" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">입력 토큰</text>
-<text x="210" y="131" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok 워커</text>
-<rect x="220.0" y="114" width="10.0" height="16" rx="3" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
-<text x="238.037424" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3k + ctx 833k</text>
-<text x="210" y="167" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek 워커</text>
-<rect x="220.0" y="150" width="340.8" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
-<text x="568.85046" y="167" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3k + 28.40M</text>
-<text x="210" y="203" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet 워커</text>
-<rect x="220.2" y="186" width="1.5" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<rect x="221.5" y="186" width="28.4" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<text x="257.871132" y="203" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">17k + 109k + 2.36M</text>
-<text x="210" y="239" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet 단독 (3회 평균)</text>
-<rect x="220.2" y="222" width="17.5" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<text x="245.69038799999998" y="239" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">20k + 1.45M</text>
-<text x="210" y="275" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable 단독</text>
-<rect x="220.0" y="258" width="13.6" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<text x="241.664916" y="275" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4k + 1.13M</text>
-<text x="210" y="311" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok 단독</text>
-<rect x="220.0" y="294" width="1.9" height="16" rx="3" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
-<text x="229.9401" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">ctx 162k</text>
+<text x="210" y="131" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + grok 워커</text>
+<rect x="220.1" y="119.0" width="20.0" height="16" rx="3" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
+<text x="248.074848" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3k + ctx 833k</text>
+<text x="210" y="167" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + deepseek 워커</text>
+<rect x="220.1" y="155.0" width="328.2" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
+<text x="556.291896" y="167" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">3k + 13.68M</text>
+<text x="210" y="203" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable + sonnet 워커</text>
+<rect x="220.4" y="191.0" width="2.6" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="223.0" y="191.0" width="56.7" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="287.742264" y="203" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">17k + 109k + 2.36M</text>
+<text x="210" y="239" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet 단독 (3회 평균)</text>
+<rect x="220.5" y="227.0" width="34.9" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="263.38077599999997" y="239" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">20k + 1.45M</text>
+<text x="210" y="275" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable 단독</text>
+<rect x="220.1" y="263.0" width="27.2" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<text x="255.329832" y="275" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4k + 1.13M</text>
+<text x="210" y="311" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok 단독</text>
+<rect x="220.0" y="299.0" width="3.9" height="16" rx="3" fill="#008300" fill-opacity="0.25" stroke="#008300" stroke-dasharray="3,2"/>
+<text x="231.8802" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">ctx 162k</text>
 <line x1="220" y1="330" x2="580" y2="330" stroke="#c3c2b7"/>
-<text x="220" y="344" font-size="10" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
-<text x="580" y="344" font-size="10" fill="#898781" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">30.00M</text>
+<text x="220" y="345" font-size="10" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
+<text x="580" y="345" font-size="10" fill="#898781" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">15.00M</text>
 <text x="715" y="102" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">출력 토큰</text>
-<rect x="715.0" y="114" width="13.2" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="715.0" y="119.0" width="13.2" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
 <text x="736.1571428571428" y="131" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">18k</text>
-<rect x="715.0" y="150" width="13.3" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<rect x="728.3" y="150" width="185.7" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="715.0" y="155.0" width="13.3" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="728.3" y="155.0" width="185.7" height="16" rx="3" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
 <text x="922.0257142857142" y="167" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">19k + 260k</text>
-<rect x="715.0" y="186" width="21.9" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<rect x="736.9" y="186" width="44.3" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<rect x="781.2" y="186" width="24.4" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="715.0" y="191.0" width="21.9" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="736.9" y="191.0" width="44.3" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="781.2" y="191.0" width="24.4" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
 <text x="813.6521428571428" y="203" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">31k + 62k + 34k</text>
-<rect x="715.0" y="222" width="28.7" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<rect x="743.7" y="222" width="18.7" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="715.0" y="227.0" width="28.7" height="16" rx="3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="743.7" y="227.0" width="18.7" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
 <text x="770.4235714285714" y="239" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">40k + 26k</text>
-<rect x="715.0" y="258" width="35.8" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<rect x="750.8" y="258" width="9.9" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="715.0" y="263.0" width="35.8" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="750.8" y="263.0" width="9.9" height="16" rx="3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
 <text x="768.7092857142857" y="275" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">50k + 14k</text>
 <text x="723.0" y="311" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">—</text>
 <line x1="715" y1="330" x2="915" y2="330" stroke="#c3c2b7"/>
-<text x="715" y="344" font-size="10" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
-<text x="915" y="344" font-size="10" fill="#898781" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">280k</text>
+<text x="715" y="345" font-size="10" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
+<text x="915" y="345" font-size="10" fill="#898781" text-anchor="end" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">280k</text>
 <rect x="220" y="361" width="10" height="10" rx="2" fill="#2a78d6"/>
 <text x="234" y="370" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">fable</text>
 <rect x="300" y="361" width="10" height="10" rx="2" fill="#1baf7a"/>
