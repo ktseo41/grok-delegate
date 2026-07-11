@@ -54,10 +54,12 @@ STRINGS = {
         "cost_caption":   "Claude: measured (run.json, API list prices) · grok/deepseek: the delegate's own wallet, "
                            "estimated low–high bounds.",
         "claude_label":   "Claude",
+        "acc_subtitle":   "Fewer cells lost is better.",
     },
     "ko": {
         "acc_title":      lambda r, denom: f"라운드 {r} — 조합별 손실 셀 ({denom})",
         "acc_aria":       lambda r: f"라운드 {r} 조합별 손실 셀",
+        "acc_subtitle":   "손실 셀이 적을수록 좋은 결과다.",
         "tokens_aria":    lambda r: f"라운드 {r} 모델별 원시 토큰",
         "tokens_title":   lambda r: f"라운드 {r} — 모델별 원시 토큰(입력/출력)",
         "tokens_caption": "막대는 모델별로 누적. 캐시 토큰은 본문 표 참고. 초록 점선: grok의 최종 컨텍스트 "
@@ -164,11 +166,12 @@ def text(x, y, s, size=12, fill=INK, anchor="start", weight="normal"):
 # ----------------------------------------------------- chart 1: accuracy ----
 def chart_accuracy(round_no, rows, denom_note, extra_note=(), lang="en", vmax=5):
     st = STRINGS[lang]
-    head = 44
+    head = 58
     W = 780
     H = head + 34 * len(rows) + 34 + (10 + 15 * len(extra_note) if extra_note else 0)
     s = svg_open(W, H, st["acc_aria"](round_no))
     s += text(20, 30, st["acc_title"](round_no, denom_note), 15, INK, weight="600")
+    s += text(20, 46, st["acc_subtitle"], 10.5, MUTED)
     x0, xmax = 250, W - 130
     y = head + 14
     for label, lost, scoretxt in rows:
