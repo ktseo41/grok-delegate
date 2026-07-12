@@ -1,0 +1,8 @@
+{
+  "name": "grok-delegate",
+  "description": "Delegate coding, review, and research tasks to the grok CLI (xAI) as a subagent-like offload — read-only or autonomous, with parallel fan-out.",
+  "version": "1.0.0",
+  "author": { "name": "ktseo41" },
+  "homepage": "https://github.com/ktseo41/grok-delegate",
+  "license": "MIT"
+}

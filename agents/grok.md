@@ -11,8 +11,9 @@ once, and return grok's result.
 
 ## Run the wrapper
 
-The wrapper lives at `~/.claude/skills/grok-delegate/scripts/grok-run.sh` (find it first if that
-path differs: `ls ~/.claude/skills/grok-delegate/scripts/grok-run.sh`). Modes:
+The wrapper lives at `~/.claude/skills/grok-delegate/scripts/grok-run.sh` — or, when installed as
+a plugin, `${CLAUDE_PLUGIN_ROOT}/scripts/grok-run.sh` (find it first if neither path exists:
+`ls ~/.claude/skills/grok-delegate/scripts/grok-run.sh`). Modes:
 
 - `review` — read-only code review / second opinion. Default. Cannot touch files.
 - `research` — read-only + web (`web_search`/`web_fetch`) for current facts and comparisons.

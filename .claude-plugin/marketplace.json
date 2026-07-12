@@ -1,0 +1,13 @@
+{
+  "name": "ktseo41",
+  "owner": { "name": "ktseo41" },
+  "description": "ktseo41's Claude Code plugins — grok-delegate: hand review/research/fix work to the grok CLI (xAI).",
+  "plugins": [
+    {
+      "name": "grok-delegate",
+      "source": "./",
+      "description": "Delegate coding, review, and research tasks to the grok CLI (xAI) as a subagent-like offload — read-only or autonomous, with parallel fan-out.",
+      "version": "1.0.0"
+    }
+  ]
+}

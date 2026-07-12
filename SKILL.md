@@ -64,9 +64,10 @@ ask first rather than defaulting to it. Never weaken `research` itself to get we
 ## How to run it
 
 Always go through the wrapper. It lives at `scripts/grok-run.sh` inside this skill's directory —
-when installed that is `~/.claude/skills/grok-delegate/scripts/grok-run.sh`. If you are unsure where
-the skill is, find it first: `ls ~/.claude/skills/grok-delegate/scripts/grok-run.sh` (or search your
-skills dir). Use that absolute path everywhere the examples below write `$SKILL_DIR`; set it once so
+when installed that is `~/.claude/skills/grok-delegate/scripts/grok-run.sh` (or, installed as a
+plugin, `${CLAUDE_PLUGIN_ROOT}/scripts/grok-run.sh`). If you are unsure where the skill is, find it
+first: `ls ~/.claude/skills/grok-delegate/scripts/grok-run.sh` (or search your skills/plugins dirs).
+Use that absolute path everywhere the examples below write `$SKILL_DIR`; set it once so
 the commands are copy-pasteable, e.g. `SKILL_DIR=~/.claude/skills/grok-delegate`.
 
 ```bash
@@ -246,5 +247,5 @@ re-collecting everything:
 
 ## Requirements
 
-- The `grok` CLI on `PATH` (xAI). Verified against grok 0.2.93.
+- The `grok` CLI on `PATH` (xAI). Verified against grok 0.2.93 (read-only canary last re-run 2026-07-12).
 - Authenticated: run `grok login` once (or set `XAI_API_KEY` for CI). Uses a separate xAI quota, not your Claude usage.
