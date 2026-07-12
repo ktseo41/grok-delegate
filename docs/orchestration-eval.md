@@ -1,6 +1,6 @@
 # Is grok delegation actually worth it? — the orchestration evals
 
-Two rounds of controlled experiments on real web-research tasks, testing whether **fable
+Three rounds of controlled experiments on real web-research tasks, testing whether **fable
 orchestrating grok workers** actually beats the alternatives. The lineup: the same structure
 with other workers (fable + sonnet workers, fable + deepseek workers) and three solo runs
 (fable solo, sonnet solo, grok solo).
@@ -13,9 +13,10 @@ without the raw data.
 ## TL;DR
 
 **Verdict: yes.** fable + one grok worker per topic beat every alternative tested — a
-perfect score on both task shapes (72/72 lookup, 72/72 judgment traps), at the lowest
-Claude-side spend of each round ($2.69 / $2.97 API-equivalent, no web usage on the Claude
-meter at all). In this configuration the orchestrator only
+perfect score on all three task shapes (72/72 lookup, 72/72 judgment traps, 72/72
+source-diligence), at or near the lowest Claude-side spend of each round ($2.69 / $2.97 /
+$3.52 API-equivalent, no web usage on the Claude meter at all). In this configuration the
+orchestrator only
 splits the task and assembles what workers report — no re-verification pass; a variant
 that adds one scored the same with grok workers and only multiplied the Claude bill
 (raw runs in the workspace, summary in lesson #8).
@@ -24,14 +25,16 @@ that adds one scored the same with grok workers and only multiplied the Claude b
 
 ![Round 2 — cells lost per configuration](assets/r2-accuracy.svg)
 
-| Configuration | Round 1 (lookup task) | Round 2 (judgment-trap task) |
-| --- | --- | --- |
-| **fable + grok workers** | **72/72 (100%)** — 12/12 workers on the first wave, zero retries | **72/72 (100%)** — 12/12 workers |
-| fable + deepseek workers | 71/72 (98.6%) — 12/12 workers completed; the only loss was writing the effective date as the Fed's decision date | **72/72 (100%)** — 12/12 workers completed |
-| fable + sonnet workers | **72/72 (100%)** — 12/12 workers | 69/72 (95.8%) — a wrong index choice passed through uncaught (3-cell cascade) |
-| sonnet solo | 70/72 (97.2%) | 69.3/72 (96.3%) — average of 3 runs (70·69·69) |
-| fable solo | 71/72 (98.6%) | 68/72 (94.4%); hit both release-timing traps |
-| grok solo | **72/72 (100%)** | 67/72 (93.1%) — hit the exact same traps as fable solo |
+![Round 3 — cells lost per configuration](assets/r3-accuracy.svg)
+
+| Configuration | Round 1 (lookup) | Round 2 (judgment traps) | Round 3 (source diligence) |
+| --- | --- | --- | --- |
+| **fable + grok workers** | **72/72 (100%)** — 12/12 workers on the first wave, zero retries | **72/72 (100%)** — 12/12 workers | **72/72 (100%)** — flawless three rounds running |
+| fable + deepseek workers | 71/72 (98.6%) — 12/12 workers completed; the only loss was writing the effective date as the Fed's decision date | **72/72 (100%)** — 12/12 workers completed | 71/72 (98.6%) — one guidance tax-rate misread |
+| fable + sonnet workers | **72/72 (100%)** — 12/12 workers | 69/72 (95.8%) — a wrong index choice passed through uncaught (3-cell cascade) | 66/72 (91.7%) — workers couldn't open sec.gov originals, fell back to media copies (1 stale figure + 4 quote mismatches + 1 arithmetic) |
+| sonnet solo | 70/72 (97.2%) | 69.3/72 (96.3%) — average of 3 runs (70·69·69) | 62/72 (86.1%) — same 403, retreated to media excerpts and filename guessing; stale figure, quote and guidance cascade |
+| fable solo | 71/72 (98.6%) | 68/72 (94.4%); hit both release-timing traps | 71/72 (98.6%) — diagnosed the 403 and switched to the task-permitted identified-UA requests for SEC |
+| grok solo | **72/72 (100%)** | 67/72 (93.1%) — hit the exact same traps as fable solo | 71/72 (98.6%) — wrote the release date as the filing date on one cell |
 
 <sub>*A variant where the orchestrator re-verifies and corrects every worker result was
 also run, but the goal here is testing grok delegation, not workflows, so it is excluded —
@@ -71,6 +74,28 @@ grok delegation.
     it.
 
   12 × 6 = 72 cells, 1 point each.
+- **Round 3 — source diligence.** Earnings 8-K filings of 12 companies (airline, beverages,
+  apparel, consumer, industrials, …) filed with SEC EDGAR after 2026-07-06, 6 fields each
+  (filing date + accession number, fiscal-quarter label + period end, GAAP diluted EPS,
+  revenue + computed YoY %, guidance presence/metrics/GAAP basis, verbatim quote of the GAAP
+  EPS sentence + EDGAR URL). Primary source is EDGAR by rule (company IR for corroboration
+  only, third-party summaries and news banned), and the accession numbers were *not* given —
+  finding the right filing via full-text search is part of the task. Traps:
+  - **Corrected filing**: one company's target filing is an amended 8-K (8-K/A) whose GAAP
+    EPS differs from the superseded original ($(0.98) → $(1.15)) — using the stale original,
+    or a summary based on it, shows up in the value.
+  - **GAAP/adjusted side-by-side**: every release prints adjusted EPS next to GAAP.
+  - **Fiscal-year labels**: quarters ending late May that are "Q1 FY2027" for some companies,
+    a 5/30 (not 5/31) period end, etc.
+  - **Metadata precision**: a company whose press-release date differs from the EDGAR filing
+    date.
+  - **Verbatim-quote field**: the exact original sentence, letter for letter — a detector for
+    whether the run actually opened the source or patched over it with copies and summaries.
+
+  12 × 6 = 72 cells. One special condition: the SEC *requires* automated access to identify
+  itself with a contact User-Agent, so the task explicitly permitted identified-UA direct
+  requests for SEC domains only (compliance, not spoofing — the ban on UA spoofing and
+  block circumvention elsewhere stayed as before).
 
 > A "trap" here is a deliberately-planted easy-to-get-wrong spot — the point is not what the
 > model knows but whether it actually slips where slipping is easy.
@@ -163,10 +188,52 @@ All figures are **API-equivalent** (replacement cost). Claude from run.json, dee
 | fable solo | $9.95 | — | $9.95 |
 | grok solo | $0 | grok $1.10 | $1.10 |
 
-Cost shape on the API basis: the sonnet-worker configuration is the most expensive
-($11.05–11.54) because its workers bill the Claude meter. grok/deepseek worker delegation
-moves the heavy web collection onto a cheaper external meter, coming in below fable solo
-($4.82–7.33) and around sonnet solo. grok solo is the cheapest ($0.79–1.10).
+### Round 3
+
+![Round 3 — raw tokens per model](assets/r3-tokens.svg)
+
+![Round 3 — potential cost per configuration](assets/r3-cost.svg)
+
+**Raw tokens per model**
+
+| Configuration | Model | sessions¹ | in | out | cache write | cache read |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| fable + grok workers | fable-5 | 1 | 32 | 19,363 | 92,882 | 696,005 |
+| | grok-4.5² | 14 | 862,185 | 61,041 | — | 1,702,016 |
+| fable + deepseek workers | fable-5 | 1 | 43 | 20,992 | 75,536 | 928,585 |
+| | deepseek-v4-flash | 13 | 4,747,194³ | 175,585⁴ | — | 5,210,240³ |
+| fable + sonnet workers | fable-5 | 1 | 35 | 48,598 | 129,150 | 1,385,285 |
+| | sonnet-5 | 14 | 29,118 | 136,889 | 559,754 | 6,487,692 |
+| | haiku-4.5⁵ | — | 2,881,925 | 64,181 | 0 | 0 |
+| sonnet solo | sonnet-5 | 1 | 11,571 | 36,529 | 138,136 | 4,038,827 |
+| | haiku-4.5 | — | 918,774 | 21,088 | 0 | 0 |
+| fable solo⁶ | fable-5 | 1 | 76 | 36,444 | 161,236 | 3,377,666 |
+| grok solo | grok-4.5 | 1 | 373,565 | 11,716 | — | 3,235,968 |
+
+<sub>¹ same as the round-1 table. grok 14 = 12 first-wave + 2 retries, deepseek 13 = 12 first-wave + 1 supplemental (the orchestrator's launcher script dropped one company; its aggregation pass caught the gap and dispatched a make-up worker), sonnet workers 14 = 12 first-wave + 2 respawns (workers self-reported an unobtained quote).<br>
+² same as the round-1 table. Session matching reconciled 14/14.<br>
+³ of the original 9,957,434 input total, 5,210,240 cache hits are split out to the cache-read column — same handling as round-1 footnote ³.<br>
+⁴ of the 175,585 output, 79,528 are reasoning tokens — same as round-1 footnote ⁴.<br>
+⁵ same as the round-1 table.<br>
+⁶ fable solo ended up using no Claude web tools this round (haiku 0, zero WebSearch calls) — WebFetch is 403-blocked SEC-wide, and after diagnosing that it switched to the task-permitted identified-UA direct requests for SEC domains, parsing the raw exhibits locally.</sub>
+
+---
+
+**Potential cost per configuration**
+
+| Configuration | Claude-side | External (API-equiv) | Total |
+| --- | ---: | ---: | ---: |
+| fable + grok workers | $3.52 | grok $2.94 | $6.46 |
+| fable + deepseek workers | $3.49 | deepseek $0.93 | $4.42 |
+| fable + sonnet workers | $17.73 | — | $17.73 |
+| sonnet solo | $4.21 | — | $4.21 |
+| fable solo | $8.43 | — | $8.43 |
+| grok solo | $0 | grok $2.44 | $2.44 |
+
+Cost shape on the API basis: the sonnet-worker configuration is the most expensive every
+round ($11.05–17.73) because its workers bill the Claude meter. grok/deepseek worker
+delegation moves the heavy web collection onto a cheaper external meter, coming in below
+fable solo ($4.42–7.33) and around sonnet solo. grok solo is the cheapest ($0.79–2.44).
 
 **But actual outlay differs.** grok here ran on a SuperGrok subscription ($30/mo) and Claude
 on Max x20 ($200/mo); under a subscription the marginal dollar cost per run is ≈$0 (you burn
@@ -200,7 +267,8 @@ configuration.
   log by the `session=` prefix the wrapper trailer prints, summed, and priced at grok-4.5
   API rates ($2 / $0.50 cached / $6 per 1M) — the matched session counts reconcile with the
   token table, cross-checked against each session's final context size (ctxTokens; round-1
-  workers 12 sessions / 735,055, round-2 21 sessions / 833,433). grok actually ran on a SuperGrok subscription ($30/mo), so no
+  workers 12 sessions / 735,055, round-2 21 sessions / 833,433, round-3 workers 14
+  sessions). grok actually ran on a SuperGrok subscription ($30/mo), so no
   dollars were billed; the API-equivalent puts it on the same footing as the other models.
   It can also be read on the subscription basis: the CLI logs `creditUsagePercent`
   (1-point granularity) each run, and round 2's grok-solo run moved it exactly one point
@@ -225,11 +293,21 @@ Charts regenerate via `assets/gen_charts.py`.
   which never fired (see lesson #4), so all three are repeats of sonnet solo. Their spread
   (70/72, 69/72, 69/72) estimates sonnet's run-to-run variance. Advisor behavior is not this
   eval's question, so no further runs.
-- **Narrow execution window + answer-drift control.** All runs sat inside 2026-07-10–11,
-  and release calendars plus the judging records confirm no answer-changing release or rate
-  decision landed inside that window. A both-accepted rule for a release landing on an
-  execution day was fixed in advance (never needed), and judging finished the same day for
-  all configurations.
+- **Narrow execution window + answer-drift control.** All round-1/2 runs sat inside
+  2026-07-10–11, and release calendars plus the judging records confirm no answer-changing
+  release or rate decision landed inside that window. A both-accepted rule for a release
+  landing on an execution day was fixed in advance (never needed), and judging finished the
+  same day for all configurations. Round 3 ran and was judged within one day (2026-07-12),
+  and its targets are already-filed 8-Ks — immutable documents, so there is no drift to
+  control; instead, all 12 companies were re-checked for freshly-filed amendments (8-K/A)
+  right before execution.
+- **Answer key written before the runs (round 3).** Round 3's answer table and adjudication
+  rules (including how seven boundary cases would be scored, with expected wrong answers
+  noted per company) were extracted from the source documents *before* any run, and kept out
+  of every run-prompt path. That pre-built key turned out to be what made judging possible at
+  all: the judge session itself was 403-blocked from sec.gov and settled every cell against
+  the key plus official distribution copies of the releases (shared denominator 72, zero
+  unscorable cells).
 - **Predictions written down first.** Expectations — which configuration would win, whether
   the advisor(fable) would fire on its own — were written to a file before execution and
   compared afterwards, to guard against fitting the interpretation to the outcome.
@@ -245,7 +323,10 @@ Charts regenerate via `assets/gen_charts.py`.
   workers via the Agent tool; grok and deepseek workers run through their external CLIs),
   never as an extra helper on top; web = WebSearch/WebFetch only (or grok's
   `web_search`/`web_fetch`); no curl; bot-blocked sites
-  (403) handled by domain-limited search, never circumvention.
+  (403) handled by domain-limited search, never circumvention. Round 3 carved out one
+  exception: the SEC's policy requires an identifying User-Agent, so identified-UA direct
+  requests were task-permitted for SEC domains only (see the task section) — the rules for
+  every other site were unchanged.
 
 ## What the evals taught (and what changed in this repo because of them)
 
@@ -290,11 +371,14 @@ Charts regenerate via `assets/gen_charts.py`.
    worker layer, not something to paper over with orchestrator effort — and fixing the
    deepseek channel proved it: a minimal `CODEX_HOME` (its default config's MCP/plugin
    tools serialize as a `namespace` tool type OpenRouter rejects with a 400), a
-   collection gate, a bigger retry budget, and a final-message format rule took round-1
-   completion to 12/12 (and likewise in round 2). The metric that actually compares worker
-   *models* is **completed-work accuracy**: grok 144/144, deepseek 143/144 (the single
-   loss wrote the effective date as the Fed's decision date), sonnet 141/144 with all
-   three losses on one judgment trap's cascade. Since the score alone cannot distinguish completion
+   collection gate, a bigger retry budget, and a final-message format rule took completion
+   to 12/12 in all three rounds. The metric that actually compares worker
+   *models* is **completed-work accuracy**: over rounds 1–2, grok 144/144, deepseek 143/144
+   (the single loss wrote the effective date as the Fed's decision date), sonnet 141/144
+   with all three losses on one judgment trap's cascade. Adding round 3 gives grok 216/216,
+   deepseek 214/216, sonnet 207/216 — but sonnet's round-3 losses were largely channel
+   design (see #9), so the two-round figures are the cleaner model comparison. Since the
+   score alone cannot distinguish completion
    failure from judgment error, always report the failure rate next to the score (as the
    TL;DR table does).
 8. **Re-verification is worker insurance — with grok workers you can skip it.** A variant
@@ -303,8 +387,26 @@ Charts regenerate via `assets/gen_charts.py`.
    cost 2–3× more Claude-side ($6.09–7.66 vs $2.69–2.97), because the re-checking runs on
    the Claude web meter. The only place the insurance actually paid out was sonnet
    workers on the judgment task, where the uninsured run let a wrong index choice through
-   (69/72). One more note for the next round: the traps now catch almost nobody — this
-   task's discriminative power is spent, so a rematch needs harder judgment-layer traps.
+   (69/72). The note at the end of round 2 was "a rematch needs harder judgment-layer
+   traps" — round 3 was that rematch; see #9 for how it went.
+9. **In round 3 the value traps again caught nobody — the real separator was "can this
+   channel open the source at all".** The GAAP/adjusted pairs, fiscal-year labels and
+   period-end traps were passed by all six configurations, and most lost cells (including
+   the corrected-filing trap) traced to a single cause: Claude Code's WebFetch is
+   403-blocked SEC-wide (it cannot attach an identifying User-Agent), so **the ability to
+   open sec.gov originals differed by configuration.** grok CLI's `web_fetch` and
+   deepseek's (codex) shell fetch went through; fable solo diagnosed the 403 and switched
+   itself to the task-permitted identified-UA requests for SEC (71/72). sonnet solo, given
+   the same toolset, did not switch — it retreated to media copies and filename guessing
+   (62/72: stale pre-correction figure, four quote mismatches, invented guidance). The
+   sonnet-worker configuration couldn't switch even in principle, since its harness blocks
+   shell access (66/72) — read that loss as channel design, not model quality. Two lessons:
+   (a) the verbatim-quote+URL field worked exactly as designed, as a cheap detector of
+   "did the run actually open the source" — values can mostly be reconstructed from
+   copies, verbatim quotes cannot; (b) if a task's primary source sits behind bot
+   blocking, configurations separate on whether their collection channel can open that
+   source *before* they separate on anything else — part of grok delegation's edge this
+   round belongs to the channel (its own web_fetch), not the model.
 
 ## Reusing the frame for the next model / channel
 
@@ -312,8 +414,8 @@ To compare a new delegate (a different CLI, a different model family, a new mode
 frame and swap the configuration. Most of it is just applying the principles above — blind
 judging, raw per-model token reporting (no summing), gating workers on collection evidence
 plus reporting fallback counts, running cheapest-first inside a narrow window and logging CLI
-and model versions (these runs: claude CLI 2.1.206, grok 0.2.93, grok-4.5, claude-sonnet-5 /
-claude-fable-5). Two rules to add on top:
+and model versions (rounds 1–2: claude CLI 2.1.206, round 3: 2.1.207; grok 0.2.93, grok-4.5,
+claude-sonnet-5 / claude-fable-5). Two rules to add on top:
 
 1. **Always run three reference configurations**: the candidate structure (orchestrator +
    delegate workers), the orchestrator model solo, and the delegate model solo. The finding
@@ -327,22 +429,33 @@ claude-fable-5). Two rules to add on top:
 
 - **n=1 per configuration.** The three round-2 sonnet runs spread across 1 cell
   (70·69·69), so 1–2-cell gaps between configurations are inside noise. What survives n=1
-  is the *streak* (grok workers at 144/144 across both task shapes) and the *matched
-  failure fingerprints* of the solo runs.
-- **Scores are from a unified re-judging on 2026-07-11.** The original experiment scored each
-  run differently (those records stay in the workspace); every report was then re-scored with
-  one shared key and one procedure, removing the differences. A few configurations moved by
-  1–2 cells; the ranking and conclusions are unchanged. Evidence the scoring holds up: the few
-  cells where different judge sessions split were all resolved against the primary source (the
-  RBA meeting-calendar misread overturned against the official page; round 2's four split
-  quote cells adjudicated by the pre-registered "passes if verbatim at its URL" rule, which
-  also matches the original experiment's verdicts). A single judge session has its own error
-  rate, so cross-run verdict comparison is a cheap error detector.
+  is the *streak* (grok workers at 216/216 across three task shapes) and the *matched
+  failure fingerprints* — round 2's two solos failing the same traps the same way, round
+  3's two sonnet configurations failing the same 403 the same way.
+- **Round 1–2 scores are from a unified re-judging on 2026-07-11.** The original experiment
+  scored each run differently (those records stay in the workspace); every report was then
+  re-scored with one shared key and one procedure, removing the differences. A few
+  configurations moved by 1–2 cells; the ranking and conclusions are unchanged. Round 3 was
+  scored with that unified method (pre-built key + a single blind session) from the start.
+  Evidence the scoring holds up: the few cells where different judge sessions split were all
+  resolved against the primary source (the RBA meeting-calendar misread overturned against
+  the official page; round 2's four split quote cells adjudicated by the pre-registered
+  "passes if verbatim at its URL" rule, which also matches the original experiment's
+  verdicts). A single judge session has its own error rate, so cross-run verdict comparison
+  is a cheap error detector.
+- **One round-3 judging limitation.** The judge session was itself 403-blocked from sec.gov,
+  so it verified against the pre-built key plus official distribution copies of the
+  releases. Only one verdict pair (a quote phrasing in two reports) rests on
+  absence-from-copies rather than direct confirmation — flagged with a confidence grade in
+  the scoreboard; every other cell was settled verbatim.
 - **Follow-up candidates.** ① fable + sonnet workers plus a re-verification pass on a
   judgment-trap task: whether the verification layer catches the wrong index choice
   (69/72) is the test of sonnet workers' insurance case. ② A haiku-worker configuration
   would add one more data point to "pick workers by failure rate × external price".
-  ③ Any rematch needs a harder task — these traps no longer separate configurations.
+  ③ Pure judgment discrimination is still unsolved — round 3's top four configurations
+  bunched at 71–72 again, and the spread came from the access channel, not the traps. The
+  next task needs sources that open without bot blocking and traps that live purely in the
+  judgment layer to separate the top tier.
 - **grok 0.2.93's `research` mode fails closed** (upstream bug combining web tools with the
   read-only allowlist), so the eval workers ran `research-rw` with the user's explicit OK.
   When xAI ships the fix, the same frame can compare `research` (read-only) workers directly.

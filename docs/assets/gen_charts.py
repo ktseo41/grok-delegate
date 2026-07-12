@@ -121,6 +121,18 @@ ACC_R2 = [
 ]
 NOTE_R2 = ["* sonnet solo = average of 3 runs: 70/72, 69/72, 69/72."]
 NOTE_R2_KO = ["* sonnet 단독 = 3회 실행 평균: 70/72, 69/72, 69/72."]
+ACC_R3 = [
+    ("fable + grok workers",       0,    "72/72 · 100%"),
+    ("fable + deepseek workers",   1,    "71/72 · 98.6%"),
+    ("fable solo",                 1,    "71/72 · 98.6%"),
+    ("grok solo",                  1,    "71/72 · 98.6%"),
+    ("fable + sonnet workers",     6,    "66/72 · 91.7%"),
+    ("sonnet solo",                10,   "62/72 · 86.1%"),
+]
+NOTE_R3 = ["Round 3's spread is channel-driven: the two configurations that could not open",
+           "sec.gov (WebFetch is 403-blocked there) lost cells to media-copy fallbacks."]
+NOTE_R3_KO = ["라운드 3의 격차는 채널에서 났다: sec.gov를 못 연 두 조합(WebFetch가 전역 403)이",
+              "매체 사본 폴백에서 셀을 잃었다."]
 
 # Token rows: (label, [(model, in, out), ...]) — "in" is fresh (non-cached) input
 # to match the doc tables; cache columns live there. grok's in/out come from its
@@ -146,6 +158,16 @@ TOKENS_R2 = [
     ("fable solo",               [("fable", 4065, 50150), ("haiku", 1134678, 13843)]),
     ("grok solo",                [("grok", 248095, 11056)]),
 ]
+TOKENS_R3 = [
+    ("fable + grok workers",     [("fable", 32, 19363), ("grok", 862185, 61041)]),
+    ("fable + deepseek workers", [("fable", 43, 20992),
+                                  ("deepseek", 4747194, 175585)]),  # 9,957,434 − 5,210,240 cached
+    ("fable + sonnet workers",   [("fable", 35, 48598), ("sonnet", 29118, 136889),
+                                  ("haiku", 2881925, 64181)]),
+    ("sonnet solo",              [("sonnet", 11571, 36529), ("haiku", 918774, 21088)]),
+    ("fable solo",               [("fable", 76, 36444)]),  # no haiku: used no Claude web tools
+    ("grok solo",                [("grok", 373565, 11716)]),
+]
 
 # Cost rows: (label, claude_usd, external). All figures are API-equivalent
 # (list-price replacement cost). The external segment stacks onto the Claude bar
@@ -169,6 +191,14 @@ COST_R2 = [
     ("sonnet solo (avg of 3)",   5.99, None),
     ("fable solo",               9.95, None),
     ("grok solo",                0.0, ("grok", 1.10)),
+]
+COST_R3 = [
+    ("fable + grok workers",     3.52, ("grok", 2.94)),
+    ("fable + deepseek workers", 3.49, ("deepseek", 0.93)),
+    ("fable + sonnet workers",   17.73, None),
+    ("sonnet solo",              4.21, None),
+    ("fable solo",               8.43, None),
+    ("grok solo",                0.0, ("grok", 2.44)),
 ]
 
 def fmt(n):
@@ -332,10 +362,15 @@ if __name__ == "__main__":
         "r2-accuracy.svg": lambda lang: chart_accuracy(2, ACC_R2,
             "of 72 fields" if lang == "en" else "72개 필드 기준",
             NOTE_R2 if lang == "en" else NOTE_R2_KO, lang=lang, vmax=8),
+        "r3-accuracy.svg": lambda lang: chart_accuracy(3, ACC_R3,
+            "of 72 fields" if lang == "en" else "72개 필드 기준",
+            NOTE_R3 if lang == "en" else NOTE_R3_KO, lang=lang, vmax=10),
         "r1-tokens.svg":   lambda lang: chart_tokens(1, TOKENS_R1, 8_000_000, 200_000, lang=lang),
         "r2-tokens.svg":   lambda lang: chart_tokens(2, TOKENS_R2, 15_000_000, 280_000, lang=lang),
+        "r3-tokens.svg":   lambda lang: chart_tokens(3, TOKENS_R3, 5_000_000, 280_000, lang=lang),
         "r1-cost.svg":     lambda lang: chart_cost(1, COST_R1, lang=lang),
         "r2-cost.svg":     lambda lang: chart_cost(2, COST_R2, lang=lang),
+        "r3-cost.svg":     lambda lang: chart_cost(3, COST_R3, lang=lang),
     }
     for name, fn in charts.items():
         p = os.path.join(OUT, name)
