@@ -121,6 +121,23 @@ grok context — make every prompt self-contained. (grok also has its own `--bes
 `/tasks`. Claude Code's sanctioned way to make a non-Claude tool a first-class agent is an MCP server;
 grok ships none today, so background Bash is the supported route.
 
+**The two consumption patterns.** How grok's output gets back to you decides whether the courier
+subagent (next section) belongs in the loop:
+
+- **Conversational one-shot** — the user asks for a review/answer and the deliverable is a summary
+  *in the conversation*. Use the courier (`@grok`): it isolates grok's verbose output in its own
+  context and relays only the substance.
+- **Orchestrated fan-out + file drop** — you (the orchestrator) fan out N workers whose deliverable
+  is a *file* each worker writes in its own working dir (summaries, reports, transformed artifacts),
+  which you then read, verify, and synthesize yourself. Call the wrapper **directly** via background
+  Bash and have each prompt end with "write the result to `<file>`"; skip the courier — a relay
+  agent per worker adds a full Claude-side turn per worker and shuttles content you were going to
+  read from disk anyway. Verified on a real 6-worker run (yt-dlp caption collection + per-video
+  summaries, `fix` mode with per-worker scratch cwds): identical grok-side behavior to the courier
+  path (modes, isolation, usage trailer), zero courier overhead. Verification stays with the
+  orchestrator: spot-check a sample of outputs against the on-disk source material (e.g. the
+  downloaded transcripts) before synthesizing.
+
 **Turn-budget sizing.** The wrapper's default `--max-turns 30` fits a **single-topic** worker
 comfortably (observed: 3–17 tool calls per topic). A monolithic run covering many topics does not:
 a real 12-topic solo research run died mid-task at the default cap and needed `--max-turns 120` to
@@ -144,9 +161,10 @@ still works through the Bash wrapper above.
 artifact* (a translated page, a whole file) that pass-through is wasted tokens. Prefer calling the
 wrapper directly and redirecting to a file — `grok-run.sh review "…translate, output the full HTML" >
 out.html` — so neither the courier nor the main context pays to shuttle it; then check only the part
-you need (a `diff`/`grep`). Rule of thumb: **want a summary → `@grok`; want the raw artifact →
-direct wrapper + `> file`.** The courier earns its cost on analysis (review/research), where
-summarizing and isolating grok's output is the point.
+you need (a `diff`/`grep`). Rule of thumb: **want a summary in the conversation → `@grok`; want a
+raw artifact or a file-drop fan-out → direct wrapper + `> file`** (see "The two consumption
+patterns" above). The courier earns its cost on analysis (review/research), where summarizing and
+isolating grok's output is the point.
 
 ## Examples
 
