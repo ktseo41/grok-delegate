@@ -5,6 +5,12 @@ tasks to the [grok CLI](https://x.ai) (xAI, `grok-4.5`) — as a subagent-like o
 calls grok headless via the Bash tool, in a **read-only** or **autonomous** mode, and can fan out
 several grok workers in parallel.
 
+![Both eval rounds — cells lost and cost per configuration](docs/assets/hero.svg)
+
+<sub>Two controlled eval rounds, 144 research cells: the grok-worker configuration was the only
+one with zero wrong cells, at the lowest Claude-side spend of every run — method and full numbers
+in [`docs/orchestration-eval.md`](docs/orchestration-eval.md).</sub>
+
 ## Why
 
 - **Independent cross-check.** grok is a different model family, so it has a different set of blind
@@ -17,11 +23,20 @@ several grok workers in parallel.
 
 ## Install
 
-Clone directly into your Claude Code skills directory so the folder name matches the skill name:
+As a plugin (also registers the `grok` subagent below automatically):
+
+```
+/plugin marketplace add ktseo41/grok-delegate
+/plugin install grok-delegate@ktseo41
+```
+
+Or clone directly into your Claude Code skills directory so the folder name matches the skill name:
 
 ```bash
 git clone https://github.com/ktseo41/grok-delegate.git ~/.claude/skills/grok-delegate
 ```
+
+Pick one method — a plugin install plus a skills-dir clone would register the skill twice.
 
 Or use the installer (copies into `~/.claude/skills/grok-delegate` by default):
 
@@ -48,7 +63,7 @@ want a summary → `@grok`; want the raw artifact → direct wrapper + `> file`.
 
 ### Requirements
 
-- The `grok` CLI on your `PATH`. Verified against grok 0.2.93.
+- The `grok` CLI on your `PATH`. Verified against grok 0.2.93 (read-only canary last re-run 2026-07-12).
 - Authenticated once: `grok login` (or `XAI_API_KEY` for CI).
 
 ## Usage

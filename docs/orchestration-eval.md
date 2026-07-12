@@ -20,6 +20,8 @@ splits the task and assembles what workers report — no re-verification pass; a
 that adds one scored the same with grok workers and only multiplied the Claude bill
 (raw runs in the workspace, summary in lesson #8).
 
+![Both rounds — cells lost and cost per configuration](assets/hero.svg)
+
 ![Round 1 — cells lost per configuration](assets/r1-accuracy.svg)
 
 ![Round 2 — cells lost per configuration](assets/r2-accuracy.svg)
@@ -343,6 +345,11 @@ claude-fable-5). Two rules to add on top:
   (69/72) is the test of sonnet workers' insurance case. ② A haiku-worker configuration
   would add one more data point to "pick workers by failure rate × external price".
   ③ Any rematch needs a harder task — these traps no longer separate configurations.
+  ④ Other orchestrators over the same grok workers — opus or sonnet in the fable seat.
+  That isolates how much of the win is the orchestration structure vs the orchestrator
+  model; the sonnet variant also inverts the usual shape (the worker, grok-4.5, is the
+  stronger model), testing whether split-and-assemble still holds when the orchestrator
+  is the weaker one.
 - **grok 0.2.93's `research` mode fails closed** (upstream bug combining web tools with the
   read-only allowlist), so the eval workers ran `research-rw` with the user's explicit OK.
   When xAI ships the fix, the same frame can compare `research` (read-only) workers directly.
