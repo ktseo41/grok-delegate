@@ -16,13 +16,14 @@ without the raw data.
 perfect score on both task shapes (72/72 lookup, 72/72 judgment traps), at the lowest
 Claude-side spend of each round ($2.69 / $2.97 API-equivalent, no web usage on the Claude
 meter at all). In this configuration the orchestrator only
-splits the task and assembles what workers report — no re-verification pass; a variant
-that adds one scored the same with grok workers and only multiplied the Claude bill
-(raw runs in the workspace, summary in lesson #8).
+splits the task and assembles what workers report — no re-verification pass. (A variant
+where the orchestrator re-checks every worker value against the source is a separate,
+higher-accuracy device — a cross-model check at 2–3× the Claude cost, not a cheaper win —
+see lesson #8.)
 
 ![Both rounds — cells lost and cost per configuration](assets/hero.svg)
 
-<sub>*The summary chart: both rounds combined — total cells lost (of 144) and total
+<sub>*Both rounds combined — total cells lost (of 144) and total
 API-equivalent cost per configuration, with the external-meter share (grok/deepseek)
 split out of the cost bars. Everything below breaks these numbers out per round.*</sub>
 
@@ -41,10 +42,10 @@ Accuracy per round:
 | fable solo | 71/72 (98.6%) | 68/72 (94.4%); hit both release-timing traps |
 | grok solo | **72/72 (100%)** | 67/72 (93.1%) — hit the exact same traps as fable solo |
 
-<sub>*A variant where the orchestrator re-verifies and corrects every worker result was
-also run, but the goal here is testing grok delegation, not workflows, so it is excluded —
-same perfect grok-worker scores at 2–3× the Claude-side cost. Raw runs in the experiment
-workspace.*</sub>
+<sub>*A variant where the orchestrator re-checks every worker value against the source was
+also run; the goal here is testing delegation, not workflows, so it is excluded from the
+main comparison. What it changes — a cross-model accuracy check at 2–3× the Claude cost,
+not a cheaper win — is in lesson #8. Raw runs in the experiment workspace.*</sub>
 
 ### Why deepseek is in the mix
 
@@ -282,7 +283,10 @@ Charts regenerate via `assets/gen_charts.py`.
    including on a cell where sonnet wrote down the correct official wording and then chose
    the wrong index anyway. The plumbing was verified live by forced probes, so non-firing was
    the model's choice. To make an advisor fire you must escalate the instruction to the point
-   where you are measuring obedience, not judgment.
+   where you are measuring obedience, not judgment. (Update: the advisor tool worked during
+   these runs but has since stopped functioning — calls now return "unavailable", a breakage
+   others have hit too, not a per-session fluke; the path can no longer be exercised at all,
+   so the finding above holds only for the window when the tool still ran.)
 5. **Measurement can contaminate behavior.** Asking the child session to *report advisor
    availability* caused it to make a test call to the advisor (caught in smoke, fixed to
    "observe the tool list only"). Pre-write instrumentation wording and smoke-test it before
@@ -305,14 +309,19 @@ Charts regenerate via `assets/gen_charts.py`.
    three losses on one judgment trap's cascade. Since the score alone cannot distinguish completion
    failure from judgment error, always report the failure rate next to the score (as the
    TL;DR table does).
-8. **Re-verification is worker insurance — with grok workers you can skip it.** A variant
-   where the orchestrator re-checks every worker number against the primary source (runs
-   kept in the workspace) scored exactly the same as the main table with grok workers and
-   cost 2–3× more Claude-side ($6.09–7.66 vs $2.69–2.97), because the re-checking runs on
-   the Claude web meter. The only place the insurance actually paid out was sonnet
-   workers on the judgment task, where the uninsured run let a wrong index choice through
-   (69/72). One more note for the next round: the traps now catch almost nobody — this
-   task's discriminative power is spent, so a rematch needs harder judgment-layer traps.
+8. **Re-verification buys accuracy through cross-model checking — it is not the delegation
+   win.** The main tables run assemble-only (the orchestrator splits and transcribes, no
+   re-checking); in a separate run the orchestrator re-opened the primary source and
+   re-confirmed *every* worker value — a blind re-check of all cells, not just the ones you
+   already suspect. It's mentioned at all because the experiment originally included this
+   re-verification step and then dropped it, to isolate what delegation alone buys.
+
+   Re-verification *can* catch a worker error. But that benefit comes not from any special
+   workflow — it comes from **cross-model verification** (a different model re-reading the
+   sources) — and it raises the Claude-side cost 2–3× (from $2.69–2.97 to $6.09–7.66). That
+   doesn't fit delegation's original goal: doing the work cost-efficiently through grok while
+   keeping accuracy high. So re-verification is a device you might consider for work that
+   needs high accuracy — not a tool for cost-efficient delegation.
 
 ## Reusing the frame for the next model / channel
 
@@ -346,16 +355,35 @@ claude-fable-5). Two rules to add on top:
   quote cells adjudicated by the pre-registered "passes if verbatim at its URL" rule, which
   also matches the original experiment's verdicts). A single judge session has its own error
   rate, so cross-run verdict comparison is a cheap error detector.
-- **Follow-up candidates.** ① fable + sonnet workers plus a re-verification pass on a
-  judgment-trap task: whether the verification layer catches the wrong index choice
-  (69/72) is the test of sonnet workers' insurance case. ② A haiku-worker configuration
-  would add one more data point to "pick workers by failure rate × external price".
-  ③ Any rematch needs a harder task — these traps no longer separate configurations.
-  ④ Other orchestrators over the same grok workers — opus or sonnet in the fable seat.
-  That isolates how much of the win is the orchestration structure vs the orchestrator
-  model; the sonnet variant also inverts the usual shape (the worker, grok-4.5, is the
-  stronger model), testing whether split-and-assemble still holds when the orchestrator
-  is the weaker one.
+- **The tasks were not hard.** Both rounds are official-source lookup with
+  planted traps — not open-ended reasoning, conflicting-source synthesis, or judgment under
+  ambiguity. Round 1 bunched everyone near the ceiling and round 2's traps now catch almost
+  nobody. So these results say delegation is reliable and cheap *on well-specified
+  collection tasks*, and they scope the orchestrator-swap result the same way: "the
+  orchestrator model is interchangeable" holds for split-and-assemble collection and says
+  nothing about harder task shapes, where the orchestrator's own reasoning would carry more
+  of the load. A genuinely hard task is the missing test (follow-up ①).
+- **Follow-up candidates.**
+  - ① A harder task is needed — these traps no longer separate configurations.
+  - ② **Other orchestrators over the same grok workers — done (2026-07-12).** Swapping the
+    fable orchestrator for opus, same grok workers and the same split-and-assemble rules
+    (no re-verification), scored a perfect 72/72 — identical to fable — so the win is the
+    structure (one topic per worker + the collection gate), not the fable model: you don't
+    need the priciest model in the orchestrator seat. A sonnet orchestrator (the inverted
+    shape, where the worker grok-4.5 is the stronger model) got every cell it completed
+    right (66/66) and did the orchestrator job — split, gate-catch a heavy first wave of
+    no-collection workers, retry, and honestly leave the one unrecovered topic blank — at
+    the lowest Claude-side cost of the three; its only miss was a grok worker that failed
+    collection on both tries, so the bottleneck there is the worker's retry budget, not
+    orchestration. (An opus solo run the same day again trailed the delegated runs.) Raw
+    runs in the workspace.
+
+    <details>
+    <summary>Scores and cost by configuration</summary>
+
+    ![Orchestrator swap — score and cost by configuration](assets/orchestrator-swap.svg)
+
+    </details>
 - **grok 0.2.93's `research` mode fails closed** (upstream bug combining web tools with the
   read-only allowlist), so the eval workers ran `research-rw` with the user's explicit OK.
   When xAI ships the fix, the same frame can compare `research` (read-only) workers directly.

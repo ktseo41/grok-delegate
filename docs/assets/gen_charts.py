@@ -53,6 +53,9 @@ LABEL_KO = {
     "grok solo":                "grok 단독",
     "sonnet solo":               "sonnet 단독",
     "sonnet solo (avg of 3)":   "sonnet 단독 (3회 평균)",
+    "opus + grok workers":      "opus + grok 워커",
+    "sonnet + grok workers":    "sonnet + grok 워커",
+    "opus solo":                "opus 단독",
 }
 
 STRINGS = {
@@ -79,6 +82,11 @@ STRINGS = {
         "hero_acc_panel": "Cells lost (of 144)",
         "hero_cost_panel": "Cost (USD, API-equivalent)",
         "hero_lost":      "lost",
+        "swap_aria":      "Orchestrator swap — cells lost and cost per configuration",
+        "swap_title":     "Orchestrator swap — same grok workers, orchestrator model changed (round-2 task, 2026-07-12)",
+        "swap_caption1":  "Same round-2 task, workers, and split-and-assemble rules; only the orchestrator model changes.",
+        "swap_caption2":  "Cost is API-equivalent; the grok segment bills an external meter (C's is higher — 6 retried workers); opus-solo's bar is all Claude (opus + internal haiku web).",
+        "swap_acc_panel": "Cells lost (of 72)",
     },
     "ko": {
         "acc_title":      lambda r, denom: f"라운드 {r} — 조합별 손실 셀 ({denom})",
@@ -103,6 +111,11 @@ STRINGS = {
         "hero_acc_panel": "손실 셀 (144개 기준)",
         "hero_cost_panel": "비용 (달러, API 환산)",
         "hero_lost":      "손실",
+        "swap_aria":      "오케스트레이터 교체 — 조합별 손실 셀과 비용",
+        "swap_title":     "오케스트레이터 교체 — 같은 grok 워커, 오케스트레이터 모델만 변경 (라운드2 과제, 2026-07-12)",
+        "swap_caption1":  "라운드2 과제·워커·분할/조립 규칙 동일 — 오케스트레이터 모델만 변경.",
+        "swap_caption2":  "비용은 API 환산; grok 구간은 외부 미터(C가 높음 — 재시도 6워커); opus 단독 막대는 전부 Claude(opus + 내부 haiku 웹).",
+        "swap_acc_panel": "손실 셀 (72개 기준)",
     },
 }
 
@@ -196,6 +209,19 @@ HERO = [
 ]
 NOTE_HERO = ["* sonnet solo round 2 = average of 3 runs."]
 NOTE_HERO_KO = ["* sonnet 단독 라운드 2 = 3회 실행 평균."]
+
+# Orchestrator-swap rows (follow-up ④, run 2026-07-12): same grok workers, same
+# split-and-assemble rules as round 2 — only the orchestrator model changes.
+# (label, cells lost of 72, score text, marker, Claude USD, external (model, USD) or None).
+# A opus+grok 72/72; C sonnet+grok 66/72 (completed cells 66/66, only loss = one grok
+# worker failing collection twice); B opus solo 64/72. Claude $ from run.json costUSD,
+# grok $ from unified.jsonl session match at grok-4.5 rates (grok-cost.py). B's Claude
+# bar folds opus $3.37 + internal haiku web $1.51.
+SWAP = [
+    ("opus + grok workers",   0, "72/72 · 100%",  "", 1.93, ("grok", 2.91)),
+    ("sonnet + grok workers", 6, "66/72 · 91.7%", "", 1.43, ("grok", 3.69)),
+    ("opus solo",             8, "64/72 · 88.9%", "", 4.88, None),
+]
 
 def fmt(n):
     if n >= 1_000_000: return f"{n/1e6:.2f}M"
@@ -424,9 +450,79 @@ def chart_hero(lang="en"):
         s += text(20, axis_y + 38 + 15 * i, line, 10.5, MUTED)
     return s + "</svg>\n"
 
+# -------------------------------------------------- chart 5: orchestrator swap ----
+def chart_swap(lang="en"):
+    """Follow-up ④: same grok workers, orchestrator model changed (round-2 task).
+    Same two-panel idiom as the hero chart — cells lost (of 72) + API-equiv cost."""
+    st = STRINGS[lang]
+    W = CHART_W
+    row_h = 34
+    rows_top = 92
+    n = len(SWAP)
+    axis_y = rows_top + n * row_h
+    H = axis_y + 60
+    acc_x0, acc_w = BAR_X0, 290
+    cost_x0, cost_w = 660, 300
+    acc_vmax, cost_vmax = 8, 6.0
+    s = svg_open(W, H, st["swap_aria"])
+    s += text(20, TITLE_Y, st["swap_title"], TITLE_SIZE, INK, weight="600")
+    s += text(20, CAP_Y1, st["swap_caption1"], CAP_SIZE, MUTED)
+    s += text(20, CAP_Y2, st["swap_caption2"], CAP_SIZE, MUTED)
+    s += text(acc_x0, 78, st["swap_acc_panel"], 12, INK, weight="600")
+    s += text(cost_x0, 78, st["hero_cost_panel"], 12, INK, weight="600")
+    y = rows_top
+    for label, lost, scoretxt, marker, usd, ext in SWAP:
+        base = y + 12
+        by = y + 2
+        s += text(acc_x0 - 10, base, label_for(label, lang), 12, INK, anchor="end", weight="600")
+        # accuracy panel — same idiom as the hero / per-round accuracy charts
+        bw = acc_w * (lost / acc_vmax)
+        if lost == 0:
+            s += f'<circle cx="{acc_x0 + 3}" cy="{y + 8}" r="3.5" fill="{BAR_BLUE}"/>\n'
+        else:
+            s += (f'<rect x="{acc_x0}" y="{by}" width="{bw:.1f}" height="{BAR_H}" rx="4" '
+                  f'fill="{BAR_BLUE}"/>\n')
+        s += text(acc_x0 + max(bw, 7) + 8, base,
+                  f'{lost:g} {st["hero_lost"]} · {scoretxt}', 11, INK2)
+        # cost panel — same stacked idiom as the cost / hero charts
+        x = cost_x0
+        parts = []
+        if usd > 0:
+            bw = cost_w * usd / cost_vmax
+            s += (f'<rect x="{x:.1f}" y="{by}" width="{bw:.1f}" height="{BAR_H}" rx="3" '
+                  f'fill="{BAR_BLUE}" stroke="{SURFACE}" stroke-width="2"/>\n')
+            x += bw
+            parts.append(f"${usd:.2f}")
+        if ext:
+            model, val = ext
+            bw = cost_w * val / cost_vmax
+            s += (f'<rect x="{x:.1f}" y="{by}" width="{max(bw, 3):.1f}" height="{BAR_H}" rx="3" '
+                  f'fill="{MODEL_COLOR[model]}" stroke="{SURFACE}" stroke-width="2"/>\n')
+            x += bw
+            parts.append(f"${val:.2f}")
+        s += text(x + 8, base, " + ".join(parts) or "$0", AXIS_SIZE, INK2)
+        y += row_h
+    # axes
+    s += f'<line x1="{acc_x0}" y1="{axis_y}" x2="{acc_x0 + acc_w}" y2="{axis_y}" stroke="{BASE}"/>\n'
+    for v in range(0, acc_vmax + 1, 2):
+        x = acc_x0 + acc_w * v / acc_vmax
+        s += text(x, axis_y + AXIS_DY, str(v), AXIS_SIZE, MUTED, anchor="middle")
+    s += f'<line x1="{cost_x0}" y1="{axis_y}" x2="{cost_x0 + cost_w}" y2="{axis_y}" stroke="{BASE}"/>\n'
+    for v in (0, 2, 4, 6):
+        x = cost_x0 + cost_w * v / cost_vmax
+        s += text(x, axis_y + AXIS_DY, f"${v}", AXIS_SIZE, MUTED, anchor="middle")
+    # cost legend (Claude + grok only — no deepseek in this experiment)
+    lx, ly = cost_x0, axis_y + 38
+    for name, fill in ((st["claude_label"], BAR_BLUE), ("grok", MODEL_COLOR["grok"])):
+        s += f'<rect x="{lx}" y="{ly - 9}" width="10" height="10" rx="2" fill="{fill}"/>\n'
+        s += text(lx + 14, ly, name, 11, INK2)
+        lx += 14 + 8 * len(name) + 26
+    return s + "</svg>\n"
+
 if __name__ == "__main__":
     charts = {
         "hero.svg":        lambda lang: chart_hero(lang=lang),
+        "orchestrator-swap.svg": lambda lang: chart_swap(lang=lang),
         "r1-accuracy.svg": lambda lang: chart_accuracy(1, ACC_R1,
             "of 72 fields" if lang == "en" else "72개 필드 기준",
             NOTE_R1 if lang == "en" else NOTE_R1_KO, lang=lang, vmax=5),

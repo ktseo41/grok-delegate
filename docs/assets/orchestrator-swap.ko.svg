@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 254" width="1050" height="254" role="img" aria-label="오케스트레이터 교체 — 조합별 손실 셀과 비용">
+<rect width="1050" height="254" rx="8" fill="#fcfcfb"/>
+<text x="20" y="30" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">오케스트레이터 교체 — 같은 grok 워커, 오케스트레이터 모델만 변경 (라운드2 과제, 2026-07-12)</text>
+<text x="20" y="48" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">라운드2 과제·워커·분할/조립 규칙 동일 — 오케스트레이터 모델만 변경.</text>
+<text x="20" y="63" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">비용은 API 환산; grok 구간은 외부 미터(C가 높음 — 재시도 6워커); opus 단독 막대는 전부 Claude(opus + 내부 haiku 웹).</text>
+<text x="220" y="78" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">손실 셀 (72개 기준)</text>
+<text x="660" y="78" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">비용 (달러, API 환산)</text>
+<text x="210" y="104" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">opus + grok 워커</text>
+<circle cx="223" cy="100" r="3.5" fill="#2a78d6"/>
+<text x="235" y="104" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0 손실 · 72/72 · 100%</text>
+<rect x="660.0" y="94" width="96.5" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="756.5" y="94" width="145.5" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="910.0" y="104" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$1.93 + $2.91</text>
+<text x="210" y="138" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">sonnet + grok 워커</text>
+<rect x="220" y="128" width="217.5" height="16" rx="4" fill="#2a78d6"/>
+<text x="445.5" y="138" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">6 손실 · 66/72 · 91.7%</text>
+<rect x="660.0" y="128" width="71.5" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="731.5" y="128" width="184.5" height="16" rx="3" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<text x="924.0" y="138" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$1.43 + $3.69</text>
+<text x="210" y="172" font-size="12" fill="#0b0b0b" text-anchor="end" font-weight="600" font-family="system-ui,-apple-system,Segoe UI,sans-serif">opus 단독</text>
+<rect x="220" y="162" width="290.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="518.0" y="172" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">8 손실 · 64/72 · 88.9%</text>
+<rect x="660.0" y="162" width="244.0" height="16" rx="3" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<text x="912.0" y="172" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$4.88</text>
+<line x1="220" y1="194" x2="510" y2="194" stroke="#c3c2b7"/>
+<text x="220.0" y="209" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">0</text>
+<text x="292.5" y="209" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">2</text>
+<text x="365.0" y="209" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">4</text>
+<text x="437.5" y="209" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">6</text>
+<text x="510.0" y="209" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">8</text>
+<line x1="660" y1="194" x2="960" y2="194" stroke="#c3c2b7"/>
+<text x="660.0" y="209" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$0</text>
+<text x="760.0" y="209" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$2</text>
+<text x="860.0" y="209" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$4</text>
+<text x="960.0" y="209" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">$6</text>
+<rect x="660" y="223" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="674" y="232" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">Claude</text>
+<rect x="748" y="223" width="10" height="10" rx="2" fill="#008300"/>
+<text x="762" y="232" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif">grok</text>
+</svg>
