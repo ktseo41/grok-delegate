@@ -22,6 +22,12 @@ that adds one scored the same with grok workers and only multiplied the Claude b
 
 ![Both rounds — cells lost and cost per configuration](assets/hero.svg)
 
+<sub>*The summary chart: both rounds combined — total cells lost (of 144) and total
+API-equivalent cost per configuration, with the external-meter share (grok/deepseek)
+split out of the cost bars. Everything below breaks these numbers out per round.*</sub>
+
+Accuracy per round:
+
 ![Round 1 — cells lost per configuration](assets/r1-accuracy.svg)
 
 ![Round 2 — cells lost per configuration](assets/r2-accuracy.svg)
