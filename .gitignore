@@ -5,3 +5,6 @@ opt-run/
 loop.log
 opt-report.html
 *.local.log
+
+# local checkout of xAI's open-source grok for source investigation (not versioned)
+vendor-grok-build/

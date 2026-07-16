@@ -36,30 +36,37 @@ use it instead of hand-rolling grok flags, unless you deliberately want autonomo
 mirrors how Claude Code's own built-in Explore/Plan subagents stay read-only: Write and Edit are
 denied at the tool level, not via a permission mode.)
 
-**grok 0.2.93 research-mode bug — do not "fix" it the unsafe way.** On this build, adding a web tool
-to a `--tools` allowlist fails to build the session (upstream error naming `run_terminal_cmd` /
-`auto_background_on_timeout`), so `research` **fails closed on 0.2.93**. The wrapper detects the
-build error per-run, so a newer grok that fixes it works again with no change here — this is a
-version-specific block, not a permanent one. If grok reports that `--tools` is broken and suggests
-`--disallowed-tools` or a permission mode to get web working, do **not** take it: those build fine
-but re-enable file writes and shell (canary-verified), so the run would no longer be read-only.
-`review` is unaffected.
+**`research` is the normal path on current grok (0.2.98+).** A historical bug on grok < 0.2.98 made
+adding a web tool to a `--tools` allowlist fail to build the session (upstream error naming
+`run_terminal_cmd` / `auto_background_on_timeout`), so on those old builds `research` **fails
+closed**. That was fixed upstream in grok 0.2.98 (2026-07-12) and verified fixed on 2026-07-16
+against installed grok 0.2.99 and the now-open-source repo (checkout 0.2.101) — see
+`docs/source-investigation-2026-07-16.md`. The wrapper still detects a build failure per-run: on
+< 0.2.98 it names the old bug; on 0.2.98+ (or an unknown version) it now auto-retries `research`
+once, and if that still fails it reports a likely transient backend/rate-limit error and suggests
+retrying later rather than escalating straight to `research-rw`. If grok reports that `--tools` is
+broken and suggests `--disallowed-tools` or a permission mode to get web working, do **not** take
+it: those build fine but re-enable file writes and shell (canary-verified), so the run would no
+longer be read-only. `review` is unaffected.
 
-When `research` fails closed, do **not** silently substitute something — surface it and let the user
-choose, because each path spends a different quota. The web tools work fine without the allowlist,
-so with the user's **explicit OK** to let grok hold write/shell for the lookup there are two
-grok-native routes, both on grok's **xAI** quota:
+If `research` still fails after the retry — an old build (< 0.2.98) or a persistent session-build
+failure — do **not** silently substitute something: surface it and let the user choose, because
+each path spends a different quota. The web tools work fine without the allowlist, so with the
+user's **explicit OK** to let grok hold write/shell for the lookup there are two grok-native
+routes, both on grok's **xAI** quota:
 
-- **`research-rw`** — for repo-less web research (facts, comparisons, data collection). Runs like
-  `fix` but the wrapper points it at a fresh throwaway temp dir, so stray writes land nowhere that
-  matters. That isolation is **advisory only**: grok keeps shell and can reach outside the cwd, so
-  this needs the same user OK as `fix`. The wrapper's prompt guard forbids shell-based fetch and
-  UA spoofing, but a prompt is not a sandbox.
+- **`research-rw`** — legacy fallback: repo-less web research on an old grok build, or when
+  `research` keeps failing to build a session after a retry. Runs like `fix` but the wrapper points
+  it at a fresh throwaway temp dir, so stray writes land nowhere that matters. That isolation is
+  **advisory only**: grok keeps shell and can reach outside the cwd, so this needs the same user OK
+  as `fix`. The wrapper's prompt guard forbids shell-based fetch and UA spoofing, but a prompt is
+  not a sandbox.
 - **`fix -w <name>`** — for research anchored in a repo, with edits isolated in a worktree.
 
-If the user needs a strictly read-only answer, either wait for the grok fix or offer your own
-WebSearch/WebFetch — but that burns **Claude's** quota (the very thing delegating to grok saves), so
-ask first rather than defaulting to it. Never weaken `research` itself to get web.
+If the user needs a strictly read-only answer and `research` won't build, either upgrade grok
+(< 0.2.98 is the known-bad range) or offer your own WebSearch/WebFetch — but that burns **Claude's**
+quota (the very thing delegating to grok saves), so ask first rather than defaulting to it. Never
+weaken `research` itself to get web.
 
 ## How to run it
 
@@ -82,9 +89,10 @@ the commands are copy-pasteable, e.g. `SKILL_DIR=~/.claude/skills/grok-delegate`
 "$SKILL_DIR/scripts/grok-run.sh" research \
   "Compare Postgres vs SQLite for a single-node analytics cache. Cite sources." --cwd /path/to/repo
 
-# 2b. Web research while `research` fails closed on grok 0.2.93 — ONLY with the user's
-#     explicit OK (grok holds write+shell; the wrapper isolates it in a throwaway temp
-#     dir, but that isolation is advisory, not a sandbox). No --cwd needed.
+# 2b. Legacy fallback if `research` still fails to build a session (old grok < 0.2.98,
+#     or a persistent build failure even after the wrapper's auto-retry) — ONLY with the
+#     user's explicit OK (grok holds write+shell; the wrapper isolates it in a throwaway
+#     temp dir, but that isolation is advisory, not a sandbox). No --cwd needed.
 "$SKILL_DIR/scripts/grok-run.sh" research-rw \
   "What is the current ECB deposit facility rate? Quote the official page verbatim with the URL."
 
@@ -209,7 +217,7 @@ target (each a fresh grok context), then collect — see "Parallel / subagent-li
 | --- | --- | --- |
 | Second opinion, code review, "is this right?" | `review` | Cannot modify the repo. Safe by construction. |
 | Needs current web facts, comparisons, docs | `research` | Read-only + `web_search`/`web_fetch`. |
-| Web research while `research` fails closed (0.2.93), user OK'd write/shell | `research-rw` | Like `fix` with web, pointed at a throwaway temp dir. Isolation is advisory — requires the user's explicit OK. |
+| Legacy fallback: `research` won't build a session (old grok < 0.2.98, or a persistent failure), user OK'd write/shell | `research-rw` | Like `fix` with web, pointed at a throwaway temp dir. Isolation is advisory — requires the user's explicit OK. |
 | Autonomous implementation, "have grok fix it" | `fix` | Full toolset + auto-approve. **Always pair with `-w`** so edits are isolated and reviewable. |
 
 Default to `review` when the user is ambiguous. Only use `fix` when the user clearly wants grok to
@@ -265,5 +273,8 @@ re-collecting everything:
 
 ## Requirements
 
-- The `grok` CLI on `PATH` (xAI). Verified against grok 0.2.93 (read-only canary last re-run 2026-07-12).
+- The `grok` CLI on `PATH` (xAI). The read-only permission-mode canary was last re-run on grok 0.2.93
+  (2026-07-12) and those facts still hold. Separately, the 0.2.93 research-build bug described above
+  is fixed as of grok 0.2.98 — verified 2026-07-16 against installed grok 0.2.99 and the
+  now-open-source repo (checkout 0.2.101); see `docs/source-investigation-2026-07-16.md`.
 - Authenticated: run `grok login` once (or set `XAI_API_KEY` for CI). Uses a separate xAI quota, not your Claude usage.
