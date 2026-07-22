@@ -277,4 +277,12 @@ re-collecting everything:
   (2026-07-12) and those facts still hold. Separately, the 0.2.93 research-build bug described above
   is fixed as of grok 0.2.98 — verified 2026-07-16 against installed grok 0.2.99 and the
   now-open-source repo (checkout 0.2.101); see `docs/source-investigation-2026-07-16.md`.
+  A source-diff audit of upstream 0.2.101 → 0.2.105 (2026-07-19, two independent grok passes over
+  the open-source repo) found no changes to any surface this skill depends on: allowlist
+  enforcement, flag parsing, web-tool names, session-build error text, and the
+  `unified.jsonl` token schema are all byte-identical, and the allowlist+web-tools build path is
+  now covered by upstream e2e tests. Two upstream changes that do NOT affect this skill:
+  the 0.2.102 fleet-wide remote `permission_mode` is TUI-only (headless passes `None`), and the
+  0.2.105 default model is now `grok-4.5` (bundled catalog defaults it to `reasoning_effort:
+  "high"`; `--reasoning-effort`/`--effort` exists if a caller ever wants medium/low).
 - Authenticated: run `grok login` once (or set `XAI_API_KEY` for CI). Uses a separate xAI quota, not your Claude usage.

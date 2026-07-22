@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # grok-run.sh — delegate a one-shot task to the grok CLI (xAI) from Claude Code.
 #
-# Verified against grok 0.2.93. Key safety facts:
+# Canary-verified against grok 0.2.93; source-diff audit of 0.2.101→0.2.105 (2026-07-19)
+# found every surface this script depends on unchanged (allowlist enforcement, flags,
+# web-tool names, "agent building failed" error text, unified.jsonl schema).
+# Key safety facts:
 #   * In headless mode, `grok -p ...` runs tools without a human to approve them, so it
 #     EDITS FILES unless the write tools are removed. `--permission-mode` is NOT a reliable
 #     guard here — every mode (default/acceptEdits/auto/bypassPermissions/plan AND dontAsk)
