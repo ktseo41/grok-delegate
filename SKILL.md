@@ -124,7 +124,7 @@ grok has no in-Claude subagent binding, so parallelism = **multiple background B
 `grok-run.sh` each, then collect. In Claude Code, launch several Bash tool calls with
 `run_in_background: true` in one message; you are re-invoked as each finishes. Use this for: review
 the same diff from N angles, or split independent files across N grok workers. Each call is a fresh
-grok context — make every prompt self-contained. (grok also has its own `--best-of-n` and internal
+grok context — make every prompt self-contained. (grok also has its own internal
 `task` subagents, but cross-Claude parallelism is background Bash.) These background runs show up in
 `/tasks`. Claude Code's sanctioned way to make a non-Claude tool a first-class agent is an MCP server;
 grok ships none today, so background Bash is the supported route.
@@ -285,4 +285,14 @@ re-collecting everything:
   the 0.2.102 fleet-wide remote `permission_mode` is TUI-only (headless passes `None`), and the
   0.2.105 default model is now `grok-4.5` (bundled catalog defaults it to `reasoning_effort:
   "high"`; `--reasoning-effort`/`--effort` exists if a caller ever wants medium/low).
+  A follow-up audit of upstream 0.2.105 → head `a5727c596` (2026-07-22, a two-arm grok fan-out over
+  the 300-file delta) again found every safety surface unchanged: the headless write guard
+  (`--permission-mode` is still NOT a reliable read-only guard — a `--tools` allowlist stays
+  mandatory), web-tool names, the `agent building failed` session-build error text, the
+  `unified.jsonl` token schema, and the `grok-4.5`/`high` model+effort defaults are all stable.
+  One compatibility change: `--check` (alias `--self-verify`) and `--best-of-n <N>` were removed
+  from `cli.rs`, so on a build past 0.2.105 those flags fail at parse — the wrapper never invoked
+  them (the only reference was a passing doc mention, since removed). Two grok-internal changes that
+  do NOT touch this skill: the effort `max` level is now a distinct tier rather than an alias of
+  `xhigh`, and `cargo check` was dropped from grok's own auto-approved safe-bash list.
 - Authenticated: run `grok login` once (or set `XAI_API_KEY` for CI). Uses a separate xAI quota, not your Claude usage.
