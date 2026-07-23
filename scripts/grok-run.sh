@@ -179,13 +179,7 @@ fi
 MAXTURNS="${GROK_MAXTURNS:-30}"
 COMMON=(--output-format plain)
 
-# Web-mode prompt guard (research and research-rw). Two parts:
-#   * Citation-loop guard: grok 0.2.93 can leak its internal citation sentinel
-#     (`_end_of_render_inline_citation`) into the output stream and repeat the closing
-#     marker forever — one observed run spewed 290k chars over 9 min before it was
-#     killed. The trigger is web-search citation rendering, so it applies to any
-#     web-enabled run. An explicit "no inline citation markers" rule suppresses it
-#     (verified).
+# Web-mode prompt guard (research and research-rw).
 #   * Collection rules: no circumventing bot protection (observed on a real run: a
 #     research-rw worker used run_terminal_command to get around a 403 — exactly the
 #     unattended-shell behavior this skill exists to prevent), retry blocked sites via
@@ -197,8 +191,7 @@ COMMON=(--output-format plain)
 GUARD=""
 case "$MODE" in
   research|research-rw)
-    GUARD='[출력 규칙] 인라인 인용 마커나 각주 sentinel 토큰(예: _end_of_render_inline_citation)을 본문에 절대 쓰지 마라. 근거 URL은 리포트 맨 끝의 "출처" 목록에 평범한 마크다운 링크로만 모아라. 같은 문구·마커를 반복해서 출력하지 마라.
-[수집 규칙] 사이트가 fetch를 차단하면(403·봇 방어) 우회하지 마라 — User-Agent 위장, 터미널/셸을 통한 fetch, 프록시 경유 전부 금지다. 대신 그 도메인으로 한정한 web_search로 같은 정보를 찾고, 그래도 확인이 안 되면 그 항목을 "미확인"으로 명시해서 보고하라. 사실 주장에는 원문 축자 인용과 출처 URL을 붙여라.'
+    GUARD='[수집 규칙] 사이트가 fetch를 차단하면(403·봇 방어) 우회하지 마라 — User-Agent 위장, 터미널/셸을 통한 fetch, 프록시 경유 전부 금지다. 대신 그 도메인으로 한정한 web_search로 같은 정보를 찾고, 그래도 확인이 안 되면 그 항목을 "미확인"으로 명시해서 보고하라. 사실 주장에는 원문 축자 인용과 출처 URL을 붙여라.'
     ;;
 esac
 
@@ -206,7 +199,7 @@ esac
 # thing from stdin into a temp file and hand it to grok via --prompt-file — lets a
 # caller pipe instructions + a large `git diff` without hitting ARG_MAX, and grok
 # receives it in full. This changes ONLY how the prompt is delivered; the --tools
-# read-only guard below is untouched. In research mode the citation GUARD above is
+# read-only guard below is untouched. In research mode the web GUARD above is
 # prepended to whichever delivery path is used.
 if [[ "$PROMPT" == "-" ]]; then
   PROMPT_FILE="$(mktemp "${TMPDIR:-/tmp}/grok-prompt.XXXXXX")"  # cleaned by the unified EXIT trap

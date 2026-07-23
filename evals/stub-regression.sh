@@ -126,6 +126,19 @@ grep -q WARNING "$D/e" && fail "review must not warn" "warned" || pass "review -
 rm -rf "$D"
 
 # ---------------------------------------------------------------------------
+echo "=== G1: web GUARD keeps collection rules, citation-sentinel workaround removed ==="
+D="$(mktemp -d)"; argv_stub "$D"
+out="$(run "$D" research "find X" 2>/dev/null || true)"
+if printf '%s' "$out" | grep -qF '수집 규칙' \
+   && printf '%s' "$out" | grep -qF '미확인' \
+   && ! printf '%s' "$out" | grep -qF '_end_of_render_inline_citation'; then
+  pass "web GUARD has collection rules, no citation-sentinel workaround"
+else
+  fail "web GUARD contents" "expected 수집 규칙 + 미확인 present, _end_of_render_inline_citation absent"
+fi
+rm -rf "$D"
+
+# ---------------------------------------------------------------------------
 echo "=== H3: research fail-closed message points to research-rw / 'fix -w', not to dropping the guard ==="
 # The stub must answer `--version` with an OLD (< 0.2.98) version: H3 targets the
 # version-gated old-bug branch, whose message suggests research-rw / 'fix -w' without
