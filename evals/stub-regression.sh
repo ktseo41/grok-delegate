@@ -260,6 +260,58 @@ grep -q WARNING "$D/e" && fail "fix -w=feat should be silent" "warned (short equ
 rm -rf "$D"
 
 # ---------------------------------------------------------------------------
+echo "=== V: --verify self-verify gate (fix-only, version-gated, arg-stripped, isolated home) ==="
+D="$(mktemp -d)"
+# Version-aware stub: `grok --version` returns a version we vary via STUB_VER; any
+# other call dumps argv, echoes the effective GROK_HOME, and succeeds with a body.
+mkstub "$D" <<'EOS'
+#!/usr/bin/env bash
+if [ "$1" = "--version" ]; then echo "grok ${STUB_VER:-0.2.111} (stub) [stable]"; exit 0; fi
+for a in "$@"; do printf '<%s>\n' "$a"; done
+echo "GROKHOME=${GROK_HOME:-unset}"
+echo "STUB_OK body"
+exit 0
+EOS
+
+# V1: --verify is refused outside fix (it runs shell -> never in the read-only sandboxes).
+PATH="$D:$PATH" bash "$W" review   "x" --verify "true" >/dev/null 2>&1; rc=$?
+[[ "$rc" -eq 2 ]] && pass "--verify in review -> exit 2"   || fail "verify review guard"   "rc=$rc (expected 2)"
+PATH="$D:$PATH" bash "$W" research "x" --verify "true" >/dev/null 2>&1; rc=$?
+[[ "$rc" -eq 2 ]] && pass "--verify in research -> exit 2" || fail "verify research guard" "rc=$rc (expected 2)"
+
+# V2: --verify with no command argument is a usage error.
+PATH="$D:$PATH" bash "$W" fix "x" --verify >/dev/null 2>&1; rc=$?
+[[ "$rc" -eq 2 ]] && pass "--verify with no cmd -> exit 2" || fail "verify missing arg" "rc=$rc (expected 2)"
+
+# V3: fix + --verify on a too-old grok is refused (a Stop hook fails open there, so the
+#     gate would silently not verify). Message must name the required version.
+PATH="$D:$PATH" STUB_VER=0.2.101 bash "$W" fix "x" --cwd /tmp --verify "true" >/dev/null 2>"$D/e"; rc=$?
+[[ "$rc" -eq 2 ]] && grep -q '0.2.111' "$D/e" \
+  && pass "--verify on grok 0.2.101 -> refused with version hint" \
+  || fail "verify version guard" "rc=$rc"
+
+# V4: fix + --verify on a new-enough grok -> proceeds; the arm marker prints, --verify is
+#     stripped from grok's argv (grok never sees it), and GROK_HOME is relocated to a
+#     throwaway verify home. HOME points at a scratch dir so no real ~/.grok is touched.
+out="$(PATH="$D:$PATH" HOME="$D" STUB_VER=0.2.111 bash "$W" fix "x" --cwd /tmp --verify "true" 2>"$D/e")"; rc=$?
+if [[ "$rc" -eq 0 ]] \
+   && grep -q -- '--verify armed' "$D/e" \
+   && ! printf '%s\n' "$out" | grep -q '^<--verify>$' \
+   && ! printf '%s\n' "$out" | grep -q '^<true>$' \
+   && printf '%s\n' "$out" | grep -q 'GROKHOME=.*grok-verify-home'; then
+  pass "fix --verify (new grok) -> armed, --verify stripped from argv, GROK_HOME isolated"
+else
+  fail "verify arm/strip/isolate" "rc=$rc (see $D/e); check the --verify block"
+fi
+# V5: the throwaway verify home is removed on exit (EXIT trap).
+if printf '%s\n' "$out" | grep -q 'GROKHOME=.*grok-verify-home'; then
+  vh="$(printf '%s\n' "$out" | sed -n 's/^GROKHOME=//p' | head -1)"
+  [[ -n "$vh" && ! -e "$vh" ]] && pass "verify home cleaned up on exit" \
+                              || fail "verify home cleanup" "still present: $vh"
+fi
+rm -rf "$D"
+
+# ---------------------------------------------------------------------------
 echo "=== B5: extra --output-format overrides the plain-stdout contract (KNOWN GAP — expect XFAIL) ==="
 D="$(mktemp -d)"
 mkstub "$D" <<'EOS'

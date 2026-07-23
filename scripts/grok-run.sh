@@ -28,6 +28,15 @@
 #                                    # fails closed) or when session-build failures persist.
 #   grok-run.sh fix         "<prompt>" [extra grok args...]  # AUTONOMOUS: edits files + shell
 #
+# Self-verify gate (fix mode only): pass --verify "<cmd>" to make grok keep working
+# until <cmd> succeeds. A Stop hook runs <cmd> each time grok is about to finish; while
+# it fails, the failure is fed back and grok is forced to continue (grok caps at 8
+# continuations per turn). Needs grok >= 0.2.111. The hook is injected into a throwaway
+# GROK_HOME so it stays isolated under parallel fan-out. Slow builds: raise the hook
+# timeout with GROK_VERIFY_TIMEOUT (default 600s; a timed-out gate fails open and lets
+# grok stop). Example:
+#   grok-run.sh fix "make the failing test pass" -w fix-x --verify "cargo test -q"
+#
 # Large prompts (e.g. instructions + a big `git diff`): pass "-" as the prompt to
 # stream the whole thing from stdin. It goes to grok via --prompt-file, so it
 # never hits ARG_MAX and grok gets it in full (no read_file pagination). The
@@ -43,6 +52,7 @@
 #   GROK_MAXTURNS default max turns (default 30)
 #   GROK_ALLOW_NOWEB=1  skip the web-collection gate (research/research-rw runs that
 #                make no web tool call normally FAIL — see the gate near the end)
+#   GROK_VERIFY_TIMEOUT  Stop-hook gate timeout in seconds for --verify (default 600)
 set -uo pipefail
 
 MODE="${1:-review}"; shift || true
@@ -57,6 +67,47 @@ if ! command -v grok >/dev/null 2>&1; then
   echo "grok-run.sh: grok CLI not found on PATH. Install/login first (grok login)." >&2
   exit 127
 fi
+
+# --- Unified cleanup ------------------------------------------------------
+# One EXIT trap owns every temp path the script creates (the streamed-prompt
+# file and, for --verify, the throwaway GROK_HOME). Declared before anything
+# that mktemps so a failure at any later point still tidies up. VERIFY_HOME is
+# a directory of SYMLINKS into the real ~/.grok (plus one real hooks/ dir), so
+# `rm -rf` removes the links, never their targets.
+PROMPT_FILE=""
+VERIFY_HOME=""
+_cleanup() {
+  [[ -n "$PROMPT_FILE" ]] && rm -f "$PROMPT_FILE"
+  [[ -n "$VERIFY_HOME" ]] && rm -rf "$VERIFY_HOME"
+}
+trap _cleanup EXIT
+
+# --- Extract the wrapper-only --verify flag -------------------------------
+# `--verify <cmd>` is a grok-run.sh flag, NOT a grok flag, so it must be pulled
+# out of the passthrough args before anything scans or forwards "$@" (grok would
+# reject an unknown --verify). It arms a Stop-hook self-verify gate on `fix`
+# mode: after each turn grok is about to end, the gate runs <cmd>; while <cmd>
+# fails, the hook returns a `block` decision that feeds the failure back and
+# makes grok keep working (grok's built-in cap ends the turn after 8
+# continuations; a timed-out gate fails OPEN and lets grok stop). Restores and
+# generalizes the removed `--check`. fix-only: the gate runs shell, so it must
+# never touch the read-only review/research sandboxes.
+VERIFY_CMD=""
+_filtered_args=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --verify)
+      VERIFY_CMD="${2:-}"; shift 2 || { echo "grok-run.sh: --verify needs a command argument." >&2; exit 2; }
+      ;;
+    --verify=*)
+      VERIFY_CMD="${1#*=}"; shift
+      ;;
+    *)
+      _filtered_args+=("$1"); shift
+      ;;
+  esac
+done
+set -- "${_filtered_args[@]:+${_filtered_args[@]}}"
 
 # Version gate for the build-error branch further down. The 0.2.93 "agent building
 # failed" bug (a --tools allowlist can't combine with a web tool) was fixed upstream
@@ -87,6 +138,32 @@ fi
 VERSION_BUG_POSSIBLE=0
 if [[ -n "$GROK_VERSION" ]] && _grok_ver_lt "$GROK_VERSION" "0.2.98"; then
   VERSION_BUG_POSSIBLE=1
+fi
+
+# --verify validation. Two hard gates:
+#   * Mode: fix only. The gate runs shell (<cmd>), so it must never be attached to
+#     the read-only review/research sandboxes — that would smuggle shell in through
+#     a "verify" flag. research-rw is also refused: it's web research, not repo fixing.
+#   * Version: the Stop-hook block/continuation mechanism this relies on did NOT exist
+#     at 0.2.101 (source-verified: no Block decision, Stop dispatched non-blocking) and
+#     is confirmed present + working headless on 0.2.111 (empirical smoke test). A Stop
+#     hook on an older build fails OPEN — grok would stop without ever verifying, and the
+#     caller would wrongly believe the gate ran. Refuse rather than silently skip. An
+#     unparseable/empty version is refused too (can't confirm support).
+VERIFY_ENABLED=0
+if [[ -n "${VERIFY_CMD//[[:space:]]/}" ]]; then
+  if [[ "$MODE" != "fix" ]]; then
+    echo "grok-run.sh: --verify is only valid in 'fix' mode (it runs shell, so it cannot go in the" >&2
+    echo "  read-only review/research sandboxes). Re-run as: grok-run.sh fix \"<prompt>\" --verify \"<cmd>\"" >&2
+    exit 2
+  fi
+  if [[ -z "$GROK_VERSION" ]] || _grok_ver_lt "$GROK_VERSION" "0.2.111"; then
+    echo "grok-run.sh: --verify needs grok >= 0.2.111 (Stop-hook self-verify; verified working there)." >&2
+    echo "  Detected: ${GROK_VERSION:-unknown}. On older builds a Stop hook fails open, so the gate would" >&2
+    echo "  silently NOT verify. Run 'grok update' first, then retry." >&2
+    exit 2
+  fi
+  VERIFY_ENABLED=1
 fi
 
 MAXTURNS="${GROK_MAXTURNS:-30}"
@@ -121,10 +198,8 @@ esac
 # receives it in full. This changes ONLY how the prompt is delivered; the --tools
 # read-only guard below is untouched. In research mode the citation GUARD above is
 # prepended to whichever delivery path is used.
-PROMPT_FILE=""
 if [[ "$PROMPT" == "-" ]]; then
-  PROMPT_FILE="$(mktemp "${TMPDIR:-/tmp}/grok-prompt.XXXXXX")"
-  trap 'rm -f "$PROMPT_FILE"' EXIT
+  PROMPT_FILE="$(mktemp "${TMPDIR:-/tmp}/grok-prompt.XXXXXX")"  # cleaned by the unified EXIT trap
   cat >"$PROMPT_FILE"
   if [[ ! -s "$PROMPT_FILE" ]]; then
     echo "grok-run.sh: prompt was '-' but stdin was empty. Pipe the prompt in, e.g. | grok-run.sh review -" >&2
@@ -241,6 +316,78 @@ case "$MODE" in
     ;;
 esac
 
+# --- Arm the --verify self-verify gate (fix mode, >= 0.2.111) ---------------
+# Build a throwaway GROK_HOME so the injected Stop hook is isolated (safe under
+# parallel fan-out) and never pollutes the user's ~/.grok/hooks. The real home is
+# mirrored in by SYMLINK (auth, config, bundled catalog, sessions…) so grok
+# authenticates and builds a session normally; only hooks/ is a real dir we own.
+# Same per-worker minimal-home pattern the deepseek harness uses; validated
+# end-to-end by the headless smoke test.
+if [[ "$VERIFY_ENABLED" -eq 1 ]]; then
+  _src_home="${GROK_HOME:-$HOME/.grok}"
+  VERIFY_HOME="$(mktemp -d "${TMPDIR:-/tmp}/grok-verify-home.XXXXXX")"
+  # Mirror every real-home entry except hooks/, which we provide ourselves. Any
+  # global hooks the user has are intentionally NOT inherited for this run — the
+  # gate must be the only Stop hook, or a user hook could allow the stop early.
+  shopt -s dotglob nullglob
+  for _entry in "$_src_home"/*; do
+    _base="$(basename "$_entry")"
+    [[ "$_base" == "hooks" ]] && continue
+    ln -s "$_entry" "$VERIFY_HOME/$_base" 2>/dev/null
+  done
+  shopt -u dotglob nullglob
+  mkdir -p "$VERIFY_HOME/hooks"
+
+  # The user's <cmd> verbatim in its own file; the gate execs it with `sh`, so no
+  # shell-quoting of <cmd> is needed and it can be a full pipeline.
+  _cmdfile="$VERIFY_HOME/hooks/verify-cmd.sh"
+  printf '%s\n' "$VERIFY_CMD" >"$_cmdfile"
+
+  # The gate script. Only gates real turn-ends ("reason":"end_turn" — camelCase,
+  # confirmed from the live headless payload); cd's into the payload cwd so <cmd>
+  # runs where grok is editing (the worktree/--cwd); blocks with the failure tail
+  # fed back when <cmd> is red, allows the stop when green. jq encodes the reason
+  # safely; a static reason is the fallback when jq is absent.
+  _gate="$VERIFY_HOME/hooks/verify.sh"
+  {
+    printf '#!/bin/sh\n'
+    printf 'CMDFILE=%q\n' "$_cmdfile"
+    cat <<'GATE_EOF'
+INPUT=$(cat)
+case "$INPUT" in
+  *'"reason":"end_turn"'*) ;;
+  *) exit 0 ;;
+esac
+CWD=$(printf '%s' "$INPUT" | sed -n 's/.*"cwd":"\([^"]*\)".*/\1/p')
+[ -n "$CWD" ] && cd "$CWD" 2>/dev/null
+OUT=$( { sh "$CMDFILE"; } 2>&1 ); RC=$?
+[ "$RC" -eq 0 ] && exit 0
+MSG="grok-delegate --verify: the gate command exited $RC. Fix the errors and finish only when it passes.
+Gate output (tail):
+$(printf '%s' "$OUT" | tail -n 40)"
+if command -v jq >/dev/null 2>&1; then
+  REASON=$(printf '%s' "$MSG" | jq -Rs .)
+else
+  REASON='"grok-delegate --verify: gate command failed; fix the errors before finishing."'
+fi
+printf '{"decision":"block","reason":%s}\n' "$REASON"
+exit 0
+GATE_EOF
+  } >"$_gate"
+  chmod +x "$_gate"
+
+  # A timed-out Stop hook fails OPEN (grok stops without verifying), so the timeout
+  # must comfortably exceed the gate command's runtime. Default 600s; override with
+  # GROK_VERIFY_TIMEOUT for slow builds.
+  _vtimeout="${GROK_VERIFY_TIMEOUT:-600}"
+  printf '{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "%s", "timeout": %s } ] } ] } }\n' \
+    "$_gate" "$_vtimeout" >"$VERIFY_HOME/hooks/verify.json"
+
+  export GROK_HOME="$VERIFY_HOME"
+  echo "[grok-run] --verify armed: Stop-hook gate runs \`$VERIFY_CMD\` (timeout ${_vtimeout}s); grok keeps" >&2
+  echo "[grok-run]   working until it passes (grok caps at 8 continuations/turn). Isolated GROK_HOME." >&2
+fi
+
 echo "[grok-run] mode=$MODE maxturns=$_maxturns_eff model=${GROK_MODEL:-<account-default>}" >&2
 
 # Wrapped so the build-error retry below (research mode, >= 0.2.98/unknown version) can
@@ -294,7 +441,12 @@ fi
 # still reports what it burned. Never affects the run: any missing tool/file is skipped.
 GROK_TOOLSUSED="" GROK_HAVE_SIGNALS=0
 if [[ -n "$GROK_SID" ]] && command -v jq >/dev/null 2>&1; then
-  _sigdir="$(find "$HOME/.grok/sessions" -maxdepth 2 -type d -name "$GROK_SID" 2>/dev/null | head -1)"
+  # Respect an effective GROK_HOME (a caller's, or the throwaway one --verify exports)
+  # so the usage trailer finds this run's session dir. Under --verify the home's
+  # sessions/ is a SYMLINK to the real one, so `find -L` is required to dereference
+  # the start path and descend into it (plain find treats a symlinked start dir as a
+  # file and matches nothing — which made the trailer wrongly print "no signals").
+  _sigdir="$(find -L "${GROK_HOME:-$HOME/.grok}/sessions" -maxdepth 2 -type d -name "$GROK_SID" 2>/dev/null | head -1)"
   if [[ -n "$_sigdir" && -f "$_sigdir/signals.json" ]]; then
     # Keep the tool list around for the web-collection gate below.
     GROK_TOOLSUSED="$(jq -r '(.toolsUsed // []) | join(",")' "$_sigdir/signals.json" 2>/dev/null)" && GROK_HAVE_SIGNALS=1

@@ -100,11 +100,22 @@ the commands are copy-pasteable, e.g. `SKILL_DIR=~/.claude/skills/grok-delegate`
 "$SKILL_DIR/scripts/grok-run.sh" fix \
   "Fix the failing test in tests/test_parser.py and run pytest until green." \
   --cwd /path/to/repo -w grok-fix
+
+# 3b. Self-verifying fix: --verify "<cmd>" makes grok keep working until <cmd> passes.
+#     After each turn grok is about to finish, the wrapper runs <cmd>; while it fails the
+#     failure is fed back and grok is forced to continue (grok caps at 8 continuations per
+#     turn). fix-only; needs grok >= 0.2.111. Slow builds: raise GROK_VERIFY_TIMEOUT (s).
+"$SKILL_DIR/scripts/grok-run.sh" fix \
+  "Make the failing parser test pass." \
+  --cwd /path/to/repo -w grok-fix --verify "pytest -q tests/test_parser.py"
 ```
 
 Pass-through args go after the prompt: `-m grok-4.5` (frontier; default is account-set),
 `--max-turns N` (wrapper defaults to 30), `-w/--worktree NAME` (isolated git worktree for `fix`),
 `--effort high`. Space or `=` form both work (`--max-turns=40`). Env: `GROK_MODEL`, `GROK_MAXTURNS`.
+One wrapper-only flag (not passed to grok): `--verify "<cmd>"` on `fix` mode — a self-verify gate
+that keeps grok working until `<cmd>` succeeds (see example 3b; `GROK_VERIFY_TIMEOUT` tunes the
+per-check timeout, default 600s).
 
 **Reviewing a diff (important).** `review` has no git or shell, so grok cannot run
 `git diff` — it can only `read_file` the current working tree. Never tell it to "review
