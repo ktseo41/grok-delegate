@@ -127,9 +127,15 @@ rm -rf "$D"
 
 # ---------------------------------------------------------------------------
 echo "=== H3: research fail-closed message points to research-rw / 'fix -w', not to dropping the guard ==="
+# The stub must answer `--version` with an OLD (< 0.2.98) version: H3 targets the
+# version-gated old-bug branch, whose message suggests research-rw / 'fix -w' without
+# naming the forbidden workarounds. (The >= 0.2.98/unknown branch deliberately names
+# --disallowed-tools/--permission-mode in its "do NOT do this" warning, which would
+# trip this test's negative assertion — a versionless stub landed there.)
 D="$(mktemp -d)"
 mkstub "$D" <<'EOS'
 #!/bin/sh
+if [ "$1" = "--version" ]; then echo "grok 0.2.93 (stub) [stable]"; exit 0; fi
 echo "agent building failed: auto_background_on_timeout" >&2
 exit 1
 EOS
@@ -216,6 +222,83 @@ if command -v uuidgen >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
                     || fail "review gated by mistake" "rc=$rc"
 else
   info "uuidgen or jq missing — no-web gate tests skipped (gate is best-effort without them)"
+fi
+rm -rf "$D"
+
+# ---------------------------------------------------------------------------
+echo "=== S1 (#1): kernel sandbox backstop in argv — review/research carry --sandbox read-only; fix must NOT ==="
+D="$(mktemp -d)"; argv_stub "$D"
+
+# (a) review: --sandbox read-only present AND lsp inside the --tools allowlist.
+out="$(run "$D" review "x" 2>/dev/null)"
+if printf '%s\n' "$out" | grep -A1 '^<--sandbox>$' | grep -q '^<read-only>$' \
+   && printf '%s\n' "$out" | grep -A1 '^<--tools>$' | grep -q 'lsp'; then
+  pass "review argv -> --sandbox read-only + lsp in --tools"
+else
+  fail "review sandbox argv" "missing --sandbox read-only or lsp in --tools"
+fi
+
+# (b) research: --sandbox read-only present (verified upstream: backend-hosted web
+#     tools still work under the local read-only sandbox).
+out="$(run "$D" research "x" 2>/dev/null || true)"
+printf '%s\n' "$out" | grep -A1 '^<--sandbox>$' | grep -q '^<read-only>$' \
+  && pass "research argv -> --sandbox read-only" \
+  || fail "research sandbox argv" "missing --sandbox read-only"
+
+# (c) fix legitimately writes + shells: the backstop must NOT leak into it.
+out="$(run "$D" fix "x" --cwd /tmp -w wt 2>/dev/null)"
+printf '%s\n' "$out" | grep -q '^<--sandbox>$' \
+  && fail "fix must have no --sandbox" "found --sandbox in fix argv" \
+  || pass "fix argv -> no --sandbox"
+rm -rf "$D"
+
+# ---------------------------------------------------------------------------
+echo "=== L2 (#1): read-only tripwire — a review/research run that USED write/shell -> non-zero FAILED ==="
+# Mirrors H6: the stub extracts the pinned -s SID and writes a signals.json whose
+# toolsUsed we control. Tool names are the REAL reported ones (captured from live
+# signals.json + grok's claude_alias.rs): shell = run_terminal_command (snake) /
+# Bash (Pascal), write = search_replace / write / Write.
+D="$(mktemp -d)"
+mkstub "$D" <<'EOS'
+#!/usr/bin/env bash
+sid=""; prev=""
+for a in "$@"; do [ "$prev" = "-s" ] && sid="$a"; prev="$a"; done
+if [ -n "$sid" ]; then
+  mkdir -p "$HOME/.grok/sessions/$sid"
+  printf '{"contextTokensUsed":8222,"sessionDurationSeconds":29,"toolCallCount":%s,"toolsUsed":[%s]}' \
+    "${STUB_TOOLCALLS:-0}" "${STUB_TOOLS:-}" > "$HOME/.grok/sessions/$sid/signals.json"
+fi
+echo "plausible review findings"
+exit 0
+EOS
+if command -v uuidgen >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+  # (a) review that ran the shell tool (real snake_case name) -> non-zero FAILED
+  out="$(HOME="$D" PATH="$D:$PATH" STUB_TOOLS='"read_file","run_terminal_command"' bash "$W" review "x" 2>"$D/e")"; rc=$?
+  if [[ "$rc" -ne 0 ]] && grep -q 'USED a write/shell' "$D/e" && [[ "$out" == *findings* ]]; then
+    pass "review + toolsUsed has run_terminal_command -> non-zero FAILED, body preserved"
+  else
+    fail "tripwire (shell, review)" "rc=$rc"
+  fi
+  # (b) PascalCase scheme is caught too (Write)
+  HOME="$D" PATH="$D:$PATH" STUB_TOOLS='"Read","Write"' bash "$W" review "x" >/dev/null 2>"$D/e"; rc=$?
+  [[ "$rc" -ne 0 ]] && grep -q 'USED a write/shell' "$D/e" \
+    && pass "review + toolsUsed=[Write] (PascalCase) -> non-zero FAILED" \
+    || fail "tripwire (PascalCase write)" "rc=$rc"
+  # (c) research: web collection happened AND a write leaked -> tripwire still fires
+  HOME="$D" PATH="$D:$PATH" STUB_TOOLS='"web_fetch","search_replace"' bash "$W" research "x" >/dev/null 2>"$D/e"; rc=$?
+  [[ "$rc" -ne 0 ]] && grep -q 'USED a write/shell' "$D/e" \
+    && pass "research + web_fetch AND search_replace -> tripwire outranks the web gate pass" \
+    || fail "tripwire (research write)" "rc=$rc"
+  # (d) clean read-only tool set -> no false positive
+  HOME="$D" PATH="$D:$PATH" STUB_TOOLS='"read_file","grep","lsp"' bash "$W" review "x" >/dev/null 2>"$D/e"; rc=$?
+  [[ "$rc" -eq 0 ]] && pass "review + read-only tools -> success 0 (no false positive)" \
+                    || fail "tripwire false positive" "rc=$rc"
+  # (e) fix legitimately writes + shells -> never gated
+  HOME="$D" PATH="$D:$PATH" STUB_TOOLS='"run_terminal_command","write"' bash "$W" fix "x" --cwd /tmp -w wt >/dev/null 2>"$D/e"; rc=$?
+  [[ "$rc" -eq 0 ]] && pass "fix + write/shell tools -> not gated" \
+                    || fail "tripwire leaked into fix" "rc=$rc"
+else
+  info "uuidgen or jq missing — tripwire tests skipped (gate is best-effort without them)"
 fi
 rm -rf "$D"
 

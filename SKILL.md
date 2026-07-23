@@ -29,9 +29,16 @@ including file edits and shell — on its own**. `--permission-mode` is not a re
 canary-tested on grok 0.2.93, **every** mode — `default`, `acceptEdits`, `auto`, `bypassPermissions`,
 `plan`, and even `dontAsk` — let grok write a file. And if `~/.grok/config.toml` has
 `permission_mode = "always-approve"` (or you pass `--always-approve`), edits happen with no prompt
-at all. The **only** robust read-only guard is a tool allowlist (`--tools "read_file,grep,list_dir"`),
-which removes the write and shell tools entirely — verified: with it, repeated multi-vector canary
-attempts (append, create, shell) all failed to touch anything. The wrapper enforces this per mode —
+at all. The read-only guarantee rests on the **`--sandbox read-only` kernel backstop** (OS-level,
+fails closed: an unknown profile makes grok refuse to start), with the tool allowlist
+(`--tools "read_file,grep,list_dir,lsp"`) as a second layer and a post-run `toolsUsed` tripwire as a
+third — **not** the allowlist alone, which fails *open* if any name stops resolving (one
+unresolvable entry and grok keeps the full write+shell toolset; verified on 0.2.99, issue #1).
+One caveat, verified live on 0.2.111: the read-only profile deliberately keeps temp paths
+(`$TMPDIR`, `/tmp`) and `~/.grok` writable, so for a working tree under a temp dir the kernel layer
+does not apply — there the allowlist and the tripwire carry the guarantee.
+Verified: with the layered guard, repeated multi-vector canary attempts (append, create, shell,
+out-of-cwd escape, mangled fail-open allowlist) all failed to touch anything. The wrapper enforces this per mode —
 use it instead of hand-rolling grok flags, unless you deliberately want autonomous edits. (This
 mirrors how Claude Code's own built-in Explore/Plan subagents stay read-only: Write and Edit are
 denied at the tool level, not via a permission mode.)

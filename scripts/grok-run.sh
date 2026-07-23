@@ -14,8 +14,18 @@
 #     incidental headless refusal, not a read-only guarantee: with a permission_mode =
 #     "always-approve" config present, dontAsk writes too (verified on 0.2.93). If
 #     ~/.grok/config.toml sets that (or you pass --always-approve), edits happen with no
-#     prompt at all. The ONLY robust read-only guard is a tool allowlist via `--tools` —
-#     used by review/research.
+#     prompt at all. The read-only guarantee rests on THREE independent layers (review/
+#     research): (1) the `--sandbox read-only` KERNEL backstop — grok's OS-level sandbox
+#     (seatbelt/landlock), which blocks writes even if the tool allowlist fails, and whose
+#     own failure mode is CLOSED (an unknown profile name makes grok refuse to start).
+#     CAVEAT (verified live on 0.2.111): the read-only profile deliberately keeps
+#     TMPDIR//tmp and GROK_HOME writable (essential_writable_paths_minimal), so for a
+#     working tree under a temp dir the kernel layer does not apply — layers 2+3 carry
+#     it there. (2) the `--tools` allowlist, which removes write/shell tools — but
+#     FAILS OPEN: one unresolvable name in the list makes grok keep the FULL toolset
+#     (verified 0.2.99, issue #1), so it can never be the only guard; (3) a post-run
+#     tripwire below that FAILS the run if signals.json shows a write/shell tool was
+#     used anyway.
 #   * A read-only agent asked to write will loop forever, so --max-turns is always set.
 #
 # Usage:
@@ -259,12 +269,21 @@ fi
 
 case "$MODE" in
   review)
-    # Read-only: only file-reading/search tools. No shell, no edits, no web.
-    ARGS=(--tools "read_file,grep,list_dir" "${COMMON[@]}" "$@")
+    # Read-only: only file-reading/search tools (lsp = read-only symbol/diagnostic
+    # lookup, is_read_only in grok source). No shell, no edits, no web.
+    # --sandbox read-only is the KERNEL backstop: the --tools allowlist FAILS OPEN if
+    # any name stops resolving (grok keeps the full toolset — verified, issue #1),
+    # while the sandbox blocks writes at the OS level and FAILS CLOSED (an unknown
+    # profile name makes grok refuse to start). Verified on 0.2.111 — including the
+    # caveat that temp paths (TMPDIR//tmp) and GROK_HOME stay writable by design, so
+    # the kernel layer covers real working trees, not temp-dir ones (see header).
+    ARGS=(--tools "read_file,grep,list_dir,lsp" --sandbox read-only "${COMMON[@]}" "$@")
     ;;
   research)
-    # Read-only + web. Still cannot edit files or run shell.
-    ARGS=(--tools "read_file,grep,list_dir,web_search,web_fetch" "${COMMON[@]}" "$@")
+    # Read-only + web. Still cannot edit files or run shell. Same --sandbox read-only
+    # kernel backstop as review — verified on 0.2.111 that it does NOT break the web
+    # tools (they are backend-hosted, so the local network restriction doesn't apply).
+    ARGS=(--tools "read_file,grep,list_dir,web_search,web_fetch" --sandbox read-only "${COMMON[@]}" "$@")
     ;;
   research-rw)
     # Web research WITHOUT the read-only sandbox — the sanctioned fallback for OLD grok
@@ -561,6 +580,32 @@ if [[ "$MODE" == "research" || "$MODE" == "research-rw" ]] \
   echo "[grok-run]   inspection, but the non-zero exit means: do not relay it as verified fact." >&2
   echo "[grok-run]   Retry once demanding web_fetch + verbatim quote per claim, or collect" >&2
   echo "[grok-run]   directly. GROK_ALLOW_NOWEB=1 bypasses this gate on purpose." >&2
+  printf '%s\n' "$OUT"
+  exit $(( RC == 0 ? 1 : RC ))
+fi
+
+# Read-only tripwire (review / research). Layer 3 of the read-only guarantee: if this
+# run's signals.json shows a write/shell/subagent tool was actually USED, the read-only
+# sandboxes failed — turn that silent fail-open into a detected, non-zero-exit failure.
+# The names are captured from REAL signals.json files plus the grok source's alias
+# table (claude_alias.rs), across BOTH naming schemes the web gate already learned
+# about: grok-native snake_case (run_terminal_command, search_replace, write,
+# hashline_edit, spawn_subagent) and PascalCase (Bash, Write, Edit, Task…) — matched
+# case-insensitively with the same token anchoring as the web gate. NOTE the real
+# shell name is run_terminal_command, NOT the run_terminal_cmd that appears in grok's
+# old error text. Best-effort like the trailer: no signals.json => cannot judge, stay
+# silent. No bypass env on purpose — a read-only mode that ran write/shell is never
+# legitimate. The body is still printed for inspection.
+if [[ "$MODE" == "review" || "$MODE" == "research" ]] \
+   && [[ "$GROK_HAVE_SIGNALS" -eq 1 ]] \
+   && grep -qiE '(^|,)(run_terminal_command|run_terminal_cmd|bash|shell|powershell|write|write_file|search_replace|hashline_edit|edit|multiedit|task|spawn_subagent|agent)(,|$)' <<<"$GROK_TOOLSUSED"; then
+  echo "[grok-run] FAILED: read-only $MODE run USED a write/shell tool (tools=${GROK_TOOLSUSED:--})." >&2
+  echo "[grok-run]   The --tools allowlist and the --sandbox backstop both failed to hold — this" >&2
+  echo "[grok-run]   run had write/shell despite being a read-only mode. Treat the working tree as" >&2
+  echo "[grok-run]   possibly modified: inspect 'git status' before trusting it. The output is" >&2
+  echo "[grok-run]   printed for inspection, but the non-zero exit means: do not treat this as a" >&2
+  echo "[grok-run]   read-only run. Check grok's version/flags (allowlist names resolve? --sandbox" >&2
+  echo "[grok-run]   supported?) and re-run evals/canary.sh before delegating again." >&2
   printf '%s\n' "$OUT"
   exit $(( RC == 0 ? 1 : RC ))
 fi
