@@ -17,9 +17,6 @@ a plugin, `${CLAUDE_PLUGIN_ROOT}/scripts/grok-run.sh` (find it first if neither 
 
 - `review` — read-only code review / second opinion. Default. Cannot touch files.
 - `research` — read-only + web (`web_search`/`web_fetch`) for current facts and comparisons.
-- `research-rw` — web research **without** the read-only sandbox (grok holds write+shell; the
-  wrapper isolates it in a throwaway temp dir, but that is advisory, not a sandbox). Only use it
-  when the task you were handed says the user explicitly OK'd it — never pick it on your own.
 - `fix` — **AUTONOMOUS**: grok edits files and runs shell. Always add `-w <name>` so its edits land
   in an isolated git worktree you can review.
 
@@ -72,7 +69,7 @@ Match how you relay to the task shape:
 Either way, if the wrapper prints a `FAILED`/empty-output error, say grok login or the network
 likely needs attention (`grok login`) rather than silently retrying.
 
-One `FAILED` verdict is different: **"made no web tool call"** on a `research`/`research-rw` run.
+One `FAILED` verdict is different: **"made no web tool call"** on a `research` run.
 The wrapper detected (from grok's own usage signals) that grok answered from model memory without
 collecting anything — the output is printed but must **not** be relayed as verified research; on a
 real fan-out this hit 4 of 12 workers, all with plausible-looking output. Retry **once** with the
@@ -81,20 +78,19 @@ prompt strengthened to demand `web_fetch` + a verbatim quote per claim (observed
 the caller collects the facts itself (Claude quota) or drops the item — do not launder grok's
 memory-only answer as research.
 
-If it reports that **research is unavailable on this grok build** (fail-closed: grok 0.2.93 cannot
-combine web tools with the read-only `--tools` sandbox), do **not** silently work around it, and do
-**not** just fall back on your own. Stop and hand the decision back to the caller as an explicit
-three-way choice for the user — you cannot pick for them:
+If it reports that grok **could not build the session** (a research build error persisting after the
+wrapper's own automatic retry), do **not** silently work around it, and do **not** just fall back on
+your own. Stop and hand the decision back to the caller as an explicit three-way choice for the
+user — you cannot pick for them:
 
-1. **`research-rw`** (repo-less web research, throwaway temp dir) or **`fix -w <name>`**
-   (repo-anchored, isolated worktree) — grok gets web and this works, but either way grok holds
-   write and shell, so it needs the user's explicit OK; both stay on grok's xAI quota.
+1. **`fix -w <name>`** (repo-anchored, isolated worktree) — grok gets web and this works, but it
+   holds write and shell, so it needs the user's explicit OK; stays on grok's xAI quota.
 2. **Claude's own web search** — the main session does the lookup instead (Claude quota, no grok).
 3. **Proceed without web** — answer from existing knowledge, clearly flagged as unverified.
 
 Never make research work by dropping the `--tools` sandbox (e.g. `--disallowed-tools` or a permission
-mode); on grok 0.2.93 that re-enables file writes and shell (canary-verified), so the run would no
-longer be read-only.
+mode); that re-enables file writes and shell (canary-verified), so the run would no longer be
+read-only. Minimum grok: 0.2.98 for `research`, 0.2.111 for `--verify` (`grok update`).
 
 One collection norm, both sides of the delegation: if a site blocks fetching (403, bot protection),
 do **not** circumvent it — no User-Agent spoofing, no shell/curl fetch, no proxies. The wrapper's

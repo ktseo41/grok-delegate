@@ -63,8 +63,9 @@ want a summary → `@grok`; want the raw artifact → direct wrapper + `> file`.
 
 ### Requirements
 
-- The `grok` CLI on your `PATH`. Verified against grok 0.2.93 (read-only canary last re-run 2026-07-12).
+- The `grok` CLI on your `PATH`. Verified against grok 0.2.111 (read-only canary last re-run 2026-07-23).
 - Authenticated once: `grok login` (or `XAI_API_KEY` for CI).
+- Minimum grok: 0.2.98 for `research`, 0.2.111 for `--verify` (`grok update`).
 
 ## Usage
 
@@ -74,8 +75,6 @@ the wrapper directly:
 ```bash
 scripts/grok-run.sh review      "<prompt>" [grok args...]  # read-only, no web   (default)
 scripts/grok-run.sh research    "<prompt>" [grok args...]  # read-only + web search/fetch
-scripts/grok-run.sh research-rw "<prompt>" [grok args...]  # web WITHOUT the read-only sandbox
-                                          # (needs your explicit OK; throwaway temp dir)
 scripts/grok-run.sh fix         "<prompt>" [grok args...]  # AUTONOMOUS: edits files + shell
 ```
 
@@ -121,13 +120,12 @@ there is no argument-length limit and grok sees the whole diff):
 | --- | --- | --- |
 | `review` (default) | `read_file`, `grep`, `list_dir` | Second opinion, code review — cannot modify the repo. |
 | `research` | read-only + `web_search`, `web_fetch` | Comparisons, current docs/facts. |
-| `research-rw` | full toolset + `--always-approve`, throwaway temp cwd | Web research while `research` fails closed on grok 0.2.93. **Not read-only** — requires your explicit OK. |
 | `fix` | full toolset + `--always-approve` | Autonomous implementation. Pair with `-w` for isolation. |
 
-**Web-collection gate (research modes).** The worst research failure observed in practice is a
+**Web-collection gate (research mode).** The worst research failure observed in practice is a
 plausible answer produced **without any web call** — exit 0, normal length, written from model
 memory (4 of 12 workers on a real fan-out). The wrapper reads grok's own usage signals after each
-`research`/`research-rw` run and **fails the run (non-zero exit)** if no `web_search`/`web_fetch`
+`research` run and **fails the run (non-zero exit)** if no `web_search`/`web_fetch`
 was ever called; the body is still printed for inspection. Bypass deliberately with
 `GROK_ALLOW_NOWEB=1`. Every run also prints a `[grok-usage]` trailer
 (`ctxTokens=… wallSec=… toolCalls=… tools=…`) so you can see what the delegation cost on the xAI side.
@@ -159,14 +157,16 @@ fixed list of filenames). A `fix`-mode positive control proves grok is genuinely
 `evals/stub-regression.sh` covers the wrapper's argument handling offline, at zero xAI quota. Run both
 after touching the wrapper — see [`evals/README.md`](evals/README.md).
 
-**Known bug (grok 0.2.93):** a `--tools` allowlist that includes a web tool (`web_search`/`web_fetch`)
-fails to build the session, so `research` currently fails closed until grok fixes it upstream (the
-wrapper re-checks each run, so a newer grok recovers automatically). It reports this clearly rather
-than dropping the read-only guard to work around it. When you still need the web lookup, don't weaken
-`research` — pick a path by quota: `review` for read-only code work; **with your explicit OK to let
-grok write**, `fix -w <name>` (fix has web, runs isolated in a worktree, stays on grok's xAI quota);
-or, if you ask first, Claude's own WebSearch/WebFetch (spends Claude's quota — the thing delegating
-saves). Never silently substitute one for another.
+**Historical bug (grok < 0.2.98, fixed upstream):** a `--tools` allowlist that includes a web tool
+(`web_search`/`web_fetch`) used to fail to build the session, so `research` failed closed. Fixed
+upstream in grok 0.2.98. The wrapper still warns (never blocks) at startup if it detects a grok
+older than that, and a research build error now gets one automatic retry before it fails closed —
+on a build error it reports this clearly rather than dropping the read-only guard to work around it.
+When you still need the web lookup and `research` keeps failing, don't weaken it — pick a path by
+quota: `review` for read-only code work; **with your explicit OK to let grok write**, `fix -w <name>`
+(fix has web, runs isolated in a worktree, stays on grok's xAI quota); or, if you ask first, Claude's
+own WebSearch/WebFetch (spends Claude's quota — the thing delegating saves). Never silently
+substitute one for another.
 
 ## Does delegating actually help?
 

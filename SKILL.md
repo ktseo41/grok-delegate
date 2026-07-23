@@ -45,35 +45,32 @@ denied at the tool level, not via a permission mode.)
 
 **`research` is the normal path on current grok (0.2.98+).** A historical bug on grok < 0.2.98 made
 adding a web tool to a `--tools` allowlist fail to build the session (upstream error naming
-`run_terminal_cmd` / `auto_background_on_timeout`), so on those old builds `research` **fails
+`run_terminal_cmd` / `auto_background_on_timeout`), so on those old builds `research` **failed
 closed**. That was fixed upstream in grok 0.2.98 (2026-07-12) and verified fixed on 2026-07-16
 against installed grok 0.2.99 and the now-open-source repo (checkout 0.2.101) — see
-`docs/source-investigation-2026-07-16.md`. The wrapper still detects a build failure per-run: on
-< 0.2.98 it names the old bug; on 0.2.98+ (or an unknown version) it now auto-retries `research`
-once, and if that still fails it reports a likely transient backend/rate-limit error and suggests
-retrying later rather than escalating straight to `research-rw`. If grok reports that `--tools` is
-broken and suggests `--disallowed-tools` or a permission mode to get web working, do **not** take
-it: those build fine but re-enable file writes and shell (canary-verified), so the run would no
-longer be read-only. `review` is unaffected.
+`docs/source-investigation-2026-07-16.md`. Since the bug is fixed upstream, the wrapper no longer
+special-cases old builds: it just warns once at startup (never blocks) if it detects a grok older
+than 0.2.98, so an old install gets a nudge to `grok update` instead of a silent surprise later. A
+research build error now gets **one automatic retry** unconditionally (a short sleep, then the same
+call again) — on current builds a build error is presumed transient (backend/rate-limit blip). If it
+still fails after the retry, the wrapper fails closed with one unified message: report the error,
+suggest `grok update` if the install is old, and — only with the user's **explicit OK** to let grok
+hold write+shell — point to `fix -w <name>` (isolated worktree, has web tools). It never suggests
+dropping the `--tools` allowlist (`--disallowed-tools`/a permission mode build fine but re-enable
+file writes and shell, canary-verified, so the run would no longer be read-only). `review` is
+unaffected throughout.
 
-If `research` still fails after the retry — an old build (< 0.2.98) or a persistent session-build
-failure — do **not** silently substitute something: surface it and let the user choose, because
-each path spends a different quota. The web tools work fine without the allowlist, so with the
-user's **explicit OK** to let grok hold write/shell for the lookup there are two grok-native
-routes, both on grok's **xAI** quota:
-
-- **`research-rw`** — legacy fallback: repo-less web research on an old grok build, or when
-  `research` keeps failing to build a session after a retry. Runs like `fix` but the wrapper points
-  it at a fresh throwaway temp dir, so stray writes land nowhere that matters. That isolation is
-  **advisory only**: grok keeps shell and can reach outside the cwd, so this needs the same user OK
-  as `fix`. The wrapper's prompt guard forbids shell-based fetch and UA spoofing, but a prompt is
-  not a sandbox.
-- **`fix -w <name>`** — for research anchored in a repo, with edits isolated in a worktree.
+If `research` still fails after the retry, do **not** silently substitute something: surface it and
+let the user choose, because each path spends a different quota. With the user's **explicit OK** to
+let grok hold write/shell for the lookup, `fix -w <name>` gives repo-anchored research with edits
+isolated in a worktree, on grok's **xAI** quota.
 
 If the user needs a strictly read-only answer and `research` won't build, either upgrade grok
-(< 0.2.98 is the known-bad range) or offer your own WebSearch/WebFetch — but that burns **Claude's**
-quota (the very thing delegating to grok saves), so ask first rather than defaulting to it. Never
-weaken `research` itself to get web.
+(`grok update`; < 0.2.98 is the known-bad range) or offer your own WebSearch/WebFetch — but that
+burns **Claude's** quota (the very thing delegating to grok saves), so ask first rather than
+defaulting to it. Never weaken `research` itself to get web.
+
+Minimum grok: 0.2.98 for `research`, 0.2.111 for `--verify`.
 
 ## How to run it
 
@@ -95,13 +92,6 @@ the commands are copy-pasteable, e.g. `SKILL_DIR=~/.claude/skills/grok-delegate`
 # 2. Read-only + web research
 "$SKILL_DIR/scripts/grok-run.sh" research \
   "Compare Postgres vs SQLite for a single-node analytics cache. Cite sources." --cwd /path/to/repo
-
-# 2b. Legacy fallback if `research` still fails to build a session (old grok < 0.2.98,
-#     or a persistent build failure even after the wrapper's auto-retry) — ONLY with the
-#     user's explicit OK (grok holds write+shell; the wrapper isolates it in a throwaway
-#     temp dir, but that isolation is advisory, not a sandbox). No --cwd needed.
-"$SKILL_DIR/scripts/grok-run.sh" research-rw \
-  "What is the current ECB deposit facility rate? Quote the official page verbatim with the URL."
 
 # 3. AUTONOMOUS fix (grok edits files + runs shell). Isolate with a worktree:
 "$SKILL_DIR/scripts/grok-run.sh" fix \
@@ -235,7 +225,6 @@ target (each a fresh grok context), then collect — see "Parallel / subagent-li
 | --- | --- | --- |
 | Second opinion, code review, "is this right?" | `review` | Cannot modify the repo. Safe by construction. |
 | Needs current web facts, comparisons, docs | `research` | Read-only + `web_search`/`web_fetch`. |
-| Legacy fallback: `research` won't build a session (old grok < 0.2.98, or a persistent failure), user OK'd write/shell | `research-rw` | Like `fix` with web, pointed at a throwaway temp dir. Isolation is advisory — requires the user's explicit OK. |
 | Autonomous implementation, "have grok fix it" | `fix` | Full toolset + auto-approve. **Always pair with `-w`** so edits are isolated and reviewable. |
 
 Default to `review` when the user is ambiguous. Only use `fix` when the user clearly wants grok to
@@ -257,7 +246,7 @@ network error); tell the user to run `grok login` rather than silently retrying.
 **The no-collection failure mode (wrapper-gated).** The worst research failure is not a crash but a
 **plausible answer produced without any collection**: on a real 12-worker fan-out, 4 workers exited
 0 with normal-sized, entirely made-from-memory output — indistinguishable from success except in
-grok's own usage signals. The wrapper now enforces this: a `research`/`research-rw` run whose
+grok's own usage signals. The wrapper now enforces this: a `research` run whose
 signals show **no `web_search`/`web_fetch` call exits non-zero** with a `FAILED: … no web tool call`
 verdict (body still printed for inspection). Treat that exit as "not research": retry **once** with
 the prompt strengthened to demand `web_fetch` + a verbatim quote per claim — observed recovery is

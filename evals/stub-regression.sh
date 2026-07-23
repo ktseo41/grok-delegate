@@ -139,29 +139,64 @@ fi
 rm -rf "$D"
 
 # ---------------------------------------------------------------------------
-echo "=== H3: research fail-closed message points to research-rw / 'fix -w', not to dropping the guard ==="
-# The stub must answer `--version` with an OLD (< 0.2.98) version: H3 targets the
-# version-gated old-bug branch, whose message suggests research-rw / 'fix -w' without
-# naming the forbidden workarounds. (The >= 0.2.98/unknown branch deliberately names
-# --disallowed-tools/--permission-mode in its "do NOT do this" warning, which would
-# trip this test's negative assertion — a versionless stub landed there.)
+echo "=== H3: persistent research build-error -> retried once, FAILED, points to 'fix -w' (user OK), never to dropping the guard ==="
+# The wrapper auto-retries a research build error once unconditionally, then fails
+# closed with a single unified message. The forbidden flags (--disallowed-tools /
+# --permission-mode) are expected to appear ONLY inside the "Do NOT work around" warning
+# itself, never as an endorsed path. Stub reports a MODERN version and always build-errors,
+# so both the initial attempt and the retry fail.
 D="$(mktemp -d)"
 mkstub "$D" <<'EOS'
 #!/bin/sh
-if [ "$1" = "--version" ]; then echo "grok 0.2.93 (stub) [stable]"; exit 0; fi
+if [ "$1" = "--version" ]; then echo "grok 0.2.111 (stub) [stable]"; exit 0; fi
 echo "agent building failed: auto_background_on_timeout" >&2
 exit 1
 EOS
 run "$D" research "latest vite" --cwd /tmp >/dev/null 2>"$D/e"; rc=$?
 if [[ "$rc" -ne 0 ]] \
-   && grep -qi 'research-rw' "$D/e" \
+   && grep -qi 'retried once' "$D/e" \
    && grep -qi 'fix -w' "$D/e" \
    && grep -qiE "user's (explicit )?OK" "$D/e" \
-   && ! grep -qiE 'disallowed-tools|permission-mode' "$D/e"; then
-  pass "research FAILED msg suggests research-rw / 'fix -w' (user OK), not a guard-dropping workaround"
+   && ! grep -qi 'research-rw' "$D/e" \
+   && grep -qi 'Do NOT work around' "$D/e"; then
+  pass "research FAILED msg: auto-retried once, points to 'fix -w' (user OK), never research-rw"
 else
   fail "research fail-closed message" "rc=$rc; check wording in grok-run.sh"
 fi
+rm -rf "$D"
+
+# ---------------------------------------------------------------------------
+echo "=== R1 (#3): research-rw mode is REMOVED -> unknown mode, exit 2 ==="
+D="$(mktemp -d)"; argv_stub "$D"
+run "$D" research-rw "x" >/dev/null 2>"$D/e"; rc=$?
+[[ "$rc" -eq 2 ]] && grep -q 'unknown mode' "$D/e" \
+  && pass "research-rw -> unknown mode, exit 2 (removal locked in)" \
+  || fail "research-rw removal" "rc=$rc"
+rm -rf "$D"
+
+# ---------------------------------------------------------------------------
+echo "=== F1: soft version-floor advisory (grok < 0.2.98 warns, never blocks) ==="
+D="$(mktemp -d)"
+mkstub "$D" <<'EOS'
+#!/bin/sh
+if [ "$1" = "--version" ]; then echo "grok 0.2.93 (stub) [stable]"; exit 0; fi
+echo "a plain review body"
+exit 0
+EOS
+run "$D" review "x" --cwd /tmp >/dev/null 2>"$D/e"; rc=$?
+[[ "$rc" -eq 0 ]] && grep -qi 'grok update' "$D/e" \
+  && pass "grok 0.2.93 -> advisory printed ('grok update'), run not blocked" \
+  || fail "soft floor advisory" "rc=$rc"
+mkstub "$D" <<'EOS'
+#!/bin/sh
+if [ "$1" = "--version" ]; then echo "grok 0.2.111 (stub) [stable]"; exit 0; fi
+echo "a plain review body"
+exit 0
+EOS
+run "$D" review "x" --cwd /tmp >/dev/null 2>"$D/e"; rc=$?
+[[ "$rc" -eq 0 ]] && ! grep -qi 'grok update' "$D/e" \
+  && pass "grok 0.2.111 -> no soft-floor advisory" \
+  || fail "soft floor false positive" "rc=$rc"
 rm -rf "$D"
 
 # ---------------------------------------------------------------------------
@@ -215,11 +250,6 @@ if command -v uuidgen >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
   else
     fail "no-web gate (research)" "rc=$rc"
   fi
-  # (b) research-rw is gated too
-  HOME="$D" PATH="$D:$PATH" bash "$W" research-rw "x" >/dev/null 2>"$D/e"; rc=$?
-  [[ "$rc" -ne 0 ]] && grep -q 'FAILED.*no web tool call' "$D/e" \
-    && pass "research-rw + toolsUsed=[] -> non-zero FAILED" \
-    || fail "no-web gate (research-rw)" "rc=$rc"
   # (c) a web tool call present -> success
   out="$(HOME="$D" PATH="$D:$PATH" STUB_TOOLS='"web_fetch"' bash "$W" research "x" 2>"$D/e")"; rc=$?
   [[ "$rc" -eq 0 && "$out" == *uncollected* ]] \

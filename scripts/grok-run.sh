@@ -31,11 +31,6 @@
 # Usage:
 #   grok-run.sh review      "<prompt>" [extra grok args...]  # read-only, no web       (default)
 #   grok-run.sh research    "<prompt>" [extra grok args...]  # read-only + web_search/fetch
-#   grok-run.sh research-rw "<prompt>" [extra grok args...]  # web WITHOUT the read-only
-#                                    # sandbox (needs user OK) — runs like fix, pointed at a
-#                                    # throwaway temp dir unless --cwd is given. For repo-less
-#                                    # web research on OLD grok builds (< 0.2.98, where `research`
-#                                    # fails closed) or when session-build failures persist.
 #   grok-run.sh fix         "<prompt>" [extra grok args...]  # AUTONOMOUS: edits files + shell
 #
 # Self-verify gate (fix mode only): pass --verify "<cmd>" to make grok keep working
@@ -60,7 +55,7 @@
 # Env:
 #   GROK_MODEL   default model (else grok's account default, currently grok-4.5)
 #   GROK_MAXTURNS default max turns (default 30)
-#   GROK_ALLOW_NOWEB=1  skip the web-collection gate (research/research-rw runs that
+#   GROK_ALLOW_NOWEB=1  skip the web-collection gate (research runs that
 #                make no web tool call normally FAIL — see the gate near the end)
 #   GROK_VERIFY_TIMEOUT  Stop-hook gate timeout in seconds for --verify (default 600)
 set -uo pipefail
@@ -119,15 +114,14 @@ while [[ $# -gt 0 ]]; do
 done
 set -- "${_filtered_args[@]:+${_filtered_args[@]}}"
 
-# Version gate for the build-error branch further down. The 0.2.93 "agent building
-# failed" bug (a --tools allowlist can't combine with a web tool) was fixed upstream
-# in 0.2.98 (CHANGELOG 2026-07-12: "Web search and X search no longer fail when both a
-# local function tool and the backend hosted tool are active"). Below 0.2.98 the same
-# stderr text still means that bug; at/above it, the bug is structurally impossible, so
-# the same text is almost always a transient backend/rate-limit error instead. Parsing
-# is best-effort: any failure to run/parse `grok --version` leaves GROK_VERSION empty,
-# and an empty version is treated like ">= 0.2.98" (i.e. do NOT assume the old bug) —
-# asserting a stale diagnosis on an unknown version is worse than assuming the fix.
+# Version detection. Two consumers: (a) the --verify >= 0.2.111 hard gate below (a Stop
+# hook's block/continuation mechanism did not exist at 0.2.101 and is confirmed working
+# on 0.2.111, so --verify refuses anything older or unparseable), and (b) a soft startup
+# advisory for grok < 0.2.98 (the old allowlist+web session-build bug — fixed upstream,
+# but a caller still running an old build benefits from a nudge to update). Parsing is
+# best-effort: any failure to run/parse `grok --version` leaves GROK_VERSION empty; an
+# empty version means no advisory here (nothing to warn about) — --verify has its own,
+# separate refusal for an empty version, since a hard gate cannot assume support.
 _grok_ver_lt() {
   # $1 < $2 for dotted a.b.c triples, numeric field by field. Ignores anything after
   # the third field (e.g. build metadata) — good enough for this gate, not a general
@@ -145,15 +139,16 @@ GROK_VERSION=""
 if _grok_ver_raw="$(grok --version 2>/dev/null)"; then
   GROK_VERSION="$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' <<<"$_grok_ver_raw" | head -1)"
 fi
-VERSION_BUG_POSSIBLE=0
+# Soft version floor. The pre-0.2.98 allowlist+web session-build bug is fixed upstream;
+# nothing below special-cases old builds anymore, so just warn once at startup.
 if [[ -n "$GROK_VERSION" ]] && _grok_ver_lt "$GROK_VERSION" "0.2.98"; then
-  VERSION_BUG_POSSIBLE=1
+  echo "[grok-run] WARNING: grok $GROK_VERSION < 0.2.98 — research may fail its session build (old allowlist+web bug). Run 'grok update'." >&2
 fi
 
 # --verify validation. Two hard gates:
 #   * Mode: fix only. The gate runs shell (<cmd>), so it must never be attached to
 #     the read-only review/research sandboxes — that would smuggle shell in through
-#     a "verify" flag. research-rw is also refused: it's web research, not repo fixing.
+#     a "verify" flag.
 #   * Version: the Stop-hook block/continuation mechanism this relies on did NOT exist
 #     at 0.2.101 (source-verified: no Block decision, Stop dispatched non-blocking) and
 #     is confirmed present + working headless on 0.2.111 (empirical smoke test). A Stop
@@ -179,18 +174,18 @@ fi
 MAXTURNS="${GROK_MAXTURNS:-30}"
 COMMON=(--output-format plain)
 
-# Web-mode prompt guard (research and research-rw).
+# Web-mode prompt guard (research).
 #   * Collection rules: no circumventing bot protection (observed on a real run: a
-#     research-rw worker used run_terminal_command to get around a 403 — exactly the
+#     web-mode worker used run_terminal_command to get around a 403 — exactly the
 #     unattended-shell behavior this skill exists to prevent), retry blocked sites via
 #     domain-limited web_search instead of more fetches (a fetch-retry against a
 #     blocked site cost 3x the median run), and verbatim quote + URL per claim so
 #     downstream verification stays cheap.
-# This is a plain prompt prefix — it does NOT touch the --tools sandbox (research) and
-# is NOT a sandbox itself (research-rw). It applies to both -p and --prompt-file paths.
+# This is a plain prompt prefix — it does NOT touch the --tools sandbox. It applies to
+# both -p and --prompt-file paths.
 GUARD=""
 case "$MODE" in
-  research|research-rw)
+  research)
     GUARD='[수집 규칙] 사이트가 fetch를 차단하면(403·봇 방어) 우회하지 마라 — User-Agent 위장, 터미널/셸을 통한 fetch, 프록시 경유 전부 금지다. 대신 그 도메인으로 한정한 web_search로 같은 정보를 찾고, 그래도 확인이 안 되면 그 항목을 "미확인"으로 명시해서 보고하라. 사실 주장에는 원문 축자 인용과 출처 URL을 붙여라.'
     ;;
 esac
@@ -278,33 +273,6 @@ case "$MODE" in
     # tools (they are backend-hosted, so the local network restriction doesn't apply).
     ARGS=(--tools "read_file,grep,list_dir,web_search,web_fetch" --sandbox read-only "${COMMON[@]}" "$@")
     ;;
-  research-rw)
-    # Web research WITHOUT the read-only sandbox — the sanctioned fallback for OLD grok
-    # builds (< 0.2.98, which cannot combine web tools with a --tools allowlist — research
-    # fails closed there) or for a session-build failure that persists after the
-    # automatic retry (see the build-error branch below). Runs like fix (--always-approve,
-    # full toolset incl. shell), so it REQUIRES the
-    # user's explicit OK, same as fix. Unless the caller passed --cwd, the run is
-    # pointed at a fresh throwaway temp dir so stray writes land nowhere that matters.
-    # That isolation is ADVISORY ONLY: grok keeps shell and can reach outside the cwd
-    # (the canary suite's out-of-cwd vector demonstrates this class of escape). The
-    # prompt GUARD above forbids shell-based fetch and UA spoofing, but a prompt is
-    # not a sandbox. The temp dir is left in place after the run for inspection.
-    _has_cwd=0
-    for _a in "$@"; do
-      case "$_a" in --cwd|--cwd=*) _has_cwd=1 ;; esac
-    done
-    ARGS=(--always-approve "${COMMON[@]}" "$@")
-    if [[ "$_has_cwd" -eq 0 ]]; then
-      RW_DIR="$(mktemp -d "${TMPDIR:-/tmp}/grok-research-rw.XXXXXX")"
-      ARGS+=(--cwd "$RW_DIR")
-      echo "[grok-run] research-rw: throwaway cwd $RW_DIR (kept after the run for inspection)." >&2
-    else
-      echo "[grok-run] research-rw: using caller-supplied --cwd." >&2
-    fi
-    echo "[grok-run] research-rw is NOT read-only: grok holds write+shell; the temp-dir/cwd" >&2
-    echo "[grok-run]   isolation is advisory only. Use only with the user's explicit OK." >&2
-    ;;
   fix)
     # AUTONOMOUS. grok gets its full toolset and auto-approves everything.
     # Prefer running with -w/--worktree so changes land in an isolated git worktree.
@@ -323,7 +291,7 @@ case "$MODE" in
     ARGS=(--always-approve "${COMMON[@]}" "$@")
     ;;
   *)
-    echo "grok-run.sh: unknown mode '$MODE' (use review|research|research-rw|fix)" >&2
+    echo "grok-run.sh: unknown mode '$MODE' (use review|research|fix)" >&2
     exit 2
     ;;
 esac
@@ -402,9 +370,9 @@ fi
 
 echo "[grok-run] mode=$MODE maxturns=$_maxturns_eff model=${GROK_MODEL:-<account-default>}" >&2
 
-# Wrapped so the build-error retry below (research mode, >= 0.2.98/unknown version) can
-# invoke the exact same grok call a second time and land its OUT/ERR/RC in the same
-# variables the rest of the script already reads.
+# Wrapped so the build-error retry below (research mode) can invoke the exact same grok
+# call a second time and land its OUT/ERR/RC in the same variables the rest of the
+# script already reads.
 _run_grok_once() {
   local errfile
   errfile="$(mktemp)"
@@ -415,16 +383,12 @@ _is_build_error() { grep -qiE 'agent building failed|auto_background_on_timeout'
 
 _run_grok_once
 
-# One automatic retry, research mode only, and only when the 0.2.93 allowlist+web bug
-# is NOT a plausible cause (version >= 0.2.98, confirmed fixed upstream, or unknown —
-# see the version gate above). On an old (< 0.2.98) build the bug is still the likely
-# cause and retrying just burns another turn on a deterministic failure, so that case
-# skips straight to the fail-closed branch below. A short sleep gives a transient
-# backend/rate-limit blip a chance to clear before the retry.
+# One unconditional automatic retry for research build errors. On current builds the
+# old deterministic allowlist+web bug is fixed, so a build error is presumed transient —
+# a short sleep lets a backend/rate-limit blip clear before the retry.
 BUILD_ERROR_RETRIED=0
-if _is_build_error "$ERR" && [[ "$MODE" == "research" && "$VERSION_BUG_POSSIBLE" -eq 0 ]]; then
-  echo "[grok-run] research hit a session-build error; on this grok build the 0.2.93" >&2
-  echo "[grok-run]   allowlist+web bug is fixed, so retrying once after a short wait..." >&2
+if _is_build_error "$ERR" && [[ "$MODE" == "research" ]]; then
+  echo "[grok-run] research hit a session-build error; retrying once after a short wait..." >&2
   sleep 3
   # Reuse the SID we own (only when we generated it ourselves — a caller-supplied
   # session flag is never touched) so the retry's usage trailer below is findable, but
@@ -483,46 +447,24 @@ if [[ $RC -ne 0 ]]; then
   echo "[grok-run] grok exited $RC." >&2
 fi
 
-# Build-error branch, version-gated (see the version gate above the run). Below 0.2.98
-# this stderr text ("agent building failed: ... run_terminal_cmd ... auto_background_on_timeout")
-# is the known bug: a web tool can't be added to a --tools allowlist, which breaks research
-# mode. Do NOT "fix" it by dropping the allowlist or switching to --disallowed-tools /
-# --permission-mode: those build fine but re-enable file writes and shell (canary-verified), so
-# the run would no longer be read-only. Fail closed instead. At/above 0.2.98 (or when the
-# version is unknown) that bug is structurally fixed upstream, so the same text is far more
-# likely a transient backend/rate-limit error — research mode already retried once above; here
-# we just report whichever diagnosis actually fits this install.
+# Build-error branch. On any current (0.2.98+) build the old 0.2.93 allowlist+web
+# session-build bug is fixed upstream, so this stderr text is almost always a
+# transient backend/rate-limit error — research already retried once above. Report
+# and fail closed; never "fix" it by weakening the read-only guard.
 if _is_build_error "$ERR"; then
-  if [[ "$VERSION_BUG_POSSIBLE" -eq 1 ]]; then
-    if [[ "$MODE" == "research" ]]; then
-      echo "[grok-run] FAILED: research mode is unavailable on this grok build ($GROK_VERSION)." >&2
-      echo "[grok-run]   grok can't combine web tools with a read-only --tools allowlist" >&2
-      echo "[grok-run]   (upstream session-build bug, fixed in 0.2.98). Not worked around on" >&2
-      echo "[grok-run]   purpose: dropping the allowlist would re-enable writes/shell. Use 'review'" >&2
-      echo "[grok-run]   for read-only code work. With the user's explicit OK to let grok hold" >&2
-      echo "[grok-run]   write+shell: 'research-rw' (repo-less web research, throwaway temp dir)" >&2
-      echo "[grok-run]   or 'fix -w <name>' (repo work, isolated worktree) — both have web." >&2
-    else
-      echo "[grok-run] FAILED: grok could not build the session:" >&2
-      printf '%s\n' "$ERR" | head -3 >&2
-    fi
+  if [[ "$BUILD_ERROR_RETRIED" -eq 1 ]]; then
+    echo "[grok-run] FAILED: grok failed to build the session twice (retried once after 3s)." >&2
   else
-    if [[ "$BUILD_ERROR_RETRIED" -eq 1 ]]; then
-      echo "[grok-run] FAILED: grok failed to build the session twice (retried once after 3s)." >&2
-    else
-      echo "[grok-run] FAILED: grok could not build the session:" >&2
-      printf '%s\n' "$ERR" | head -3 >&2
-    fi
-    echo "[grok-run]   On this grok build (${GROK_VERSION:+detected $GROK_VERSION, }>= 0.2.98 or unknown) the old" >&2
-    echo "[grok-run]   0.2.93 allowlist+web session-build bug is fixed upstream, so this is most" >&2
-    echo "[grok-run]   likely a transient backend/rate-limit error — retry again later. Only if it" >&2
-    echo "[grok-run]   keeps recurring, and with the user's explicit OK to let grok hold write+shell," >&2
-    echo "[grok-run]   consider 'research-rw' (repo-less web research) or 'fix -w <name>' (repo work," >&2
-    echo "[grok-run]   isolated worktree). Do NOT work around this by dropping the --tools allowlist" >&2
-    echo "[grok-run]   or using --disallowed-tools/--permission-mode — those re-enable file writes" >&2
-    echo "[grok-run]   and shell (canary-verified), which is not an acceptable substitute for the" >&2
-    echo "[grok-run]   read-only sandbox." >&2
+    echo "[grok-run] FAILED: grok could not build the session:" >&2
+    printf '%s\n' "$ERR" | head -3 >&2
   fi
+  echo "[grok-run]   Most likely a transient backend/rate-limit error — retry later. If it keeps" >&2
+  echo "[grok-run]   recurring and your grok is old (< 0.2.98), run 'grok update' first. If it still" >&2
+  echo "[grok-run]   persists, and only with the user's explicit OK to let grok hold write+shell," >&2
+  echo "[grok-run]   'fix -w <name>' (isolated worktree) has web tools. Do NOT work around this by" >&2
+  echo "[grok-run]   dropping the --tools allowlist or using --disallowed-tools/--permission-mode —" >&2
+  echo "[grok-run]   those re-enable file writes and shell (canary-verified), which is not an" >&2
+  echo "[grok-run]   acceptable substitute for the read-only sandbox." >&2
   # This branch is the wrapper's OWN "FAILED" verdict, so it must exit non-zero
   # even when grok itself returned 0 — empty output on an expired auth / transport
   # error can come back as exit 0. `${RC:-1}` did NOT do this: it only falls back
@@ -544,7 +486,7 @@ if [[ -z "${OUT//[[:space:]]/}" ]]; then
   exit $(( RC == 0 ? 1 : RC ))
 fi
 
-# Web-collection gate (research / research-rw). A web-mode run that never called a
+# Web-collection gate (research). A web-mode run that never called a
 # web tool "researched" from model memory: on a real 12-worker fan-out, 4 workers
 # returned exit 0 with plausible, normal-sized, entirely uncollected output — the
 # usage trailer's tool list was the ONLY signal (nothing in exit code, size, or the
@@ -564,7 +506,7 @@ fi
 # verified live on 0.2.99 where a real research run reported toolsUsed=["WebFetch",
 # "WebSearch"] yet the old case-sensitive snake-only regex marked it "no web tool
 # call". So match case-insensitively (-i) with an optional underscore (web[_]?...).
-if [[ "$MODE" == "research" || "$MODE" == "research-rw" ]] \
+if [[ "$MODE" == "research" ]] \
    && [[ "$GROK_HAVE_SIGNALS" -eq 1 && "${GROK_ALLOW_NOWEB:-0}" != "1" ]] \
    && ! grep -qiE '(^|,)web[_]?(search|fetch)(,|$)' <<<"$GROK_TOOLSUSED"; then
   echo "[grok-run] FAILED: $MODE run made no web tool call (tools=${GROK_TOOLSUSED:--})." >&2
